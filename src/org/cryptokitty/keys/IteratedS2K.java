@@ -8,11 +8,16 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashValue;
+import org.cryptokitty.digest.HashFactory;
 
 /**
- * @author stevebrenneis
+ * @author Steve Brenneis
  *
+ * Creates an iterated, salted, hashed key. The salt and passphrase are iteratively
+ * added to a hashing context and hashed according to the hash algorithm value.
+ * The hash result is truncated or concatenated with additional padded hashes to
+ * produce the desired key size. See RFC 4880, section 3.7.1.2.
+ * 
  */
 public class IteratedS2K extends String2Key {
 
@@ -88,7 +93,7 @@ public class IteratedS2K extends String2Key {
 
 		Hash digest = null;
 		try {
-			digest = HashValue.getDigest(algorithm);
+			digest = HashFactory.getDigest(algorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// This will have been taken care of in the constructor,

@@ -7,10 +7,10 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashValue;
+import org.cryptokitty.digest.HashFactory;
 
 /**
- * @author stevebrenneis
+ * @author Steve Brenneis
  *
  * Creates a salted, hashed key. The salt and passphrase are hashed according
  * to the hash algorithm value. The hash result is truncated or concatenated
@@ -53,7 +53,7 @@ public class SaltedS2K extends String2Key {
 		byte[] pass = passPhrase.getBytes(Charset.forName("UTF-8"));
 		Hash digest = null;
 		try {
-			digest = HashValue.getDigest(algorithm);
+			digest = HashFactory.getDigest(algorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// This will have been taken care of in the constructor,
