@@ -3,7 +3,7 @@
  */
 package org.cryptokitty.keys;
 
-import org.cryptokitty.digest.HashValue;
+import org.cryptokitty.digest.HashFactory;
 
 /**
  * @author Steve Brenneis
@@ -37,13 +37,13 @@ public abstract class String2Key {
 			throws UnsupportedAlgorithmException {
 		this.passPhrase = passPhrase;
 		switch (algorithm) {
-		case HashValue.MD5:
-		case HashValue.SHA1:
-		case HashValue.RIPEMD160:
-		case HashValue.SHA256:
-		case HashValue.SHA384:
-		case HashValue.SHA512:
-		case HashValue.SHA224:
+		case HashFactory.MD5:
+		case HashFactory.SHA1:
+		case HashFactory.RIPEMD160:
+		case HashFactory.SHA256:
+		case HashFactory.SHA384:
+		case HashFactory.SHA512:
+		case HashFactory.SHA224:
 			break;
 		default:
 			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
