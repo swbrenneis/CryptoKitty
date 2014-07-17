@@ -16,13 +16,13 @@ public class HashFactory {
 	/*
 	 * Hash algorithm constants.
 	 */
-	public static final byte MD5 = 1;
-	public static final byte SHA1 = 2;
-	public static final byte RIPEMD160 = 3;
-	public static final byte SHA256 = 8;
-	public static final byte SHA384 = 9;
-	public static final byte SHA512 = 10;
-	public static final byte SHA224 = 11;
+	public static final int MD5 = 1;
+	public static final int SHA1 = 2;
+	public static final int RIPEMD160 = 3;
+	public static final int SHA256 = 8;
+	public static final int SHA384 = 9;
+	public static final int SHA512 = 10;
+	public static final int SHA224 = 11;
 
 	/*
 	 * Return a message digest given an algorithm constant.

@@ -17,36 +17,36 @@ public class PacketReader {
 	/*
 	 * Packet header constants.
 	 */
-	public static final byte BASE_PACKET_TAG = (byte)0x80;
-	public static final byte NEW_PACKET_TAG = (byte)0x40;
-	public static final byte OLD_TAG_MASK = (byte)0x3C;
-	public static final byte OLD_LENGTH_TYPE_MASK = (byte)0x03;
-	public static final byte NEW_TAG_MASK = (byte)0x3F;
-	public static final byte PACKET_LENGTH_ONE = 0;
-	public static final byte PACKET_LENGTH_TWO = 1;
-	public static final byte PACKET_LENGTH_FOUR = 2;
-	public static final byte PACKET_LENGTH_IND = 3; // Not supported
+	public static final int BASE_PACKET_TAG = 0x80;
+	public static final int NEW_PACKET_TAG = 0x40;
+	public static final int OLD_TAG_MASK = 0x3C;
+	public static final int OLD_LENGTH_TYPE_MASK = 0x03;
+	public static final int NEW_TAG_MASK = 0x3F;
+	public static final int PACKET_LENGTH_ONE = 0;
+	public static final int PACKET_LENGTH_TWO = 1;
+	public static final int PACKET_LENGTH_FOUR = 2;
+	public static final int PACKET_LENGTH_IND = 3; // Not supported
 
 	/*
 	 * Packet types.
 	 */
-	public static final byte PUPLIC_KEY_ENCRYPTED_SESSION_KEY_PACKET= 1;
-	public static final byte SIGNATURE_PACKET= 2;
-	public static final byte SYMMETRIC_KEY_ENCRYPTED_SESSION_KEY_PACKET = 3;
-	public static final byte ONE_PASS_SIGNATURE_PACKET = 4;
-	public static final byte SECRET_KEY_PACKET = 5;
-	public static final byte PUBLIC_KEY_PACKET = 6;
-	public static final byte SECRET_SUBKEY_PACKET = 7;
-	public static final byte COMPRESSED_DATA_PACKET = 8;
-	public static final byte SYMMETRIC_ENCRYPTED_DATA_PACKET = 9;
-	public static final byte MARKER_PACKET = 10;
-	public static final byte LITERAL_DATA_PACKET = 11;
-	public static final byte TRUST_PACKET = 12;
-	public static final byte USER_ID_PACKET = 13;
-	public static final byte PUBLIC_SUBKEY_PACKET = 14;
-	public static final byte USER_ATTRIBUTE_PACKET = 17;
-	public static final byte SYMMETRIC_ENCRYPTED_INTEGRITY_PROTECTED_DATA_PACKET = 18;	// Gesundheit
-	public static final byte MODIFICATION_DETECTION_CODE_PACKET = 19;
+	public static final int PUPLIC_KEY_ENCRYPTED_SESSION_KEY_PACKET= 1;
+	public static final int SIGNATURE_PACKET= 2;
+	public static final int SYMMETRIC_KEY_ENCRYPTED_SESSION_KEY_PACKET = 3;
+	public static final int ONE_PASS_SIGNATURE_PACKET = 4;
+	public static final int SECRET_KEY_PACKET = 5;
+	public static final int PUBLIC_KEY_PACKET = 6;
+	public static final int SECRET_SUBKEY_PACKET = 7;
+	public static final int COMPRESSED_DATA_PACKET = 8;
+	public static final int SYMMETRIC_ENCRYPTED_DATA_PACKET = 9;
+	public static final int MARKER_PACKET = 10;
+	public static final int LITERAL_DATA_PACKET = 11;
+	public static final int TRUST_PACKET = 12;
+	public static final int USER_ID_PACKET = 13;
+	public static final int PUBLIC_SUBKEY_PACKET = 14;
+	public static final int USER_ATTRIBUTE_PACKET = 17;
+	public static final int SYMMETRIC_ENCRYPTED_INTEGRITY_PROTECTED_DATA_PACKET = 18;	// Gesundheit
+	public static final int MODIFICATION_DETECTION_CODE_PACKET = 19;
 
 	/*
 	 * The raw packet.
@@ -83,7 +83,7 @@ public class PacketReader {
 			packetLength += (lengthByte + 192);
 		}
 		else if (lengthByte < 255) {
-			// Partial packets. Yuck.
+			// Partial body length packets. Yuck.
 			readPartialPackets(in);
 			partial = true;
 		}
@@ -179,10 +179,10 @@ public class PacketReader {
 	}
 
 	/*
-	 * Recursive method for reading partial packets.
+	 * Read partial body length packets.
 	 */
 	private void readPartialPackets(InputStream in) {
-		
+		// I don't know how to handle this yet.
 	}
 
 }

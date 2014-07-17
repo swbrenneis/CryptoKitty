@@ -3,6 +3,8 @@
  */
 package org.cryptokitty.data;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 
 /**
@@ -24,6 +26,22 @@ public class MPI {
 	 * in length.
 	 */
 	private byte[] value;
+
+	/**
+	 * Creates an MPI from an input stream.
+	 */
+	public MPI(InputStream in) throws IOException {
+
+		byte[] pBytes = new byte[2];
+		in.read(pBytes);
+		precision = ((int)pBytes[0]) << 8;
+		precision = precision | ((int)pBytes[1]) & 0xff;
+
+		int mpiLength = (precision + 7) / 8;
+		value = new byte[mpiLength];
+		in.read(value);
+
+	}
 
 	/**
 	 * Takes a precision value and a byte array value. Assumes that the
