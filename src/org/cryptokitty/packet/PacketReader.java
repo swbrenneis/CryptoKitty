@@ -28,6 +28,27 @@ public class PacketReader {
 	public static final byte PACKET_LENGTH_IND = 3; // Not supported
 
 	/*
+	 * Packet types.
+	 */
+	public static final byte PUPLIC_KEY_ENCRYPTED_SESSION_KEY_PACKET= 1;
+	public static final byte SIGNATURE_PACKET= 2;
+	public static final byte SYMMETRIC_KEY_ENCRYPTED_SESSION_KEY_PACKET = 3;
+	public static final byte ONE_PASS_SIGNATURE_PACKET = 4;
+	public static final byte SECRET_KEY_PACKET = 5;
+	public static final byte PUBLIC_KEY_PACKET = 6;
+	public static final byte SECRET_SUBKEY_PACKET = 7;
+	public static final byte COMPRESSED_DATA_PACKET = 8;
+	public static final byte SYMMETRIC_ENCRYPTED_DATA_PACKET = 9;
+	public static final byte MARKER_PACKET = 10;
+	public static final byte LITERAL_DATA_PACKET = 11;
+	public static final byte TRUST_PACKET = 12;
+	public static final byte USER_ID_PACKET = 13;
+	public static final byte PUBLIC_SUBKEY_PACKET = 14;
+	public static final byte USER_ATTRIBUTE_PACKET = 17;
+	public static final byte SYMMETRIC_ENCRYPTED_INTEGRITY_PROTECTED_DATA_PACKET = 18;	// Gesundheit
+	public static final byte MODIFICATION_DETECTION_CODE_PACKET = 19;
+
+	/*
 	 * The raw packet.
 	 */
 	protected byte[] packet;
@@ -47,7 +68,7 @@ public class PacketReader {
 	/*
 	 * Read a new style packet
 	 */
-	private void readNewPacket(int tag, InputStream in)
+	private void readNewFormatPacket(int tag, InputStream in)
 			throws InvalidPacketException, IOException {
 
 		int lengthByte = in.read();
@@ -94,7 +115,7 @@ public class PacketReader {
 	/*
 	 * Read an old style packet
 	 */
-	private void readOldPacket(int tag, InputStream in)
+	private void readOldFormatPacket(int tag, InputStream in)
 			throws InvalidPacketException, IOException {
 
 		int lengthType = tag & OLD_LENGTH_TYPE_MASK;
@@ -149,10 +170,10 @@ public class PacketReader {
 		}
 
 		if ((tag & NEW_PACKET_TAG) != 0) {
-			readNewPacket(tag, in);
+			readNewFormatPacket(tag, in);
 		}
 		else {
-			readOldPacket(tag, in);
+			readOldFormatPacket(tag, in);
 		}
 
 	}
