@@ -137,11 +137,19 @@ public class SignaturePacket {
 			case KeyAlgorithms.RSA:
 			case KeyAlgorithms.RSA_SIGN:
 				rsaMPI = new MPI(in);
+				break;
+			case KeyAlgorithms.DSA:
+				dsaMPIr = new MPI(in);
+				dsaMPIs = new MPI(in);
+				break;
+			default:
+				throw new InvalidPacketException("Invalid signture key");
 			}
 		}
 		catch (IOException e) {
 			throw new InvalidPacketException(e);
 		}
+
 	}
 
 	/*
@@ -150,6 +158,11 @@ public class SignaturePacket {
 	 */
 	private void readV4Packet(byte[] packet)
 			throws InvalidPacketException {
+
+		signatureType = packet[1];
+		pkAlgorithm = packet[2];
+		hashAlgorithm = packet[3];
+		
 		
 	}
 
