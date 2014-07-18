@@ -46,10 +46,17 @@ public class KeyID {
 		byte[] encoded = new byte[8];
 		long encode = id;
 		for (int i = 7; i >= 0; i--) {
-			encoded[i] = (byte)(id & 0xff);
+			encoded[i] = (byte)(encode & 0xff);
 			encode = encode >> 8;
 		}
 		return encoded;
+	}
+
+	/*
+	 * Get the id value.
+	 */
+	public long getID() {
+		return id;
 	}
 
 }

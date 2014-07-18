@@ -34,8 +34,7 @@ public class MPI {
 
 		byte[] pBytes = new byte[2];
 		in.read(pBytes);
-		precision = ((int)pBytes[0]) << 8;
-		precision = precision | ((int)pBytes[1]) & 0xff;
+		precision = Scalar.decode(pBytes);
 
 		int mpiLength = (precision + 7) / 8;
 		value = new byte[mpiLength];
@@ -85,8 +84,9 @@ public class MPI {
 		for (int i = 0; i < value.length; ++i) {
 			encoded[i+2] = value[i];
 		}
-		encoded[0] = (byte)((precision >> 8) & 0xff);
-		encoded[1] = (byte)(precision & 0xff);
+		byte[] pb = Scalar.encode(precision);
+		encoded[0] = pb[0];
+		encoded[1] = pb[1];
 		return encoded;
 	}
 
