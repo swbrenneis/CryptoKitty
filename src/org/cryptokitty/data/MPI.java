@@ -64,7 +64,7 @@ public class MPI {
 		this.value = Arrays.copyOfRange(value, index, value.length);
 		
 		// Calculate the precision.
-		precision = this.value.length;
+		precision = (this.value.length - 1) * 8;
 		int modbits = 8;
 		int test = this.value[0];
 		while ((test & 0x80) == 0) {
