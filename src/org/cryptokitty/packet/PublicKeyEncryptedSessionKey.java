@@ -3,9 +3,8 @@
  */
 package org.cryptokitty.packet;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
+import java.io.InputStream;
 
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
@@ -15,6 +14,8 @@ import org.cryptokitty.keys.KeyAlgorithms;
 /**
  * @author Steve Brenneis
  *
+ * The encrypted session key. Encrypted using an RSA or ElGamal
+ * public key. See RFC 4880, section 5.1.
  */
 public class PublicKeyEncryptedSessionKey {
 
@@ -58,21 +59,19 @@ public class PublicKeyEncryptedSessionKey {
 	/**
 	 * Constructs a PKESK from a raw packet.
 	 */
-	public PublicKeyEncryptedSessionKey(byte[] packet)
+	public PublicKeyEncryptedSessionKey(InputStream in)
 			throws InvalidPacketException {
 
-		version = packet[0];
 		try {
-			id = new KeyID(Arrays.copyOfRange(packet, 1, 8));
-		}
-		catch (DataException e) {
-			throw new InvalidPacketException(e);
-		}
-		pkAlgorithm = packet[9];
-		keypacket = Arrays.copyOfRange(packet, 10, packet.length-1);
-		ByteArrayInputStream in = new ByteArrayInputStream(keypacket);
-		
-		try {
+			version = in.read();
+			try {
+				id = new KeyID(in);
+			}
+			catch (DataException e) {
+				throw new InvalidPacketException(e);
+			}
+
+			pkAlgorithm = in.read();		
 			switch (pkAlgorithm) {
 			case KeyAlgorithms.RSA:
 			case KeyAlgorithms.RSA_ENCRYPT:

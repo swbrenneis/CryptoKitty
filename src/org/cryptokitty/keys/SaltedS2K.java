@@ -26,11 +26,24 @@ public class SaltedS2K extends String2Key {
 	private byte[] salt;
 
 	/**
-	 * @param passPhrase
-	 * @param algorithm
-	 * @throws UnsupportedAlgorithmException
+	 * 
 	 */
-	public SaltedS2K(String passPhrase, byte algorithm, byte[] salt)
+	public SaltedS2K(int algorithm, byte[] salt)
+			throws UnsupportedAlgorithmException {
+		super(null, algorithm);
+		// Salt is always 8 bytes.
+		if (salt.length != 8) {
+			this.salt = Arrays.copyOf(salt, 8);
+		}
+		else {
+			this.salt = salt;
+		}
+	}
+
+	/**
+	 * 
+	 */
+	public SaltedS2K(String passPhrase, int algorithm, byte[] salt)
 			throws UnsupportedAlgorithmException {
 		super(passPhrase, algorithm);
 		// Salt is always 8 bytes.
@@ -128,7 +141,7 @@ public class SaltedS2K extends String2Key {
 	public byte[] getEncoded() {
 		byte[] encoded = new byte[10];
 		encoded[0] = 1;
-		encoded[1] = algorithm;
+		encoded[1] = (byte)algorithm;
 		System.arraycopy(salt, 0, encoded, 2, 8);
 		return encoded;
 	}

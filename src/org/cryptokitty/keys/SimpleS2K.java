@@ -24,11 +24,16 @@ import org.cryptokitty.digest.HashFactory;
 public class SimpleS2K extends String2Key {
 
 	/**
-	 * @param passPhrase
-	 * @param algorithm
-	 * @throws KeyException
+	 * 
 	 */
-	public SimpleS2K(String passPhrase, byte algorithm) throws KeyException {
+	public SimpleS2K(int algorithm) throws KeyException {
+		super(null, algorithm);
+	}
+
+	/**
+	 *
+	 */
+	public SimpleS2K(String passPhrase, int algorithm) throws KeyException {
 		super(passPhrase, algorithm);
 		// Nothing to do here.
 	}
@@ -114,7 +119,7 @@ public class SimpleS2K extends String2Key {
 	public byte[] getEncoded() {
 		byte[] encoded = new byte[2];
 		encoded[0] = 0;
-		encoded[1] = algorithm;
+		encoded[1] = (byte)algorithm;
 		return encoded;
 	}
 

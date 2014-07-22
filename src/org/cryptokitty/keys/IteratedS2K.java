@@ -29,19 +29,37 @@ public class IteratedS2K extends String2Key {
 	/*
 	 * Count derivative. See RFC 4880, section 3.7.1.3
 	 */
-	private byte c;
+	private int c;
 
 	/*
 	 * Iterative count value. This is not a count of iterations, per se.
 	 * It is the number of times that the salt + passphrase bytes are fed
 	 * to the digest. 
 	 */
-	private byte count;
+	private int count;
 
 	/**
-	 * @param passPhrase
-	 * @param algorithm
-	 * @throws UnsupportedAlgorithmException
+	 * 
+	 */
+	public IteratedS2K(int algorithm, byte[] salt, int c)
+			throws UnsupportedAlgorithmException {
+		super(null, algorithm);
+		// Salt is always 8 bytes.
+		if (salt.length != 8) {
+			this.salt = Arrays.copyOf(salt, 8);
+		}
+		else {
+			this.salt = salt;
+		}
+
+		this.c = c;
+		// Now calculate count. This is really lovely. The RFC gives no particular
+		// reason for this algorithm.
+		count = (byte)((16 + (c & 0x0f)) << ((c >> 4) +6));
+	}
+
+	/**
+	 * 
 	 */
 	public IteratedS2K(String passPhrase, byte algorithm, byte[] salt)
 			throws UnsupportedAlgorithmException {
@@ -164,9 +182,9 @@ public class IteratedS2K extends String2Key {
 	public byte[] getEncoded() {
 		byte[] encoded = new byte[11];
 		encoded[0] = 3;
-		encoded[1] = algorithm;
+		encoded[1] = (byte)algorithm;
 		System.arraycopy(salt, 0, encoded, 2, 8);
-		encoded[10] = c;
+		encoded[10] = (byte)c;
 		return encoded;
 	}
 
