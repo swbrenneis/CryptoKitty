@@ -5,11 +5,13 @@ package org.cryptokitty.packet;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
 import org.cryptokitty.data.MPI;
+import org.cryptokitty.data.Scalar;
 import org.cryptokitty.data.Time;
 import org.cryptokitty.keys.KeyAlgorithms;
 
@@ -61,6 +63,11 @@ public class SignaturePacket {
 	private int hashAlgorithm;
 
 	/*
+	 * Hashed subpackets.
+	 */
+	private SignatureSubpacketSet hashedSubpackets;
+
+	/*
 	 * PublicKey algorithm.
 	 */
 	private int pkAlgorithm;
@@ -81,6 +88,11 @@ public class SignaturePacket {
 	private KeyID signer;
 
 	/*
+	 * Unhashed subpackets.
+	 */
+	private SignatureSubpacketSet unhashedSubpackets;
+
+	/*
 	 * Version number.
 	 */
 	private int version;
@@ -88,16 +100,24 @@ public class SignaturePacket {
 	/**
 	 * Constructs a signature packet from a raw packet.
 	 */
-	public SignaturePacket(byte[] packet)
+	public SignaturePacket(InputStream in)
 			throws InvalidPacketException {
 
-		version = packet[0];
+		/*
+		 * TODO Check variable validity.
+		 */
+		try {
+			version = in.read();
+		}
+		catch (IOException e) {
+			throw new InvalidPacketException(e);
+		}
 
 		if (version == 3) {
-			readV3Packet(packet);
+			readV3Packet(in);
 		}
 		else if (version == 4) {
-			readV4Packet(packet);
+			readV4Packet(in);
 		}
 		else {
 			throw new InvalidPacketException("Illegal signature version");
@@ -109,30 +129,29 @@ public class SignaturePacket {
 	 * Read a version 3 signature packet. Byte 0 of the raw
 	 * packet is the version number.
 	 */
-	private void readV3Packet(byte[] packet)
+	private void readV3Packet(InputStream in)
 			throws InvalidPacketException {
 
-		// This is supposed to be a length byte for the signature algorithm
-		// and creation time. It must always be 5, so...
-		if (packet[1] != 5) {
-			throw new InvalidPacketException("Illegal data length");
-		}
-	
-		signatureType = packet[2];
 		try {
-			createTime = new Time(Arrays.copyOfRange(packet, 3, 6));
-			signer = new KeyID(Arrays.copyOfRange(packet, 7, 14));
-		}
-		catch (DataException e) {
-			throw new InvalidPacketException(e);
-		}
+			// This is supposed to be a length byte for the signature algorithm
+			// and creation time. It must always be 5, so...
+			int length = in.read();
+			if (length != 5) {
+				throw new InvalidPacketException("Illegal data length");
+			}
 
-		pkAlgorithm = packet[15];
-		hashAlgorithm = packet[16];
+			int signatureType = in.read();
+			try {
+				createTime = new Time(in);
+				signer = new KeyID(in);
+			}
+			catch (DataException e) {
+				throw new InvalidPacketException(e);
+			}
 
-		ByteArrayInputStream in =
-				new ByteArrayInputStream(Arrays.copyOfRange(packet, 16, packet.length-1));
-		try {
+			pkAlgorithm = in.read();
+			hashAlgorithm = in.read();
+
 			switch (pkAlgorithm) {
 			case KeyAlgorithms.RSA:
 			case KeyAlgorithms.RSA_SIGN:
@@ -156,14 +175,33 @@ public class SignaturePacket {
 	 * Read a version 4 signature packet. Byte 0 of the raw
 	 * packet is the version number.
 	 */
-	private void readV4Packet(byte[] packet)
+	private void readV4Packet(InputStream in)
 			throws InvalidPacketException {
 
-		signatureType = packet[1];
-		pkAlgorithm = packet[2];
-		hashAlgorithm = packet[3];
-		
-		
+		try {
+			signatureType = in.read();
+			pkAlgorithm = in.read();
+			hashAlgorithm = in.read();
+
+			Scalar subpacketLength = new Scalar(in);
+			byte[] sBytes = new byte[subpacketLength.getValue()];
+			in.read(sBytes);
+			ByteArrayInputStream subin = new ByteArrayInputStream(sBytes);
+			hashedSubpackets = new SignatureSubpacketSet(subin);
+
+			subpacketLength = new Scalar(in);
+			sBytes = new byte[subpacketLength.getValue()];
+			in.read(sBytes);
+			subin = new ByteArrayInputStream(sBytes);
+			unhashedSubpackets = new SignatureSubpacketSet(subin);
+		}
+		catch (IOException e) {
+			throw new InvalidPacketException(e);
+		}
+		catch (DataException e) {
+			throw new InvalidPacketException(e);
+		}
+
 	}
 
 }

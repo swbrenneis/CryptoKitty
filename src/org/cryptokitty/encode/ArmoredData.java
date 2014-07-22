@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
+import org.cryptokitty.packet.PacketReader;
+
 /**
  * @author Steve Brenneis
  *
@@ -40,11 +42,6 @@ public class ArmoredData {
 	 */
 	private ArrayList<String> lines;
 
-	/*
-	 * Armored data type.
-	 */
-	private int type;
-
 	/**
 	 * Empty object for decoding.
 	 */
@@ -67,7 +64,7 @@ public class ArmoredData {
 		long crcValue = CRC24_INIT;
 		int index = 0;
 		while (index < data.length) {
-			crcValue ^= data[index++] << 16;
+			crcValue ^= (data[index++] << 16) & 0xff0000;
 			for (int i = 0; i < 8; i++) {
 				crcValue = crcValue << 1;
 				if ((crcValue & 0x1000000) != 0) {
@@ -100,12 +97,22 @@ public class ArmoredData {
 			while (line.length() > 0) {
 				line = reader.readLine();
 			}
+			
+			//Load the encoded data into a byte array.
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			line = reader.readLine();
+			while (line.charAt(0) != '=') {
+				bOut.write(line.getBytes());
+				line = reader.readLine();
+			}
+
+			ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
 
 			// Decodes the stream to the CRC delimiter.
 			Radix64 decoder = new Radix64();
-			decoder.decode(in, bytesOut);
+			decoder.decode(bIn, bytesOut);
+			data = bytesOut.toByteArray();
 
-			line = reader.readLine();
 			long crcValue = decoder.decodeCRC(line);
 			if (crcValue != crc()) {
 				throw new EncodingException("CRC error");
@@ -125,16 +132,16 @@ public class ArmoredData {
 
 		try {
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
-			writer.newLine();; // Makes sure the header begins on a new line.
 			// TODO Figure out the real cases for different headers.
 			String header = "-----";
 			String footer = "-----";
-			switch (type) {
+			int tag = getTag();
+			switch (tag) {
 			case 1:
 				header += "BEGIN PGP MESSAGE";
 				footer += "END PGP MESSAGE";
 				break;
-			case 2:
+			case PacketReader.PUBLIC_KEY_PACKET:
 				header += "BEGIN PGP PUBLIC KEY BLOCK";
 				footer += "END PGP PUBLIC KEY BLOCK";
 				break;
@@ -142,7 +149,7 @@ public class ArmoredData {
 				header += "BEGIN PGP PRIVATE KEY BLOCK";
 				footer += "END PGP PRIVATE KEY BLOCK";
 				break;
-			case 4:
+			case 11:
 				header += "BEGIN PGP MESSAGE, PART X/Y";
 				footer += "END PGP MESSAGE, PART X/Y";
 				break;
@@ -150,7 +157,8 @@ public class ArmoredData {
 				header += "BEGIN PGP MESSAGE, PART X";
 				footer += "END PGP MESSAGE, PART X";
 				break;
-			case 6:
+			case PacketReader.SIGNATURE_PACKET:
+			case PacketReader.ONE_PASS_SIGNATURE_PACKET:
 				header += "BEGIN PGP SIGNATURE";
 				footer += "END PGP SIGNATURE";
 				break;
@@ -172,7 +180,6 @@ public class ArmoredData {
 			String crcString = encoder.encodeCRC(crc());
 			writer.write(crcString);
 			writer.newLine();
-			writer.newLine();
 			writer.write(footer);
 			writer.newLine();
 			writer.flush();
@@ -189,6 +196,22 @@ public class ArmoredData {
 	 */
 	public byte[] getData() {
 		return data;
+	}
+
+	/*
+	 * Get the packet tag.
+	 */
+	private int getTag() {
+		int type = data[0] & 0x7f;
+		int tag;
+		if ((type & 0x40) != 0) {
+			// New format tag.
+			tag = type & 0x3f;
+		}
+		else {
+			tag = (type >> 2) & 0x0f;
+		}
+		return tag;
 	}
 
 }

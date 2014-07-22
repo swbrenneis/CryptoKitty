@@ -3,6 +3,9 @@
  */
 package org.cryptokitty.data;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * @author Steve Brenneis
  *
@@ -22,6 +25,26 @@ public class Time {
 	 */
 	public Time() {
 		time = System.currentTimeMillis() / 1000;
+	}
+
+	/**
+	 * Creates a time representation from an input stream.
+	 */
+	public Time(InputStream in)
+		throws DataException {
+		byte[] timeBytes = new byte[4];
+		try {
+			in.read(timeBytes);
+		}
+		catch (IOException e) {
+			throw new DataException(e);
+		}
+
+		time = 0;
+		for (byte b : timeBytes) {
+			time = time << 8;
+			time = time + (((int)b) & 0xff);
+		}
 	}
 
 	/**

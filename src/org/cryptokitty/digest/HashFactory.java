@@ -27,7 +27,7 @@ public class HashFactory {
 	/*
 	 * Return a message digest given an algorithm constant.
 	 */
-	public static Hash getDigest(byte algorithm)
+	public static Hash getDigest(int algorithm)
 			throws UnsupportedAlgorithmException {
 
 		try {

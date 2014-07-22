@@ -3,7 +3,11 @@
  */
 package org.cryptokitty.keys;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.packet.InvalidPacketException;
 
 /**
  * @author Steve Brenneis
@@ -18,12 +22,48 @@ public abstract class String2Key {
 	 */
 	public static final byte SIMPLE = 0;
 	public static final byte SALTED = 1;
-	public static final byte ITERATED = 0;
+	public static final byte ITERATED = 3;
+
+	/*
+	 * Get an S2K specifier from an input stream.
+	 */
+	public static String2Key getS2K(InputStream in)
+			throws InvalidPacketException {
+		try {
+			int s2kType = in.read();
+			switch (s2kType) {
+			case SIMPLE:
+				return new SimpleS2K(in.read());
+			case SALTED:
+				{
+					int algorithm = in.read();
+					byte[] salt = new byte[8];
+					in.read(salt);
+					return new SaltedS2K(algorithm, salt);
+				}
+			case ITERATED:
+				{
+					int algorithm = in.read();
+					byte[] salt = new byte[8];
+					in.read(salt);
+					return new IteratedS2K(algorithm, salt, in.read());
+				}
+			default:
+				throw new InvalidPacketException("Invalid string to key specifier");
+			}
+		}
+		catch (IOException e) {
+			throw new InvalidPacketException(e);
+		}
+		catch (KeyException e) {
+			throw new InvalidPacketException(e);
+		}
+	}
 
 	/*
 	 * Hash algoritm.
 	 */
-	protected byte algorithm;
+	protected int algorithm;
 
 	/*
 	 * Passphrase for the hash.
@@ -33,7 +73,7 @@ public abstract class String2Key {
 	/**
 	 * 
 	 */
-	protected String2Key(String passPhrase, byte algorithm)
+	protected String2Key(String passPhrase, int algorithm)
 			throws UnsupportedAlgorithmException {
 		this.passPhrase = passPhrase;
 		switch (algorithm) {

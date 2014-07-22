@@ -3,6 +3,8 @@
  */
 package org.cryptokitty.data;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 
 /**
@@ -22,6 +24,25 @@ public class KeyID {
 	 */
 	public KeyID(long id) {
 		this.id = id;
+	}
+
+	/**
+	 * Creates a Key ID from an input stream.
+	 */
+	public KeyID (InputStream in)
+			throws DataException {
+
+		byte[] keyBytes = new byte[8];
+		try {
+			in.read(keyBytes);
+		}
+		catch (IOException e) {
+			throw new DataException(e);
+		}
+		
+		BigInteger bi = new BigInteger(keyBytes);
+		id = bi.longValue();
+
 	}
 
 	/**

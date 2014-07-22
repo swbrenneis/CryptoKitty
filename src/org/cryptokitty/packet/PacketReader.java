@@ -3,11 +3,16 @@
  */
 package org.cryptokitty.packet;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
+
+import org.cryptokitty.encode.ArmoredData;
+import org.cryptokitty.encode.EncodingException;
 
 /**
- * @author stevebrenneis
+ * @author Steve Brenneis
  *
  * This class fulfills the general PGP packet implementation.
  * See RFC 4880, section 4.2.
@@ -63,6 +68,20 @@ public class PacketReader {
 	 */
 	protected PacketReader() {
 		// TODO Auto-generated constructor stub
+	}
+
+	/*
+	 * Returns the whole packet.
+	 */
+	public byte[] getPacket() {
+		return packet;
+	}
+
+	/*
+	 * Returns the packet tag.
+	 */
+	public int getPacketTag() {
+		return packetTag;
 	}
 
 	/*
@@ -161,19 +180,37 @@ public class PacketReader {
 	 */
 	protected void readPacket(InputStream in)
 			throws IOException, PacketException {
-		
+
+		// Check to see if the input is armored.
+		PushbackInputStream pbi = new PushbackInputStream(in);
+		InputStream decoded = pbi;
+		byte[] header = new byte[5];
+		pbi.read(header);
+		String s = new String(header);
+		pbi.unread(header);
+		if (s == "-----") {
+			// Armored input
+			ArmoredData armored = new ArmoredData();
+			try {
+				armored.decode(pbi);
+				decoded = new ByteArrayInputStream(armored.getData());
+			}
+			catch (EncodingException e) {
+				throw new InvalidPacketException(e);
+			}
+		}
 		// Get the packet tag.
-		int tag = in.read();
+		int tag = decoded.read();
 		// Check to see if it is a packet tag.
 		if ((tag & BASE_PACKET_TAG) == 0) {
 			throw new PacketException("Not a packet tag");
 		}
 
 		if ((tag & NEW_PACKET_TAG) != 0) {
-			readNewFormatPacket(tag, in);
+			readNewFormatPacket(tag, decoded);
 		}
 		else {
-			readOldFormatPacket(tag, in);
+			readOldFormatPacket(tag, decoded);
 		}
 
 	}

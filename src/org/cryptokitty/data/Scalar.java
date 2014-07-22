@@ -3,6 +3,9 @@
  */
 package org.cryptokitty.data;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * @author Steve Brenneis
  *
@@ -26,6 +29,24 @@ public class Scalar {
 	 * The scalar value.
 	 */
 	private int value;
+
+	/**
+	 * Create a scalar from an input stream.
+	 */
+	public Scalar(InputStream in)
+		throws DataException {
+		byte[] sBytes = new byte[2];
+		try {
+			in.read(sBytes);
+		}
+		catch (IOException e) {
+			throw new DataException(e);
+		}
+
+		value = (sBytes[0] & 0xff);
+		value = value << 8;
+		value |= (sBytes[1] & 0xff);		
+	}
 
 	/**
 	 * Create a scalar given and integer value.
