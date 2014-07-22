@@ -59,7 +59,7 @@ public class Time {
 		time = 0;
 		for (byte b : octets) {
 			time = time << 8;
-			time = time + (((int)b) & 0xff);
+			time = time |= (b & 0xff);
 		}
 	}
 
@@ -75,4 +75,12 @@ public class Time {
 		}
 		return encoded;
 	}
+
+	/*
+	 * Get the time value.
+	 */
+	public long getTime() {
+		return time;
+	}
+
 }

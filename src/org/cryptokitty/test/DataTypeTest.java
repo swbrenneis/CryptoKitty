@@ -3,9 +3,14 @@
  */
 package org.cryptokitty.test;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
+import org.cryptokitty.data.MPI;
 import org.cryptokitty.data.Scalar;
+import org.cryptokitty.data.Time;
 
 /**
  * @author Steve Brenneis
@@ -73,9 +78,73 @@ public class DataTypeTest {
 				System.out.println("s3 = " + String.valueOf(s3));
 			}
 
+			byte[] mpib1 = { 0, 19, 0x07, 0x40, 0x20 };
+			ByteArrayInputStream in1 = new ByteArrayInputStream(mpib1);
+			MPI mpi1 = new MPI(in1);
+			byte[] enc1 = mpi1.getEncoded();
+			if (mpib1.length != enc1.length) {
+				System.out.println("MPI conversion 1 failed");
+				System.out.println("mpib1 length = " + String.valueOf(mpib1.length)
+									+ " enc1 length = " + String.valueOf(enc1.length));
+				throw new DataException("Conversion failure");
+			}
+			for (int i = 0; i < mpib1.length; ++i) {
+				if (mpib1[i] != enc1[i]) {
+					System.out.println("MPI conversion 1 failed");
+					System.out.println("mpib1[i] = " + String.valueOf(mpib1[i])
+										+ " enc1[i] = " + String.valueOf(enc1[i]));
+					throw new DataException("Conversion failure");
+				}
+			}
+			System.out.println("MPI conversion 1 success!");
+
+			byte[] mpib2 = { 0x07, 0x40, 0x20 };
+			MPI mpi2 = new MPI(mpib2);
+			enc1 = mpi2.getEncoded();
+			for (int i = 0; i < mpib1.length; ++i) {
+				if (mpib1[i] != enc1[i]) {
+					System.out.println("MPI conversion 2 failed");
+					System.out.println("mpib1[i] = " + String.valueOf(mpib1[i])
+										+ " enc1[i] = " + String.valueOf(enc1[i]));
+					throw new DataException("Conversion failure");
+				}
+			}
+			System.out.println("MPI conversion 2 success!");
+
+			byte[] n1 = new byte[4];
+			long now = System.currentTimeMillis() / 1000;
+			long enc = now;
+			for (int b = 3; b >= 0; b--) {
+				n1[b] = (byte)(enc & 0xff);
+				enc = enc >> 8;
+			}
+			Time tm1 = new Time();
+			byte[] tb1 = tm1.getEncoded();
+			Time tm2 = new Time(n1);
+			long t1 = tm2.getTime();
+			for (int i = 0; i < n1.length; ++i) {
+				if (n1[i] != tb1[i]) {
+					System.out.println("Time conversion 1 failed");
+					System.out.println("n1[i] = " + String.valueOf(n1[i])
+										+ " tb1[i] = " + String.valueOf(tb1[i]));
+					throw new DataException("Conversion failure");
+				}
+			}
+			System.out.println("Time conversion 1 success!");
+			if (t1 != now) {
+				System.out.println("Time conversion 2 failed");
+				System.out.println("now = " + String.valueOf(now)
+									+ " t1 = " + String.valueOf(t1));
+				throw new DataException("Conversion failure");
+			}
+			System.out.println("Time conversion 2 success!");
+
+		}
+		catch (IOException e) {
+			System.err.println(e.getMessage());
 		}
 		catch (DataException e) {
-			System.err.println("Bad conversion");
+			System.err.println(e);
 		}
 		
 	}
