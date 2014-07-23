@@ -165,6 +165,9 @@ public class SignaturePacket {
 				throw new InvalidPacketException("Invalid signture key");
 			}
 		}
+		catch (DataException e) {
+			throw new InvalidPacketException(e);
+		}
 		catch (IOException e) {
 			throw new InvalidPacketException(e);
 		}

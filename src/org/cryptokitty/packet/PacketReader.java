@@ -66,8 +66,15 @@ public class PacketReader {
 	/**
 	 * 
 	 */
-	protected PacketReader() {
+	public PacketReader() {
 		// TODO Auto-generated constructor stub
+	}
+
+	/*
+	 * Returns a byte array input stream based on the packet array.
+	 */
+	public InputStream getInputStream() {
+		return new ByteArrayInputStream(packet);
 	}
 
 	/*
@@ -178,17 +185,16 @@ public class PacketReader {
 	/*
 	 * Read a packet in from a stream.
 	 */
-	protected void readPacket(InputStream in)
+	public void readPacket(InputStream in)
 			throws IOException, PacketException {
 
 		// Check to see if the input is armored.
 		PushbackInputStream pbi = new PushbackInputStream(in);
 		InputStream decoded = pbi;
-		byte[] header = new byte[5];
-		pbi.read(header);
-		String s = new String(header);
-		pbi.unread(header);
-		if (s == "-----") {
+//		byte[] header = new byte[5];
+		int first = pbi.read();
+		pbi.unread(first);
+		if (first == '-') {
 			// Armored input
 			ArmoredData armored = new ArmoredData();
 			try {

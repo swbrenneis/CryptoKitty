@@ -11,7 +11,7 @@ import java.io.InputStream;
  * A public subkey packet is identical to a public key packet.
  * This class is meant to differentiate the two. It may disappear.
  */
-public class PublicSubkey extends PublicKey {
+public class PublicSubkey extends PublicKeyPacket {
 
 	/**
 	 * @param in

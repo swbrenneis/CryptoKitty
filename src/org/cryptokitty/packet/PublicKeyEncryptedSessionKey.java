@@ -85,6 +85,9 @@ public class PublicKeyEncryptedSessionKey {
 				throw new InvalidPacketException("Invalid public key algorithm");
 			}
 		}
+		catch (DataException e) {
+			throw new InvalidPacketException("Invalid public key format");
+		}
 		catch (IOException e) {
 			throw new InvalidPacketException("Invalid public key format");
 		}

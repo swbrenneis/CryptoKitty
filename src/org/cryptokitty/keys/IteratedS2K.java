@@ -22,6 +22,11 @@ import org.cryptokitty.digest.HashFactory;
 public class IteratedS2K extends String2Key {
 
 	/*
+	 * Exponent bias for calculating hashing iterations.
+	 */
+	private static final int EXPBIAS = 6;
+
+	/*
 	 * Hashing salt.
 	 */
 	private byte[] salt;
@@ -36,14 +41,14 @@ public class IteratedS2K extends String2Key {
 	 * It is the number of times that the salt + passphrase bytes are fed
 	 * to the digest. 
 	 */
-	private int count;
+	private long count;
 
 	/**
 	 * 
 	 */
-	public IteratedS2K(int algorithm, byte[] salt, int c)
+	public IteratedS2K(String passPhrase, int algorithm, byte[] salt, int c)
 			throws UnsupportedAlgorithmException {
-		super(null, algorithm);
+		super(passPhrase, algorithm);
 		// Salt is always 8 bytes.
 		if (salt.length != 8) {
 			this.salt = Arrays.copyOf(salt, 8);
@@ -55,7 +60,10 @@ public class IteratedS2K extends String2Key {
 		this.c = c;
 		// Now calculate count. This is really lovely. The RFC gives no particular
 		// reason for this algorithm.
-		count = (byte)((16 + (c & 0x0f)) << ((c >> 4) +6));
+		long first = 16 + (c & 0x0f);
+		long second = (c >> 4) + EXPBIAS;
+		count = first << second;
+//		count = (byte)((16 + (c & 0x0f)) << ((c >> 4) +6));
 	}
 
 	/**
@@ -80,14 +88,16 @@ public class IteratedS2K extends String2Key {
 		}
 		// Now calculate count. This is really lovely. The RFC gives no particular
 		// reason for this algorithm.
-		count = (byte)((16 + (c & 0x0f)) << ((c >> 4) +6));
+		long first = 16 + (c & 0x0f);
+		long second = (c >> 4) + EXPBIAS;
+		count = first << second;
 	}
 
 	/*
 	 * Create the iterative hash context. We are not iteratively feeding the hash
 	 * result to the digest. We are creating an array of salt + passphrase times
 	 * the iteration count.
-	 */
+
 	private byte[] createDigestContext() {
 		byte[] pass = passPhrase.getBytes(Charset.forName("UTF-8"));
 		int feed = salt.length + pass.length;
@@ -102,7 +112,7 @@ public class IteratedS2K extends String2Key {
 		}
 		return hashContext;
 	}
-
+	 */
 	/* (non-Javadoc)
 	 * @see org.cryptokitty.keys.String2Key#generateKey(int)
 	 */
@@ -122,56 +132,30 @@ public class IteratedS2K extends String2Key {
 			return null;
 		}
 
-		int keysize = bitsize / 8;
-		int hashsize = digest.getDigestLength();
-		byte[] context = createDigestContext();
-		if (keysize == hashsize) {
-			// Good to go.
-			return digest.digest(context);
-		}
-		else if (keysize < hashsize) {
-			// Truncate to left-most (most significant) bytes.
-			byte[] hash = digest.digest(context);
-			return Arrays.copyOfRange(hash, 0, keysize-1);
-		}
-		else {
-			// Figure out how many hashes we need.
-			int hashes = keysize / hashsize;
-			if (keysize % hashsize > 0) {
-				hashes++;
+		byte[] pBytes = passPhrase.getBytes(Charset.forName("UTF-8"));
+		digest.update(salt);
+		digest.update(pBytes);
+
+		long index = count - (salt.length + pBytes.length);
+		while (index > 0) {
+			if (index < salt.length) {
+				digest.update(salt, 0, (int)index);
+				index = 0;
 			}
-			// See the RFC, section 3.7.1.3 for a description of this nasty
-			// bit of business.
-			byte[] key = new byte[keysize];
-			// The first hash is not padded.
-			byte[] hash = digest.digest(context);
-			digest.reset();
-			System.arraycopy(hash, 0, key, 0, hashsize);
-			// Get indexes and sizes ready for the iterative padding.
-			hashes--;
-			int pad = 1;
-			int pos = hashsize;
-			int size = keysize - hashsize;
-			// Generate hashes to fill the remainder of the key.
-			while (hashes > 0) {
-				// Create the byte array of zeros for padding the digest.
-				byte[] padding = new byte[pad];
-				Arrays.fill(padding, (byte)0);
-				// Add the padding to the digest.
-				digest.update(padding);
-				// Add the passphrase.
-				hash = digest.digest(context);
-				digest.reset();
-				// Copy the full or partial has result into the key.
-				System.arraycopy(hash, 0, key, pos, size);
-				// Update all the indexes and sizes.
-				hashes--;
-				pos += hashsize;
-				size -= hashsize;
-				pad++;
+			else {
+				digest.update(salt);
+				index -= salt.length;
+				if (index < pBytes.length) {
+					digest.update(pBytes, 0, (int)index);
+					index = 0;
+				}
+				else {
+					digest.update(pBytes);
+					index -= pBytes.length;
+				}
 			}
-			return key;
 		}
+		return digest.digest();
 
 	}
 

@@ -24,13 +24,6 @@ import org.cryptokitty.digest.HashFactory;
 public class SimpleS2K extends String2Key {
 
 	/**
-	 * 
-	 */
-	public SimpleS2K(int algorithm) throws KeyException {
-		super(null, algorithm);
-	}
-
-	/**
 	 *
 	 */
 	public SimpleS2K(String passPhrase, int algorithm) throws KeyException {
@@ -44,9 +37,6 @@ public class SimpleS2K extends String2Key {
 	@Override
 	public byte[] generateKey(int bitsize) {
 
-		// It probably isn't necessary to UTF-8 encode this, but we
-		// will do it for consistency with the RFC.
-		byte[] pass = passPhrase.getBytes(Charset.forName("UTF-8"));
 		Hash digest = null;
 		try {
 			digest = HashFactory.getDigest(algorithm);
@@ -60,55 +50,8 @@ public class SimpleS2K extends String2Key {
 			return null;
 		}
 
-		int keysize = bitsize / 8;
-		int hashsize = digest.getDigestLength();
-		if (keysize == hashsize) {
-			// Good to go.
-			return digest.digest(pass);
-		}
-		else if (keysize < hashsize) {
-			// Truncate to left-most (most significant) bytes.
-			byte[] hash = digest.digest(pass);
-			return Arrays.copyOfRange(hash, 0, keysize-1);
-		}
-		else {
-			// Figure out how many hashes we need.
-			int hashes = keysize / hashsize;
-			if (keysize % hashsize > 0) {
-				hashes++;
-			}
-			// See the RFC, section 3.7.1.1 for a description of this nasty
-			// bit of business.
-			byte[] key = new byte[keysize];
-			// The first hash is not padded.
-			byte[] hash = digest.digest(pass);
-			digest.reset();
-			System.arraycopy(hash, 0, key, 0, hashsize);
-			// Get indexes and sizes ready for the iterative padding.
-			hashes--;
-			int pad = 1;
-			int pos = hashsize;
-			int size = keysize - hashsize;
-			// Generate hashes to fill the remainder of the key.
-			while (hashes > 0) {
-				// Create the byte array of zeros for padding the digest.
-				byte[] padding = new byte[pad];
-				Arrays.fill(padding, (byte)0);
-				// Add the padding to the digest.
-				digest.update(padding);
-				// Add the passphrase.
-				hash = digest.digest(pass);
-				digest.reset();
-				// Copy the full or partial has result into the key.
-				System.arraycopy(hash, 0, key, pos, size);
-				// Update all the indexes and sizes.
-				hashes--;
-				pos += hashsize;
-				size -= hashsize;
-				pad++;
-			}
-			return key;
-		}
+		byte[] pBytes = passPhrase.getBytes(Charset.forName("UTF-8"));
+		return digest.digest(pBytes);
 
 	}
 
