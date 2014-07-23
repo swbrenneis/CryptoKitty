@@ -8,7 +8,7 @@ import java.io.InputStream;
 
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar;
+import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.keys.KeyAlgorithms;
 import org.cryptokitty.keys.String2Key;
 
@@ -23,7 +23,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 	/*
 	 * Checksum (sum modulus 65536) of cleartext key material.
 	 */
-	protected Scalar checksum;
+	protected Scalar16 checksum;
 
 	/*
 	 * DSA secret exponent x.
@@ -158,7 +158,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 			}
 			else {
 				// s2kUsage 0 or 255. All others deprecated and unsupported.
-				checksum = new Scalar(in);
+				checksum = new Scalar16(in);
 			}
 
 		}

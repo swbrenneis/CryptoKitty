@@ -17,17 +17,46 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
+import org.cryptokitty.data.Scalar32;
+
 /**
  * @author Steve Brenneis
  *
+ * Implementation of the CAST-128 cipher (aka CAST5).
+ * See RFC 2144 for details.
  */
 public class CAST5Cipher extends CipherSpi {
+
+	/*
+	 * Byte array for holding intermediate results.
+	 */
+	private byte[] intermediate;
+
+	/*
+	 * Initialization vector for feedback chaining modes.
+	 */
+	private byte[] iv;
+
+	/*
+	 * The symmetric Key. 128 bits.
+	 */
+	private Key key;
+
+	/*
+	 * Masking key. 32 bits.
+	 */
+	private long Km;
+
+	/*
+	 * Rotation key. 5 bits.
+	 */
+	private int Kr;
 
 	/**
 	 * 
 	 */
 	public CAST5Cipher() {
-		// TODO Auto-generated constructor stub
+		intermediate = new byte[8];
 	}
 
 	/* (non-Javadoc)
@@ -56,17 +85,15 @@ public class CAST5Cipher extends CipherSpi {
 	 */
 	@Override
 	protected int engineGetBlockSize() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 8;
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineGetIV()
+	/*
+	 * Get the initialization vector used for chaining modes.
 	 */
 	@Override
 	protected byte[] engineGetIV() {
-		// TODO Auto-generated method stub
-		return null;
+		return iv;
 	}
 
 	/* (non-Javadoc)
@@ -91,7 +118,7 @@ public class CAST5Cipher extends CipherSpi {
 	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.SecureRandom)
 	 */
 	@Override
-	protected void engineInit(int arg0, Key arg1, SecureRandom arg2)
+	protected void engineInit(int opmode, Key key, SecureRandom random)
 			throws InvalidKeyException {
 		// TODO Auto-generated method stub
 
@@ -101,8 +128,8 @@ public class CAST5Cipher extends CipherSpi {
 	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.spec.AlgorithmParameterSpec, java.security.SecureRandom)
 	 */
 	@Override
-	protected void engineInit(int arg0, Key arg1, AlgorithmParameterSpec arg2,
-			SecureRandom arg3) throws InvalidKeyException,
+	protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params,
+			SecureRandom random) throws InvalidKeyException,
 			InvalidAlgorithmParameterException {
 		// TODO Auto-generated method stub
 
@@ -112,8 +139,8 @@ public class CAST5Cipher extends CipherSpi {
 	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.AlgorithmParameters, java.security.SecureRandom)
 	 */
 	@Override
-	protected void engineInit(int arg0, Key arg1, AlgorithmParameters arg2,
-			SecureRandom arg3) throws InvalidKeyException,
+	protected void engineInit(int opmode, Key key, AlgorithmParameters params,
+			SecureRandom random) throws InvalidKeyException,
 			InvalidAlgorithmParameterException {
 		// TODO Auto-generated method stub
 
@@ -123,7 +150,7 @@ public class CAST5Cipher extends CipherSpi {
 	 * @see javax.crypto.CipherSpi#engineSetMode(java.lang.String)
 	 */
 	@Override
-	protected void engineSetMode(String arg0) throws NoSuchAlgorithmException {
+	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
 		// TODO Auto-generated method stub
 
 	}
@@ -132,7 +159,7 @@ public class CAST5Cipher extends CipherSpi {
 	 * @see javax.crypto.CipherSpi#engineSetPadding(java.lang.String)
 	 */
 	@Override
-	protected void engineSetPadding(String arg0) throws NoSuchPaddingException {
+	protected void engineSetPadding(String padding) throws NoSuchPaddingException {
 		// TODO Auto-generated method stub
 
 	}
@@ -156,4 +183,14 @@ public class CAST5Cipher extends CipherSpi {
 		return 0;
 	}
 
+	/**
+	 * Round function 1. See RFC 2144, section 2.2, Non-identical rounds. The
+	 * function is given as:
+	 * 
+	 * I = ((Kmi + D) <<< Kri)
+	 * f = ((S1[Ia] ^ S2[Ib]) - S3[Ic]) + S4[Id]
+	 */
+	private byte[] f1(byte[] d) {
+		return null;
+	}
 }

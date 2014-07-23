@@ -11,7 +11,7 @@ import java.util.Arrays;
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
 import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar;
+import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.data.Time;
 import org.cryptokitty.keys.KeyAlgorithms;
 
@@ -186,13 +186,13 @@ public class SignaturePacket {
 			pkAlgorithm = in.read();
 			hashAlgorithm = in.read();
 
-			Scalar subpacketLength = new Scalar(in);
+			Scalar16 subpacketLength = new Scalar16(in);
 			byte[] sBytes = new byte[subpacketLength.getValue()];
 			in.read(sBytes);
 			ByteArrayInputStream subin = new ByteArrayInputStream(sBytes);
 			hashedSubpackets = new SignatureSubpacketSet(subin);
 
-			subpacketLength = new Scalar(in);
+			subpacketLength = new Scalar16(in);
 			sBytes = new byte[subpacketLength.getValue()];
 			in.read(sBytes);
 			subin = new ByteArrayInputStream(sBytes);
