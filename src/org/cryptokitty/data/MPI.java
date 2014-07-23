@@ -20,7 +20,7 @@ public class MPI {
 	 * Bit precision of the MPI. According to the RFC, this is a
 	 * 16 bit, unsigned quantity, so it is held here in an integer.
 	 */
-	private Scalar precision;
+	private Scalar16 precision;
 
 	/*
 	 * The MPI value. Represents a big endian number, precision bits
@@ -33,7 +33,7 @@ public class MPI {
 	 */
 	public MPI(InputStream in) throws DataException {
 
-		precision = new Scalar(in);
+		precision = new Scalar16(in);
 
 		int mpiLength = (precision.getValue() + 7) / 8;
 		value = new byte[mpiLength];
@@ -51,7 +51,7 @@ public class MPI {
 	 * array is correctly formatted.
 	 */
 	public MPI(int precision, byte[] value) {
-		this.precision = new Scalar(precision);
+		this.precision = new Scalar16(precision);
 		this.value = value;
 	}
 
@@ -76,7 +76,7 @@ public class MPI {
 			modbits--;
 		}
 		p += modbits;
-		precision = new Scalar(p);
+		precision = new Scalar16(p);
 
 	}
 

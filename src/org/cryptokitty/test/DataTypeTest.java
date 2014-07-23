@@ -9,7 +9,7 @@ import java.io.IOException;
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
 import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar;
+import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.data.Time;
 
 /**
@@ -54,9 +54,9 @@ public class DataTypeTest {
 			}
 
 			int s1 = 0x73ff;
-			Scalar sc1 = new Scalar(s1);
+			Scalar16 sc1 = new Scalar16(s1);
 			byte[] sb1 = sc1.getEncoded();
-			Scalar sc2 = new Scalar(sb1);
+			Scalar16 sc2 = new Scalar16(sb1);
 			int s2 = sc2.getValue();
 			if (s1 == s2) {
 				System.out.println("Scalar conversion 1 success!");
@@ -68,7 +68,7 @@ public class DataTypeTest {
 			}
 
 			byte sb2[] = { (byte)0xff, 0x40 };
-			Scalar sc3 = new Scalar(sb2);
+			Scalar16 sc3 = new Scalar16(sb2);
 			int s3 = sc3.getValue();
 			if (s3 == 0xff40) {
 				System.out.println("Scalar conversion 2 success!");

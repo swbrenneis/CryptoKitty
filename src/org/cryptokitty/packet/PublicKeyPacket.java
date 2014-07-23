@@ -8,7 +8,7 @@ import java.io.InputStream;
 
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar;
+import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.data.Time;
 import org.cryptokitty.keys.KeyAlgorithms;
 
@@ -188,7 +188,7 @@ public class PublicKeyPacket {
 
 		try {
 			createTime = new Time(in);
-			expires = new Scalar(in).getValue();
+			expires = new Scalar16(in).getValue();
 			pkAlgorithm = in.read();
 			rsaModulus = new MPI(in);
 			rsaExponent = new MPI(in);

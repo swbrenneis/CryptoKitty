@@ -44,11 +44,26 @@ public class KeyAlgorithms {
 					"", "", "AES", "AES192", "AES256", "Twofish"
 													};
 
+	/*
+	 * Check for valid key algorithm.
+	 */
+	public static boolean validKeyAlgorithm(int keyAlgorithm) {
+		if (keyAlgorithm > 1 && keyAlgorithm < 5) {
+			return true;
+		}
+		else if (keyAlgorithm > 6 && keyAlgorithm < 11) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
 	/**
 	 * 
 	 */
 	protected KeyAlgorithms() {
-		// TODO Auto-generated constructor stub
+		// Never instantiated.
 	}
 
 }
