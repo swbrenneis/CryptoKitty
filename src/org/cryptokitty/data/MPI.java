@@ -5,6 +5,7 @@ package org.cryptokitty.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -19,7 +20,7 @@ public class MPI {
 	 * Bit precision of the MPI. According to the RFC, this is a
 	 * 16 bit, unsigned quantity, so it is held here in an integer.
 	 */
-	private int precision;
+	private Scalar precision;
 
 	/*
 	 * The MPI value. Represents a big endian number, precision bits
@@ -30,15 +31,18 @@ public class MPI {
 	/**
 	 * Creates an MPI from an input stream.
 	 */
-	public MPI(InputStream in) throws IOException {
+	public MPI(InputStream in) throws DataException {
 
-		byte[] pBytes = new byte[2];
-		in.read(pBytes);
-		precision = Scalar.decode(pBytes);
+		precision = new Scalar(in);
 
-		int mpiLength = (precision + 7) / 8;
+		int mpiLength = (precision.getValue() + 7) / 8;
 		value = new byte[mpiLength];
-		in.read(value);
+		try {
+			in.read(value);
+		}
+		catch (IOException e) {
+			new DataException(e);
+		}
 
 	}
 
@@ -47,7 +51,7 @@ public class MPI {
 	 * array is correctly formatted.
 	 */
 	public MPI(int precision, byte[] value) {
-		this.precision = precision;
+		this.precision = new Scalar(precision);
 		this.value = value;
 	}
 
@@ -64,15 +68,16 @@ public class MPI {
 		this.value = Arrays.copyOfRange(value, index, value.length);
 		
 		// Calculate the precision.
-		precision = (this.value.length - 1) * 8;
+		int p = (this.value.length - 1) * 8;
 		int modbits = 8;
 		int test = this.value[0];
 		while ((test & 0x80) == 0) {
 			test = (test << 1) & 0xff;
 			modbits--;
 		}
-		precision += modbits;
-		
+		p += modbits;
+		precision = new Scalar(p);
+
 	}
 
 	/*
@@ -84,10 +89,17 @@ public class MPI {
 		for (int i = 0; i < value.length; ++i) {
 			encoded[i+2] = value[i];
 		}
-		byte[] pb = Scalar.encode(precision);
+		byte[] pb = precision.getEncoded();
 		encoded[0] = pb[0];
 		encoded[1] = pb[1];
 		return encoded;
+	}
+
+	/*
+	 * Returns the integer as a Java BigInteger.
+	 */
+	public BigInteger toBigInteger() {
+		return new BigInteger(value);
 	}
 
 }

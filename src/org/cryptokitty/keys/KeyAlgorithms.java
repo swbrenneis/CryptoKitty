@@ -36,6 +36,14 @@ public class KeyAlgorithms {
 	public static final int AES256 = 9;
 	public static final int TWOFISH = 10;
 
+	/*
+	 * Symmetric key algorithm names.
+	 */
+	public static final String[] SYMMETRIC_NAMES = {
+					"PLAINTEXT", "IDEA", "DESede", "CAST5", "Blowfish",
+					"", "", "AES", "AES192", "AES256", "Twofish"
+													};
+
 	/**
 	 * 
 	 */

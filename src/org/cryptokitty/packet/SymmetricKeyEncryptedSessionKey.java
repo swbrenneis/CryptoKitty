@@ -39,7 +39,7 @@ public class SymmetricKeyEncryptedSessionKey {
 	/**
 	 * 
 	 */
-	public SymmetricKeyEncryptedSessionKey(InputStream in)
+	public SymmetricKeyEncryptedSessionKey(String passPhrase, InputStream in)
 			throws InvalidPacketException {
 
 		/*
@@ -51,7 +51,7 @@ public class SymmetricKeyEncryptedSessionKey {
 				throw new InvalidPacketException("Invalid packet version");
 			}
 			skAlgorithm = in.read();
-			s2k = String2Key.getS2K(in);
+			s2k = String2Key.getS2K(in, passPhrase);
 			key = null;
 			int remaining = in.available();
 			if (remaining > 0) {

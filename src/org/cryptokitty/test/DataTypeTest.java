@@ -140,9 +140,6 @@ public class DataTypeTest {
 			System.out.println("Time conversion 2 success!");
 
 		}
-		catch (IOException e) {
-			System.err.println(e.getMessage());
-		}
 		catch (DataException e) {
 			System.err.println(e);
 		}
