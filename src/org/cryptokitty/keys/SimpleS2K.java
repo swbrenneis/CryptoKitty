@@ -4,7 +4,6 @@
 package org.cryptokitty.keys;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;

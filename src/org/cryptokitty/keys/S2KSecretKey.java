@@ -66,8 +66,7 @@ public class S2KSecretKey implements SecretKey {
 	 */
 	@Override
 	public String getFormat() {
-		// Encoding not supported.
-		return null;
+		return "S2K";
 	}
 
 	/* (non-Javadoc)

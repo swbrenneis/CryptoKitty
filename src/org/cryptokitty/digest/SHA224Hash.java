@@ -3,7 +3,6 @@
  */
 package org.cryptokitty.digest;
 
-import java.security.DigestException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
