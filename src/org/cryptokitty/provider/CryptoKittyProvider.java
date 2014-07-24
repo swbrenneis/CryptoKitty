@@ -22,7 +22,13 @@ public class CryptoKittyProvider extends Provider {
 	 */
 	public CryptoKittyProvider() {
 		super("CryptoKitty", 0.1, INFO);
-		// TODO Auto-generated constructor stub
+
+		/* AccessController.doPrivileged(new java.security.PrivilegedAction() {
+            public Object run() {
+            	
+            }
+		}); */
+
 	}
 
 }

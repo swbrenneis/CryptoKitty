@@ -69,6 +69,14 @@ public class Scalar32 {
 	}
 
 	/*
+	 * Returns a Scalar32 that is the sum of this scalar and n.
+	 * Addition is done modulo 65538.
+	 */
+	public Scalar32 add(int n) {
+		return new Scalar32((value + n) & 0x10000);
+	}
+
+	/*
 	 * Get the encoded value.
 	 */
 	public byte[] getEncoded() {
@@ -83,8 +91,8 @@ public class Scalar32 {
 	/*
 	 * Get the scalar value.
 	 */
-	public long getValue() {
-		return value;
+	public int getValue() {
+		return (int)value;
 	}
 
 	/*
@@ -103,6 +111,14 @@ public class Scalar32 {
 			}
 		}
 		return new Scalar32(rotated);
+	}
+
+	/*
+	 * Returns a Scalar32 that is the difference of this scalar and n.
+	 * Addition is done modulo 65538.
+	 */
+	public Scalar32 subtract(int n) {
+		return new Scalar32((value - n) & 0x10000);
 	}
 
 	/*
