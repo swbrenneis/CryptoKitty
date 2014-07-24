@@ -105,4 +105,12 @@ public class Scalar32 {
 		return new Scalar32(rotated);
 	}
 
+	/*
+	 * Exclusive or. This returns a Scalar32 that is the result of a
+	 * bitwise XOR.
+	 */
+	public Scalar32 xor(int x) {
+		return new Scalar32(value ^ x);
+	}
+
 }

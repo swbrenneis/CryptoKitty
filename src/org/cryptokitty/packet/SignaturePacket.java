@@ -6,7 +6,6 @@ package org.cryptokitty.packet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
