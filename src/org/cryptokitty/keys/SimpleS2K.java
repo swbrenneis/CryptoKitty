@@ -4,6 +4,7 @@
 package org.cryptokitty.keys;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
@@ -49,8 +50,40 @@ public class SimpleS2K extends String2Key {
 			return null;
 		}
 
+		// This is going to be ugly.
+		int keysize = bitsize / 8;
+		int hashsize = digest.getDigestLength();
+		int numhashes = (bitsize / hashsize) + (bitsize % hashsize != 0 ? 1 : 0);
+		Hash[] hashes = new Hash[numhashes];
+		hashes[0] = digest;
+		for (int i = 1; i < numhashes; ++i) {
+			byte[] pad = new byte[i];
+			Arrays.fill(pad, (byte)0);
+			try {
+				hashes[i] = HashFactory.getDigest(algorithm);
+			}
+			catch (UnsupportedAlgorithmException e) {
+				// We did this once.
+			}
+			hashes[i].update(pad);
+		}
 		byte[] pBytes = passPhrase.getBytes(Charset.forName("UTF-8"));
-		return digest.digest(pBytes);
+		for (int i = 0; i < numhashes; ++i) {
+			hashes[i].update(pBytes);
+		}
+		if (keysize <= hashsize) {
+			return Arrays.copyOf(hashes[0].digest(), keysize);
+		}
+		else {
+			int remain = keysize;
+			byte[] key = new byte[keysize];
+			for (int i = 0; i < numhashes; ++i) {
+				System.arraycopy(hashes[i].digest(), 0, key, i*hashsize,
+												Math.min(remain, hashsize));
+				remain -= hashsize;
+			}
+			return key;
+		}
 
 	}
 

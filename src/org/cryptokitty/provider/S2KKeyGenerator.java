@@ -51,7 +51,12 @@ public class S2KKeyGenerator extends KeyGeneratorSpi {
 	 */
 	@Override
 	protected SecretKey engineGenerateKey() {
-		return new S2KSecretKey(algorithm, s2k.generateKey(keysize));
+		if (s2k != null) {
+			return new S2KSecretKey(algorithm, s2k.generateKey(keysize));
+		}
+		else {
+			return null;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -69,10 +74,10 @@ public class S2KKeyGenerator extends KeyGeneratorSpi {
 	@Override
 	protected void engineInit(AlgorithmParameterSpec params, SecureRandom random)
 			throws InvalidAlgorithmParameterException {
-		if (params instanceof S2KAlgorithmParameterSpec) {
-			s2k = ((S2KAlgorithmParameterSpec)params).getS2K();
-			algorithm = ((S2KAlgorithmParameterSpec)params).getKeyAlgorithm();
-			keysize = ((S2KAlgorithmParameterSpec)params).getKeySize();
+		if (params instanceof S2KParameterSpec) {
+			s2k = ((S2KParameterSpec)params).getS2K();
+			algorithm = ((S2KParameterSpec)params).getKeyAlgorithm();
+			keysize = ((S2KParameterSpec)params).getKeySize();
 		}
 		else {
 			throw new InvalidAlgorithmParameterException("Not an S2K parameter");

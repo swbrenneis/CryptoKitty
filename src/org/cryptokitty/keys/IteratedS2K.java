@@ -132,30 +132,70 @@ public class IteratedS2K extends String2Key {
 			return null;
 		}
 
+		// This is going to be ugly.
+		int keysize = bitsize / 8;
+		int hashsize = digest.getDigestLength();
+		int numhashes = (keysize / hashsize) + (bitsize % hashsize != 0 ? 1 : 0);
+		Hash[] hashes = new Hash[numhashes];
+		hashes[0] = digest;
+		for (int i = 1; i < numhashes; ++i) {
+			byte[] pad = new byte[i];
+			Arrays.fill(pad, (byte)0);
+			try {
+				hashes[i] = HashFactory.getDigest(algorithm);
+			}
+			catch (UnsupportedAlgorithmException e) {
+				// We did this once.
+			}
+			hashes[i].update(pad);
+		}
 		byte[] pBytes = passPhrase.getBytes(Charset.forName("UTF-8"));
-		digest.update(salt);
-		digest.update(pBytes);
+		for (int i = 0; i < numhashes; ++i) {
+			hashes[i].update(salt);
+			hashes[i].update(pBytes);
+		}
 
 		long index = count - (salt.length + pBytes.length);
 		while (index > 0) {
 			if (index < salt.length) {
-				digest.update(salt, 0, (int)index);
+				for (int i = 0; i < numhashes; ++i) {
+					hashes[i].update(salt, 0, (int)index);
+				}
 				index = 0;
 			}
 			else {
-				digest.update(salt);
+				for (int i = 0; i < numhashes; ++i) {
+					hashes[i].update(salt);
+				}
 				index -= salt.length;
 				if (index < pBytes.length) {
-					digest.update(pBytes, 0, (int)index);
+					for (int i = 0; i < numhashes; ++i) {
+						hashes[i].update(pBytes, 0, (int)index);
+					}
 					index = 0;
 				}
 				else {
+					for (int i = 0; i < numhashes; ++i) {
+						hashes[i].update(pBytes);
+					}
 					digest.update(pBytes);
 					index -= pBytes.length;
 				}
 			}
 		}
-		return digest.digest();
+		if (keysize <= hashsize) {
+			return Arrays.copyOf(hashes[0].digest(), keysize);
+		}
+		else {
+			int remain = keysize;
+			byte[] key = new byte[keysize];
+			for (int i = 0; i < numhashes; ++i) {
+				System.arraycopy(hashes[i].digest(), 0, key, i*hashsize,
+												Math.min(remain, hashsize));
+				remain -= hashsize;
+			}
+			return key;
+		}
 
 	}
 
