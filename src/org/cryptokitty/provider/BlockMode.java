@@ -3,6 +3,12 @@
  */
 package org.cryptokitty.provider;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.crypto.ShortBufferException;
+
 /**
  * @author Steve Brenneis
  *
@@ -13,12 +19,14 @@ public interface BlockMode {
 	/*
 	 * Decrypt a series of bits.
 	 */
-	public byte[] decrypt(byte[] ciphertext);
+	public void decrypt(InputStream ciphertext, OutputStream plaintext)
+			throws IOException, ShortBufferException;
 
 	/*
 	 * Encrypt a series of bits.
 	 */
-	public byte[] encrypt(byte[] cleartext);
+	public void encrypt(InputStream cleartext, OutputStream ciphertext)
+			throws IOException, ShortBufferException;
 
 	/*
 	 * Reset the mode.

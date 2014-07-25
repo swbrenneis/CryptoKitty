@@ -1,21 +1,26 @@
 package org.cryptokitty.provider;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
+
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
 
 /**
  * @author Steve Brenneis
  *
  * Cipher feedback block cipher mode.
  * 
- * The shift register is set to the initialization vector and applied
- * to the block cipher. The MSB of the resulting block of ciphertext is
- * exclusive-or'd with the specified segment of plaintext to produce
- * a cipher segment. The cipher segment is then shifted into the shift
- * register from the left (MSB) side and the resulting block is applied
- * to the cipher. The operation is repeated until all segments of
- * plaintext have been processed. 
+ * Encryption:
+ * 
+ * The shift register is set to the initialization vector and applied to the block
+ * cipher. The MSB of the resulting block of ciphertext is exclusive-or'd with the
+ * specified segment of plaintext to produce a cipher segment. The cipher segment
+ * is then shifted into the shift register from the left (MSB) side and the
+ * resulting block is applied to the cipher. The operation is repeated until all
+ * segments of plaintext have been processed. 
  * 
  */
 public class CFB implements BlockMode {
@@ -47,14 +52,20 @@ public class CFB implements BlockMode {
 
 	/**
 	 * 
-	 * @param cipher
-	 * @param segmentSize
-	 * @param iv
+	 * @param cipher - The block cipher.
+	 * @param segmentSize - Segment size in bytes.
+	 * @param iv - Initialization vector.
 	 */
-	public CFB(BlockCipher cipher, int segmentSize, byte[] iv) {
+	public CFB(BlockCipher cipher, int segmentSize, byte[] iv)
+			throws IllegalBlockSizeException {
+		this.cipher = cipher;
 		this.iv = iv;
 		shiftRegister = Arrays.copyOf(iv, iv.length);
 		this.segmentSize = segmentSize;
+		int blockSize = cipher.getBlockSize();
+		if (segmentSize > blockSize || blockSize % segmentSize != 0) {
+			throw new IllegalBlockSizeException("Illegal segment or block size");
+		}
 		cipherBlock = cipher.encrypt(shiftRegister);
 	}
 
@@ -63,9 +74,10 @@ public class CFB implements BlockMode {
 	 * @see org.cryptokitty.provider.BlockMode#decrypt(byte[])
 	 */
 	@Override
-	public byte[] decrypt(byte[] ciphertext) {
+	public void decrypt(InputStream ciphertext, OutputStream plaintext)
+			throws IOException, ShortBufferException {
 		// TODO Auto-generated method stub
-		return null;
+
 	}
 
 	/*
@@ -73,27 +85,21 @@ public class CFB implements BlockMode {
 	 * @see org.cryptokitty.provider.BlockMode#encrypt(byte[])
 	 */
 	@Override
-	public byte[] encrypt(byte[] cleartext) {
+	public void encrypt(InputStream cleartext, OutputStream ciphertext)
+			throws IOException, ShortBufferException {
 
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-		for (int i = 0; i < cleartext.length; i += segmentSize) {
-			byte[] cipherSeg = Arrays.copyOf(cipherBlock, segmentSize);
-			byte[] clearSeg = Arrays.copyOf(cipherBlock, segmentSize);
+		byte[] cipherSeg = new byte[segmentSize];
+		byte[] clearSeg = new byte[segmentSize];
+		int read = cleartext.read(clearSeg);
+		while (read == segmentSize) {
 			for (int n = 0; n < segmentSize; n++) {
-				clearSeg[n] = (byte)(clearSeg[n] ^ cipherSeg[n]);
+				cipherSeg[n] = (byte)(clearSeg[n] ^ cipherBlock[n]);
 			}
-			try {
-				out.write(clearSeg);
-			}
-			catch (IOException e) {
-				// Nope.
-			}
-			shiftIn(clearSeg);
+			ciphertext.write(cipherSeg);
+			shiftIn(cipherSeg);
 			cipherBlock = cipher.encrypt(shiftRegister);
+			read = cleartext.read(cipherSeg);
 		}
-
-		return out.toByteArray();
 
 	}
 
