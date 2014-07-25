@@ -23,11 +23,11 @@ public class CryptoKittyProvider extends Provider {
 	public CryptoKittyProvider() {
 		super("CryptoKitty", 0.1, INFO);
 
-		/* AccessController.doPrivileged(new java.security.PrivilegedAction() {
-            public Object run() {
-            	
-            }
-		}); */
+		put("Cipher.CAST5", "org.cryptokitty.provider.CAST5Cipher");
+		put("Cipher.CAST5 SupportedModes", "CFB");
+		put("Cipher.CAST5 SupportedPaddings", "NOPADDING");
+
+		put("KeyGenerator.S2K", "org.cryptokitty.provider.S2KKeyGenerator");
 
 	}
 

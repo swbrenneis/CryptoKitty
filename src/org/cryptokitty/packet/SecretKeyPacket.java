@@ -5,12 +5,23 @@ package org.cryptokitty.packet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
 
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.MPI;
 import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.keys.KeyAlgorithms;
 import org.cryptokitty.keys.String2Key;
+import org.cryptokitty.keys.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.S2KParameterSpec;
 
 /**
  * @author Steve Brenneis
@@ -130,7 +141,33 @@ public class SecretKeyPacket extends PublicKeyPacket {
 				default:
 					throw new InvalidPacketException("Illegal symmetric algorithm");
 				}
-				in.read(initialVector);
+
+				try {
+					KeyGenerator keygen = KeyGenerator.getInstance("S2K", "CryptoKitty");
+					S2KParameterSpec spec = new S2KParameterSpec(passPhrase, s2k);
+					spec.setKeyAlgorithm(keyAlgorithm);
+					keygen.init(spec);
+					Key key = keygen.generateKey();
+					Cipher cipher = Cipher.getInstance("CAST5/CFB/NoPadding", "CryptoKitty");
+					in.read(initialVector);
+					IvParameterSpec iv = new IvParameterSpec(initialVector);
+				}
+				catch (UnsupportedAlgorithmException e) {
+					throw new InvalidPacketException("Unsupported key algorithm");
+				}
+				catch (NoSuchAlgorithmException e) {
+					throw new InvalidPacketException("Illegal key algorithm");
+				}
+				catch (NoSuchProviderException e) {
+					throw new InvalidPacketException("Security provider not found");
+				}
+				catch (InvalidAlgorithmParameterException e) {
+					throw new InvalidPacketException("Invalid encryption paramter");
+				}
+				catch (NoSuchPaddingException e) {
+					throw new InvalidPacketException("Invalid padding specified");
+				}
+
 			}
 
 			switch (pkAlgorithm) {	// From public key.
@@ -168,6 +205,20 @@ public class SecretKeyPacket extends PublicKeyPacket {
 		catch (DataException e) {
 			throw new InvalidPacketException(e);
 		}
+	}
+
+	/*
+	 * Get the symmetric key algorithm used to encrypt the private key.
+	 */
+	public int getKeyEncryptionAlgorithm() {
+		return keyAlgorithm;
+	}
+
+	/*
+	 * Get the String2Key key generator.
+	 */
+	public String2Key getS2K() {
+		return s2k;
 	}
 
 }

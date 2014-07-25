@@ -24,7 +24,7 @@ import org.cryptokitty.data.Scalar32;
  * used in the CAST5Cipher class and it may not be subclassed.
  * 
  */
-final class CAST5 {
+final class CAST5 implements BlockCipher {
 
 	/*
 	 * Substitution boxes.
@@ -708,6 +708,39 @@ final class CAST5 {
 			Kr[i] = Km[i] & 0x1f;
 		}
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.BlockCipher#decrypt(byte[])
+	 */
+	@Override
+	public byte[] decrypt(byte[] ciphertext) {
+		// TODO Block size checks?
+		c = ciphertext;
+		doDecryption();
+		return m;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.BlockCipher#encrypt(byte[])
+	 */
+	@Override
+	public byte[] encrypt(byte[] plaintext) {
+		// TODO Block size checks?
+		m = plaintext;
+		doEncryption();
+		return c;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.BlockCipher#getBlockSize()
+	 */
+	@Override
+	public int getBlockSize() {
+		return 8;
 	}
 
 }
