@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.crypto.ShortBufferException;
+import javax.crypto.IllegalBlockSizeException;
 
 /**
  * @author Steve Brenneis
@@ -20,13 +20,13 @@ public interface BlockMode {
 	 * Decrypt a series of bits.
 	 */
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws IOException, ShortBufferException;
+			throws IOException, IllegalBlockSizeException;
 
 	/*
 	 * Encrypt a series of bits.
 	 */
 	public void encrypt(InputStream cleartext, OutputStream ciphertext)
-			throws IOException, ShortBufferException;
+			throws IOException, IllegalBlockSizeException;
 
 	/*
 	 * Reset the mode.

@@ -75,7 +75,7 @@ public class CFB implements BlockMode {
 	 */
 	@Override
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws IOException, ShortBufferException {
+			throws IOException, IllegalBlockSizeException {
 		// TODO Auto-generated method stub
 
 	}
@@ -86,7 +86,7 @@ public class CFB implements BlockMode {
 	 */
 	@Override
 	public void encrypt(InputStream cleartext, OutputStream ciphertext)
-			throws IOException, ShortBufferException {
+			throws IOException, IllegalBlockSizeException {
 
 		byte[] cipherSeg = new byte[segmentSize];
 		byte[] clearSeg = new byte[segmentSize];
@@ -99,6 +99,9 @@ public class CFB implements BlockMode {
 			shiftIn(cipherSeg);
 			cipherBlock = cipher.encrypt(shiftRegister);
 			read = cleartext.read(cipherSeg);
+		}
+		if (read > 0) {
+			throw new IllegalBlockSizeException("Illegal segment");
 		}
 
 	}
