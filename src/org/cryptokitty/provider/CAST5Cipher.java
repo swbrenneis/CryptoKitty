@@ -3,6 +3,9 @@
  */
 package org.cryptokitty.provider;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -27,14 +30,36 @@ import javax.crypto.spec.IvParameterSpec;
 public class CAST5Cipher extends CipherSpi {
 
 	/*
+	 * Mode constants.
+	 */
+	private static final int BLOCK = 0;
+	private static final int CFB = 1;
+	private static final int PGPCFB = 2;
+
+	/*
 	 * The cipher implementation.
 	 */
 	private CAST5 cast5;
 
 	/*
+	 * The block mode handler.
+	 */
+	private BlockMode blockMode;
+
+	/*
+	 * Block mode output stream.
+	 */
+	private ByteArrayOutputStream blockOut;
+	
+	/*
 	 * Initialization vector parameter.
 	 */
 	private IvParameterSpec iv;
+
+	/*
+	 * Cipher mode.
+	 */
+	private int mode;
 
 	/*
 	 * Cipher operation mode. Will be one of Cipher.ENCRYPT_MODE,
@@ -56,18 +81,88 @@ public class CAST5Cipher extends CipherSpi {
 		params = null;
 		iv = null;
 		cast5 = null;
+		mode = BLOCK;
+		blockOut = new ByteArrayOutputStream();
 	}
 
 	/*
-	 * One step encryption/decryption. Block size must be 8.
-	 * 
+	 * Do CFB encryption/decryption.
+	 */
+	private byte[] doCFB(byte[] inBytes)
+			throws IllegalBlockSizeException {
+
+		ByteArrayInputStream bytesIn =
+				new ByteArrayInputStream(inBytes);
+
+		switch (opmode) {
+		case Cipher.DECRYPT_MODE:
+			try {
+				blockMode.decrypt(bytesIn, blockOut);
+				return blockOut.toByteArray();
+			}
+			catch (IOException e) {
+				// TODO This won't happen.
+				e.printStackTrace();
+				return null;
+			}
+		case Cipher.ENCRYPT_MODE:
+			try {
+				blockMode.encrypt(bytesIn, blockOut);
+				return blockOut.toByteArray();
+			}
+			catch (IOException e) {
+				// TODO This won't happen.
+				e.printStackTrace();
+				return null;
+			}
+		case Cipher.UNWRAP_MODE:
+		case Cipher.WRAP_MODE:
+		default:
+			return null;
+		}
+
+	}
+
+	/*
 	 *  (non-Javadoc)
 	 * @see javax.crypto.CipherSpi#engineDoFinal(byte[], int, int)
 	 */
 	@Override
 	protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLength)
 			throws IllegalBlockSizeException, BadPaddingException {
-		return null;
+
+		byte[] text = Arrays.copyOfRange(input, inputOffset, inputOffset + inputLength);
+
+		switch (mode) {
+		case BLOCK:
+			if (text.length != 8) {
+				throw new IllegalBlockSizeException("CAST5 block size must be 8");
+			}
+			else {
+				switch (opmode) {
+				case Cipher.DECRYPT_MODE:
+					return cast5.decrypt(text);
+				case Cipher.ENCRYPT_MODE:
+					return cast5.encrypt(text);
+				case Cipher.UNWRAP_MODE:	// Not supported yet.
+				case Cipher.WRAP_MODE:
+				default:
+					return null;
+				}
+			}
+		case CFB:
+		{
+			byte[] o = doCFB(text);
+			byte[] finalOut = Arrays.copyOf(o, o.length);
+			blockMode.reset();
+			blockOut.reset();
+			return finalOut;
+		}
+		default:
+			// Invalid cipher mode. Shouldn't ever happen.
+			return null;
+		}
+
 	}
 
 	/*
@@ -80,7 +175,49 @@ public class CAST5Cipher extends CipherSpi {
 	protected int engineDoFinal(byte[] input, int inputOffset, int inputLength, byte[] output,
 			int outputOffset) throws ShortBufferException, IllegalBlockSizeException,
 			BadPaddingException {
-		return 0;
+
+		byte[] text = Arrays.copyOfRange(input, inputOffset, inputOffset + inputLength);
+
+		switch (mode) {
+		case BLOCK:
+			if (text.length != 8) {
+				throw new IllegalBlockSizeException("CAST5 block size must be 8");
+			}
+			else if (output.length - outputOffset < 8) {
+				throw new ShortBufferException("CAST5 block size must be 8");
+			}
+			else {
+				byte[] o;
+				switch (opmode) {
+				case Cipher.DECRYPT_MODE:
+					o = cast5.decrypt(text);
+					System.arraycopy(o, 0, output, outputOffset, 8);
+					return 8;
+				case Cipher.ENCRYPT_MODE:
+					o = cast5.encrypt(text);
+					System.arraycopy(o, 0, output, outputOffset, 8);
+					return 8;
+				case Cipher.UNWRAP_MODE:	// Not supported yet.
+				case Cipher.WRAP_MODE:
+				default:
+					return 0;
+				}
+			}
+		case CFB:
+		{
+			byte[] out = doCFB(text);
+			if (output.length - outputOffset < out.length) {
+				throw new ShortBufferException("Output buffer too small");
+			}
+			System.arraycopy(out, 0, output, outputOffset, out.length);
+			blockMode.reset();
+			blockOut.reset();
+		}
+		default:
+			// Invalid cipher mode. Shouldn't ever happen.
+			return 0;
+		}
+
 	}
 
 	/* (non-Javadoc)
@@ -107,7 +244,16 @@ public class CAST5Cipher extends CipherSpi {
 	 */
 	@Override
 	protected int engineGetOutputSize(int inputLength) {
-		return 8;
+
+		switch (mode) {
+		case BLOCK:
+			return 8;
+		case CFB:
+			return blockOut.size() + inputLength;
+		default:
+			return 0;
+		}
+
 	}
 
 	/*
@@ -137,6 +283,16 @@ public class CAST5Cipher extends CipherSpi {
 		byte[] ivBytes = new byte[8];
 		random.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
+		if (mode == CFB) {
+			// Create the CFB mode with a default segment size.
+			try {
+				blockMode = new CFB(cast5, 1, ivBytes);
+			}
+			catch (IllegalBlockSizeException e) {
+				// Won't happen.
+				e.printStackTrace();
+			}
+		}
 
 	}
 
@@ -156,6 +312,16 @@ public class CAST5Cipher extends CipherSpi {
 		cast5 = new CAST5(key);
 		if (params != null && params instanceof IvParameterSpec) {
 			iv = (IvParameterSpec)params;
+			if (mode == CFB) {
+				// Create the CFB mode with a default segment size.
+				try {
+					blockMode = new CFB(cast5, 1, iv.getIV());
+				}
+				catch (IllegalBlockSizeException e) {
+					// Won't happen.
+					e.printStackTrace();
+				}
+			}
 		}
 		else {
 			throw new InvalidAlgorithmParameterException("Expecting initialization vector");
@@ -181,6 +347,16 @@ public class CAST5Cipher extends CipherSpi {
 		byte[] ivBytes = new byte[8];
 		random.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
+		if (mode == CFB) {
+			// Create the CFB mode with a default segment size.
+			try {
+				blockMode = new CFB(cast5, 1, ivBytes);
+			}
+			catch (IllegalBlockSizeException e) {
+				// Won't happen.
+				e.printStackTrace();
+			}
+		}
 
 	}
 
@@ -189,7 +365,17 @@ public class CAST5Cipher extends CipherSpi {
 	 */
 	@Override
 	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
-		// TODO Auto-generated method stub
+
+		switch (mode) {
+		case "CFB":
+			this.mode = CFB;
+			break;
+		case "PGPCFB":
+			this.mode = PGPCFB;
+			break;
+		default:
+			throw new NoSuchAlgorithmException("CAST5 " + mode + " mode not supported");
+		}
 
 	}
 
@@ -198,7 +384,10 @@ public class CAST5Cipher extends CipherSpi {
 	 */
 	@Override
 	protected void engineSetPadding(String padding) throws NoSuchPaddingException {
-		// TODO Auto-generated method stub
+
+		if (padding.compareToIgnoreCase("NOPADDING") != 0) {
+			throw new NoSuchPaddingException("CAST5 padding not supported");
+		}
 
 	}
 
@@ -206,19 +395,98 @@ public class CAST5Cipher extends CipherSpi {
 	 * @see javax.crypto.CipherSpi#engineUpdate(byte[], int, int)
 	 */
 	@Override
-	protected byte[] engineUpdate(byte[] arg0, int arg1, int arg2) {
-		// TODO Auto-generated method stub
-		return null;
+	protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLength) {
+
+		byte[] text = Arrays.copyOfRange(input, inputOffset, inputOffset + inputLength);
+
+		switch (mode) {
+		case BLOCK:
+			if (text.length != 8) {
+				return null;
+			}
+			else {
+				switch (opmode) {
+				case Cipher.DECRYPT_MODE:
+					return cast5.decrypt(text);
+				case Cipher.ENCRYPT_MODE:
+					return cast5.encrypt(text);
+				case Cipher.UNWRAP_MODE:	// Not supported yet.
+				case Cipher.WRAP_MODE:
+				default:
+					return null;
+				}
+			}
+		case CFB:
+		{
+			try {
+				byte[] soFar = doCFB(text);
+				return Arrays.copyOf(soFar, soFar.length);
+			}
+			catch (IllegalBlockSizeException e) {
+				e.printStackTrace();
+			}
+		}
+		default:
+			// Invalid cipher mode. Shouldn't ever happen.
+			return null;
+		}
+
 	}
 
 	/* (non-Javadoc)
 	 * @see javax.crypto.CipherSpi#engineUpdate(byte[], int, int, byte[], int)
 	 */
 	@Override
-	protected int engineUpdate(byte[] arg0, int arg1, int arg2, byte[] arg3,
-			int arg4) throws ShortBufferException {
-		// TODO Auto-generated method stub
-		return 0;
+	protected int engineUpdate(byte[] input, int inputOffset, int inputLength, byte[] output,
+			int outputOffset) throws ShortBufferException {
+
+		byte[] text = Arrays.copyOfRange(input, inputOffset, inputOffset + inputLength);
+
+		switch (mode) {
+		case BLOCK:
+			if (text.length != 8) {
+				return 0;
+			}
+			else if (output.length - outputOffset < 8) {
+				throw new ShortBufferException("CAST5 block size must be 8");
+			}
+			else {
+				byte[] o;
+				switch (opmode) {
+				case Cipher.DECRYPT_MODE:
+					o = cast5.decrypt(text);
+					System.arraycopy(o, 0, output, outputOffset, 8);
+					return 8;
+				case Cipher.ENCRYPT_MODE:
+					o = cast5.encrypt(text);
+					System.arraycopy(o, 0, output, outputOffset, 8);
+					return 8;
+				case Cipher.UNWRAP_MODE:	// Not supported yet.
+				case Cipher.WRAP_MODE:
+				default:
+					return 0;
+				}
+			}
+		case CFB:
+		{
+			try {
+				byte[] out = doCFB(text);
+				if (output.length - outputOffset < out.length) {
+					throw new ShortBufferException("Output buffer too small");
+				}
+				System.arraycopy(out, 0, output, outputOffset, out.length);
+				return out.length;
+			}
+			catch (IllegalBlockSizeException e) {
+				e.printStackTrace();
+				return 0;
+			}
+		}
+		default:
+			// Invalid cipher mode. Shouldn't ever happen.
+			return 0;
+		}
+
 	}
 
 }

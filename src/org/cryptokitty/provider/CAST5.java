@@ -24,7 +24,7 @@ import org.cryptokitty.data.Scalar32;
  * used in the CAST5Cipher class and it may not be subclassed.
  * 
  */
-final class CAST5 implements BlockCipher {
+ final class CAST5 implements BlockCipher {
 
 	/*
 	 * Substitution boxes.
@@ -351,8 +351,20 @@ final class CAST5 implements BlockCipher {
 		}
 		rounds = bitsize <= 80 ? 12 : 16;
 		// Pad keys less than 128 bits with zeros.
-		this.key = Arrays.copyOf(key.getEncoded(), 128 / 8);
+		this.key = Arrays.copyOf(key.getEncoded(), 16);
 
+	}
+
+	/*
+	 * Convert a byte array to an int array to be used for unsigned
+	 * values.
+	 */
+	private int[] byte2int(byte[] bytes) {
+		int[] newint = new int[bytes.length];
+		for (int i = 0; i < bytes.length; ++i) {
+			newint[i] = bytes[i] & 0xff;
+		}
+		return newint;
 	}
 
 	/*
@@ -368,14 +380,13 @@ final class CAST5 implements BlockCipher {
 
 		// Section 2.5 of the RFC addresses variable key sizes and states that
 		// keys of 80 bits or less only go through 12 substitution rounds.
-		byte[][] L = new byte[rounds+1][4];
-		byte[][] R = new byte[rounds+1][4];
-		L[16] = Arrays.copyOf(c, 4);
-		R[16] = Arrays.copyOfRange(c, 4, 8);
+		int[] L = new int[rounds+2];
+		int[] R = new int[rounds+2];
+		L[rounds+1] = Scalar32.decode(Arrays.copyOf(c, 4));
+		R[rounds+1] = Scalar32.decode(Arrays.copyOfRange(c, 4, 8));
 
-		for (int i = 15; i >= 0; --i) {
-			L[i] = Arrays.copyOf(R[i+1], 4);
-			Scalar32 fR = new Scalar32(L[i+1]);
+		for (int i = rounds; i > 0; --i) {
+			L[i] = R[i+1];
 			switch (i) {
 			case 1:
 			case 4:
@@ -383,28 +394,28 @@ final class CAST5 implements BlockCipher {
 			case 10:
 			case 13:
 			case 16:
-				R[i] = fR.xor(new Scalar32(f1(R[i+1], Km[i], Kr[i])).getValue()).getEncoded();
+				R[i] = L[i+1] ^ f1(R[i+1], Km[i], Kr[i]);
 				break;
 			case 2:
 			case 5:
 			case 8:
 			case 11:
 			case 14:
-				R[i] = fR.xor(new Scalar32(f2(R[i+1], Km[i], Kr[i])).getValue()).getEncoded();
+				R[i] = L[i+1] ^ f2(R[i+1], Km[i], Kr[i]);
 				break;
 			case 3:
 			case 6:
 			case 9:
 			case 12:
 			case 15:
-				R[i] = fR.xor(new Scalar32(f3(R[i+1], Km[i], Kr[i])).getValue()).getEncoded();
+				R[i] = L[i+1] ^ f3(R[i+1], Km[i], Kr[i]);
 				break;
 			}
 		}
 
 		m = new byte[8];
-		System.arraycopy(R[0], 0, m, 0, 4);
-		System.arraycopy(L[0], 0, m, 4, 4);
+		System.arraycopy(Scalar32.encode(R[1]), 0, m, 0, 4);
+		System.arraycopy(Scalar32.encode(L[1]), 0, m, 4, 4);
 
 	}
 
@@ -430,14 +441,13 @@ final class CAST5 implements BlockCipher {
 
 		// Section 2.5 of the RFC addresses variable key sizes and states that
 		// keys of 80 bits or less only go through 12 substitution rounds.
-		byte[][] L = new byte[rounds+1][4];
-		byte[][] R = new byte[rounds+1][4];
-		L[0] = Arrays.copyOf(m, 4);
-		R[0] = Arrays.copyOfRange(m, 4, 8);
+		int[] L = new int[17];
+		int[] R = new int[17];
+		L[0] = Scalar32.decode(Arrays.copyOf(m, 4));
+		R[0] = Scalar32.decode(Arrays.copyOfRange(m, 4, 8));
 
-		for (int i = 1; i < rounds+1; ++i) {
-			L[i] = Arrays.copyOf(R[i-1], 4);
-			Scalar32 fR = new Scalar32(L[i-1]);
+		for (int i = 1; i <= rounds; ++i) {
+			L[i] = R[i-1];
 			switch (i) {
 			case 1:
 			case 4:
@@ -445,28 +455,28 @@ final class CAST5 implements BlockCipher {
 			case 10:
 			case 13:
 			case 16:
-				R[i] = fR.xor(new Scalar32(f1(R[i-1], Km[i], Kr[i])).getValue()).getEncoded();
+				R[i] = L[i-1] ^ f1(R[i-1], Km[i], Kr[i]);
 				break;
 			case 2:
 			case 5:
 			case 8:
 			case 11:
 			case 14:
-				R[i] = fR.xor(new Scalar32(f2(R[i-1], Km[i], Kr[i])).getValue()).getEncoded();
+				R[i] = L[i-1] ^ f2(R[i-1], Km[i], Kr[i]);
 				break;
 			case 3:
 			case 6:
 			case 9:
 			case 12:
 			case 15:
-				R[i] = fR.xor(new Scalar32(f3(R[i-1], Km[i], Kr[i])).getValue()).getEncoded();
+				R[i] = L[i-1] ^ f3(R[i-1], Km[i], Kr[i]);
 				break;
 			}
 		}
 
 		c = new byte[8];
-		System.arraycopy(R[16], 0, c, 0, 4);
-		System.arraycopy(L[16], 0, c, 4, 4);
+		System.arraycopy(Scalar32.encode(R[rounds]), 0, c, 0, 4);
+		System.arraycopy(Scalar32.encode(L[rounds]), 0, c, 4, 4);
 
 	}
 
@@ -479,12 +489,11 @@ final class CAST5 implements BlockCipher {
 	 * 
 	 * Rounds 1, 4, 7, 10, 13, and 16 use f1.
 	 */
-	private int f1(byte[] d, int Kmi, int Kri) {
+	private int f1(int D, int Kmi, int Kri) {
 
-		int D = new Scalar32(d).getValue();
-		byte[] I = new Scalar32(Kmi).add(D).rol(Kri).getEncoded();
-		Scalar32 f = new Scalar32(S1[I[0]]).xor(S2[I[1]]).subtract(S3[I[2]]).add(S4[I[3]]);
-		return f.getValue();
+		int I = new Scalar32(Kmi + D).rol(Kri).getValue();
+		int[] i = byte2int(Scalar32.encode(I));
+		return ((S1[i[0]] ^ S2[i[1]]) - S3[i[2]]) + S4[i[3]];
 
 	}
 
@@ -497,12 +506,11 @@ final class CAST5 implements BlockCipher {
 	 * 
 	 * Rounds 2, 5, 8, 11, and 14 use f2.
 	 */
-	private int f2(byte[] d, int Kmi, int Kri) {
+	private int f2(int D, int Kmi, int Kri) {
 
-		int D = new Scalar32(d).getValue();
-		byte[] I = new Scalar32(Kmi).xor(D).rol(Kri).getEncoded();
-		Scalar32 f = new Scalar32(S1[I[0]]).subtract(S2[I[1]]).add(S3[I[2]]).xor(S4[I[3]]);
-		return f.getValue();
+		int I = new Scalar32(Kmi ^ D).rol(Kri).getValue();
+		int[] i = byte2int(Scalar32.encode(I));
+		return ((S1[i[0]] - S2[i[1]]) + S3[i[2]]) ^ S4[i[3]];
 
 	}
 
@@ -515,12 +523,11 @@ final class CAST5 implements BlockCipher {
 	 * 
 	 * Rounds 3, 6, 9, 12, and 15 use f3.
 	 */
-	private int f3(byte[] d, int Kmi, int Kri) {
+	private int f3(int D, int Kmi, int Kri) {
 
-		int D = new Scalar32(d).getValue();
-		byte[] I = new Scalar32(Kmi).xor(D).rol(Kri).getEncoded();
-		Scalar32 f = new Scalar32(S1[I[0]]).add(S2[I[1]]).xor(S3[I[2]]).subtract(S4[I[3]]);
-		return f.getValue();
+		int I = new Scalar32(Kmi - D).rol(Kri).getValue();
+		int[] i = byte2int(Scalar32.encode(I));
+		return ((S1[i[0]] + S2[i[1]]) ^ S3[i[2]]) - S4[i[3]];
 
 	}
 
@@ -533,181 +540,239 @@ final class CAST5 implements BlockCipher {
 		// round count
 		Km = new int[17];
 		Kr = new int[17];
-		byte[] x = Arrays.copyOf(key, 8);
-		byte[] z = new byte[16];
+		int[] x = byte2int(Arrays.copyOf(key, 16));
+		int[] z = new int[16];
 
 		// Generate masking keys.
 		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
-		Scalar32 z1 = new Scalar32(Arrays.copyOf(x, 4));
-		Scalar32 step = z1.xor(S5[x[13]]).xor(S6[x[15]]).xor(S7[x[12]]).xor(S8[x[14]]).xor(S7[x[8]]);
-		byte[] zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i] = zsub[i];
-		}
+		int x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		int z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
+		int[] zed = byte2int(Scalar32.encode(z0));
+		System.arraycopy(zed, 0, z, 0, 4);
 		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
-		z1 = new Scalar32(Arrays.copyOfRange(x, 8, 12));
-		step = z1.xor(S5[z[0]]).xor(S6[z[2]]).xor(S7[z[1]]).xor(S8[z[3]]).xor(S8[x[10]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i+4] = zsub[i];
-		}
+		int x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		int z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
+		zed = byte2int(Scalar32.encode(z4));
+		System.arraycopy(zed, 0, z, 4, 4);
 		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
-		z1 = new Scalar32(Arrays.copyOfRange(x, 12, 16));
-		step = z1.xor(S5[z[7]]).xor(S6[z[6]]).xor(S7[z[5]]).xor(S8[z[4]]).xor(S5[x[9]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i+8] = zsub[i];
-		}
+		int xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		int z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
+		zed = byte2int(Scalar32.encode(z8));
+		System.arraycopy(zed, 0, z, 8, 4);
 		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
-		z1 = new Scalar32(Arrays.copyOfRange(x, 4, 8));
-		step = z1.xor(S5[z[10]]).xor(S6[z[9]]).xor(S7[z[11]]).xor(S8[z[8]]).xor(S6[x[11]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i+12] = zsub[i];
-		}
+		int x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		int zc = x4 ^ (S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]]);
+		zed = byte2int(Scalar32.encode(zc));
+		System.arraycopy(zed, 0, z, 12, 4);
 		// K1  = S5[z8] ^ S6[z9] ^ S7[z7] ^ S8[z6] ^ S5[z2]
-		Scalar32 k = new Scalar32(S5[z[8]]);
-		Km[1] = (int)k.xor(S6[z[9]]).xor(S7[z[7]]).xor(S8[z[6]]).xor(S5[z[2]]).getValue();
+		Km[1] = S5[z[8]] ^ S6[z[9]] ^ S7[z[7]] ^ S8[z[6]] ^ S5[z[2]];
 		// K2  = S5[zA] ^ S6[zB] ^ S7[z5] ^ S8[z4] ^ S6[z6]
-		k = new Scalar32(S5[z[10]]);
-		Km[2] = (int)k.xor(S6[z[11]]).xor(S7[z[5]]).xor(S8[z[4]]).xor(S6[z[6]]).getValue();
+		Km[2] = S5[z[10]] ^ S6[z[11]] ^ S7[z[5]] ^ S8[z[4]] ^ S6[z[6]];
 		// K3  = S5[zC] ^ S6[zD] ^ S7[z3] ^ S8[z2] ^ S7[z9]
-		k = new Scalar32(S5[z[12]]);
-		Km[3] = (int)k.xor(S6[z[13]]).xor(S7[z[3]]).xor(S8[z[2]]).xor(S7[z[9]]).getValue();
+		Km[3] = S5[z[12]] ^ S6[z[13]] ^ S7[z[3]] ^ S8[z[2]] ^ S7[z[9]];
 		// K4  = S5[zE] ^ S6[zF] ^ S7[z1] ^ S8[z0] ^ S8[zC]
-		k = new Scalar32(S5[z[14]]);
-		Km[4] = (int)k.xor(S6[z[15]]).xor(S7[z[1]]).xor(S8[z[0]]).xor(S8[z[12]]).getValue();
+		Km[4] = S5[z[14]]^ S6[z[15]]^ S7[z[1]] ^ S8[z[0]] ^ S8[z[12]];
 
 		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
-		Scalar32 x1 = new Scalar32(Arrays.copyOfRange(z, 8, 12));
-		step = x1.xor(S5[z[5]]).xor(S6[z[7]]).xor(S7[z[4]]).xor(S8[z[6]]).xor(S7[z[0]]);
-		byte[] xsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			x[i] = xsub[i];
-		}
+		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
+		int [] xed = byte2int(Scalar32.encode(x0));
+		System.arraycopy(xed, 0, x, 0, 4);
 		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
-		x1 = new Scalar32(Arrays.copyOf(z, 4));
-		step = x1.xor(S5[x[0]]).xor(S6[x[2]]).xor(S7[x[1]]).xor(S8[x[3]]).xor(S8[z[2]]);
-		xsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			x[i+4] = xsub[i];
-		}
+		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
+		xed = byte2int(Scalar32.encode(x4));
+		System.arraycopy(xed, 0, x, 4, 4);
 		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
-		x1 = new Scalar32(Arrays.copyOfRange(z, 4, 8));
-		step = x1.xor(S5[x[7]]).xor(S6[x[6]]).xor(S7[x[5]]).xor(S8[x[4]]).xor(S5[z[1]]);
-		xsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			x[i+8] = xsub[i];
-		}
+		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
+		xed = byte2int(Scalar32.encode(x8));
+		System.arraycopy(xed, 0, x, 8, 4);
 		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
-		x1 = new Scalar32(Arrays.copyOfRange(z, 12, 16));
-		step = x1.xor(S5[x[10]]).xor(S6[x[9]]).xor(S7[x[11]]).xor(S8[x[8]]).xor(S6[z[3]]);
-		xsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			x[i+12] = xsub[i];
-		}
+		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
+		xed = byte2int(Scalar32.encode(xc));
+		System.arraycopy(xed, 0, x, 12, 4);
 		// K5  = S5[x3] ^ S6[x2] ^ S7[xC] ^ S8[xD] ^ S5[x8]
-		k = new Scalar32(S5[x[3]]);
-		Km[5] = (int)k.xor(S6[x[2]]).xor(S7[x[12]]).xor(S8[x[13]]).xor(S5[x[8]]).getValue();
+		Km[5] = S5[x[3]] ^ S6[x[2]] ^ S7[x[12]] ^ S8[x[13]] ^ S5[x[8]];
 		// K6  = S5[x1] ^ S6[x0] ^ S7[xE] ^ S8[xF] ^ S6[xD]
-		k = new Scalar32(S5[x[1]]);
-		Km[6] = (int)k.xor(S6[x[0]]).xor(S7[x[14]]).xor(S8[x[15]]).xor(S6[x[13]]).getValue();
+		Km[6] = S5[x[1]] ^ S6[x[0]] ^ S7[x[14]] ^ S8[x[15]] ^ S6[x[13]];
 		// K7  = S5[x7] ^ S6[x6] ^ S7[x8] ^ S8[x9] ^ S7[x3]
-		k = new Scalar32(S5[x[7]]);
-		Km[7] = (int)k.xor(S6[x[6]]).xor(S7[x[8]]).xor(S8[x[9]]).xor(S7[x[3]]).getValue();
+		Km[7] = S5[x[7]] ^ S6[x[6]] ^ S7[x[8]] ^ S8[x[9]] ^ S7[x[3]];
 		// K8  = S5[x5] ^ S6[x4] ^ S7[xA] ^ S8[xB] ^ S8[x7]
-		k = new Scalar32(S5[x[5]]);
-		Km[8] = (int)k.xor(S6[x[4]]).xor(S7[x[10]]).xor(S8[x[11]]).xor(S8[x[7]]).getValue();
+		Km[8] = S5[x[5]] ^ S6[x[4]] ^ S7[x[10]] ^ S8[x[11]] ^ S8[x[7]];
 
 		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
-		z1 = new Scalar32(Arrays.copyOf(x, 4));
-		step = z1.xor(S5[x[13]]).xor(S6[x[15]]).xor(S7[x[12]]).xor(S8[x[14]]).xor(S7[x[8]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i] = zsub[i];
-		}
+		x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
+		zed = byte2int(Scalar32.encode(z0));
+		System.arraycopy(zed, 0, z, 0, 4);
 		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
-		z1 = new Scalar32(Arrays.copyOfRange(x, 8, 12));
-		step = z1.xor(S5[z[0]]).xor(S6[z[2]]).xor(S7[z[1]]).xor(S8[z[3]]).xor(S8[x[10]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i+4] = zsub[i];
-		}
+		x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
+		zed = byte2int(Scalar32.encode(z4));
+		System.arraycopy(zed, 0, z, 4, 4);
 		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
-		z1 = new Scalar32(Arrays.copyOfRange(x, 12, 16));
-		step = z1.xor(S5[z[7]]).xor(S6[z[6]]).xor(S7[z[5]]).xor(S8[z[4]]).xor(S5[x[9]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i+8] = zsub[i];
-		}
+		xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
+		zed = byte2int(Scalar32.encode(z8));
+		System.arraycopy(zed, 0, z, 8, 4);
 		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
-		z1 = new Scalar32(Arrays.copyOfRange(x, 4, 8));
-		step = z1.xor(S5[z[10]]).xor(S6[z[9]]).xor(S7[z[11]]).xor(S8[z[8]]).xor(S6[x[11]]);
-		zsub = step.getEncoded();
-		for (int i = 0; i < 4; ++i) {
-			z[i+12] = zsub[i];
-		}
+		x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		zc = x4 ^ S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]];
+		zed = byte2int(Scalar32.encode(zc));
+		System.arraycopy(zed, 0, z, 12, 4);
 		// K9  = S5[z3] ^ S6[z2] ^ S7[zC] ^ S8[zD] ^ S5[z9]
-		k = new Scalar32(S5[z[3]]);
-		Km[9] = (int)k.xor(S6[z[2]]).xor(S7[z[12]]).xor(S8[z[13]]).xor(S5[z[9]]).getValue();
+		Km[9] = S5[z[3]] ^ S6[z[2]] ^ S7[z[12]] ^ S8[z[13]] ^ S5[z[9]];
 		// K10 = S5[z1] ^ S6[z0] ^ S7[zE] ^ S8[zF] ^ S6[zC]
-		k = new Scalar32(S5[z[1]]);
-		Km[10] = (int)k.xor(S6[z[0]]).xor(S7[z[14]]).xor(S8[z[15]]).xor(S6[z[12]]).getValue();
+		Km[10] = S5[z[1]] ^ S6[z[0]] ^ S7[z[14]] ^ S8[z[15]] ^ S6[z[12]];
 		// K11 = S5[z7] ^ S6[z6] ^ S7[z8] ^ S8[z9] ^ S7[z2]
-		k = new Scalar32(S5[z[7]]);
-		Km[11] = (int)k.xor(S6[z[6]]).xor(S7[z[8]]).xor(S8[z[9]]).xor(S7[z[2]]).getValue();
+		Km[11] = S5[z[7]] ^ S6[z[6]] ^ S7[z[8]] ^ S8[z[9]] ^ S7[z[2]];
 		// K12 = S5[z5] ^ S6[z4] ^ S7[zA] ^ S8[zB] ^ S8[z6]
-		k = new Scalar32(S5[z[5]]);
-		Km[12] = (int)k.xor(S6[z[4]]).xor(S7[z[10]]).xor(S8[z[11]]).xor(S8[z[6]]).getValue();
+		Km[12] = S5[z[5]] ^ S6[z[4]] ^ S7[z[10]] ^ S8[z[11]] ^ S8[z[6]];
 
-		if (rounds == 16) {
-			// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
-			x1 = new Scalar32(Arrays.copyOfRange(z, 8, 12));
-			step = x1.xor(S5[z[5]]).xor(S6[z[7]]).xor(S7[z[4]]).xor(S8[z[6]]).xor(S7[z[0]]);
-			xsub = step.getEncoded();
-			for (int i = 0; i < 4; ++i) {
-				x[i] = xsub[i];
-			}
-			// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
-			x1 = new Scalar32(Arrays.copyOf(z, 4));
-			step = x1.xor(S5[x[0]]).xor(S6[x[2]]).xor(S7[x[1]]).xor(S8[x[3]]).xor(S8[z[2]]);
-			xsub = step.getEncoded();
-			for (int i = 0; i < 4; ++i) {
-				x[i+4] = xsub[i];
-			}
-			// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
-			x1 = new Scalar32(Arrays.copyOfRange(z, 4, 8));
-			step = x1.xor(S5[x[7]]).xor(S6[x[6]]).xor(S7[x[5]]).xor(S8[x[4]]).xor(S5[z[1]]);
-			xsub = step.getEncoded();
-			for (int i = 0; i < 4; ++i) {
-				x[i+8] = xsub[i];
-			}
-			// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
-			x1 = new Scalar32(Arrays.copyOfRange(z, 12, 16));
-			step = x1.xor(S5[x[10]]).xor(S6[x[9]]).xor(S7[x[11]]).xor(S8[x[8]]).xor(S6[z[3]]);
-			xsub = step.getEncoded();
-			for (int i = 0; i < 4; ++i) {
-				x[i+12] = xsub[i];
-			}
-			// K13 = S5[x8] ^ S6[x9] ^ S7[x7] ^ S8[x6] ^ S5[x3]
-			k = new Scalar32(S5[x[8]]);
-			Km[13] = (int)k.xor(S6[x[9]]).xor(S7[x[7]]).xor(S8[x[6]]).xor(S5[x[3]]).getValue();
-			// K14 = S5[xA] ^ S6[xB] ^ S7[x5] ^ S8[x4] ^ S6[x7]
-			k = new Scalar32(S5[x[10]]);
-			Km[14] = (int)k.xor(S6[x[11]]).xor(S7[x[5]]).xor(S8[x[4]]).xor(S6[x[7]]).getValue();
-			// K15 = S5[xC] ^ S6[xD] ^ S7[x3] ^ S8[x2] ^ S7[x8]
-			k = new Scalar32(S5[x[12]]);
-			Km[15] = (int)k.xor(S6[x[13]]).xor(S7[x[3]]).xor(S8[x[2]]).xor(S7[x[8]]).getValue();
-			// K16 = S5[xE] ^ S6[xF] ^ S7[x1] ^ S8[x0] ^ S8[xD]
-			k = new Scalar32(S5[x[14]]);
-			Km[16] = (int)k.xor(S6[x[15]]).xor(S7[x[1]]).xor(S8[x[0]]).xor(S8[x[13]]).getValue();
+		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
+		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
+		xed = byte2int(Scalar32.encode(x0));
+		System.arraycopy(xed, 0, x, 0, 4);
+		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
+		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
+		xed = byte2int(Scalar32.encode(x4));
+		System.arraycopy(xed, 0, x, 4, 4);
+		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
+		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
+		xed = byte2int(Scalar32.encode(x8));
+		System.arraycopy(xed, 0, x, 8, 4);
+		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
+		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
+		xed = byte2int(Scalar32.encode(xc));
+		System.arraycopy(xed, 0, x, 12, 4);
+		// K13 = S5[x8] ^ S6[x9] ^ S7[x7] ^ S8[x6] ^ S5[x3]
+		Km[13] = S5[x[8]] ^ S6[x[9]] ^ S7[x[7]] ^ S8[x[6]] ^ S5[x[3]];
+		// K14 = S5[xA] ^ S6[xB] ^ S7[x5] ^ S8[x4] ^ S6[x7]
+		Km[14] = S5[x[10]] ^ S6[x[11]] ^ S7[x[5]] ^ S8[x[4]] ^ S6[x[7]];
+		// K15 = S5[xC] ^ S6[xD] ^ S7[x3] ^ S8[x2] ^ S7[x8]
+		Km[15] = S5[x[12]] ^ S6[x[13]]^ S7[x[3]] ^ S8[x[2]] ^ S7[x[8]];
+		// K16 = S5[xE] ^ S6[xF] ^ S7[x1] ^ S8[x0] ^ S8[xD]
+		Km[16] = S5[x[14]] ^ S6[x[15]] ^ S7[x[1]] ^ S8[x[0]] ^ S8[x[13]];
+
+		// Do it all over again for the rotate keys, but starting with the last
+		// generated x0...xf. We only need the low order 5 bits.
+		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
+		x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
+		zed = byte2int(Scalar32.encode(z0));
+		System.arraycopy(zed, 0, z, 0, 4);
+		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
+		x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
+		zed = byte2int(Scalar32.encode(z4));
+		System.arraycopy(zed, 0, z, 4, 4);
+		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
+		xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
+		zed = byte2int(Scalar32.encode(z8));
+		System.arraycopy(zed, 0, z, 8, 4);
+		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
+		x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		zc = x4 ^ (S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]]);
+		zed = byte2int(Scalar32.encode(zc));
+		System.arraycopy(zed, 0, z, 12, 4);
+		// K1  = S5[z8] ^ S6[z9] ^ S7[z7] ^ S8[z6] ^ S5[z2]
+		Kr[1] = (S5[z[8]] ^ S6[z[9]] ^ S7[z[7]] ^ S8[z[6]] ^ S5[z[2]]) & 0x1f;
+		// K2  = S5[zA] ^ S6[zB] ^ S7[z5] ^ S8[z4] ^ S6[z6]
+		Kr[2] = (S5[z[10]] ^ S6[z[11]] ^ S7[z[5]] ^ S8[z[4]] ^ S6[z[6]]) & 0x1f;
+		// K3  = S5[zC] ^ S6[zD] ^ S7[z3] ^ S8[z2] ^ S7[z9]
+		Kr[3] = (S5[z[12]] ^ S6[z[13]] ^ S7[z[3]] ^ S8[z[2]] ^ S7[z[9]]) & 0x1f;
+		// K4  = S5[zE] ^ S6[zF] ^ S7[z1] ^ S8[z0] ^ S8[zC]
+		Kr[4] = (S5[z[14]]^ S6[z[15]]^ S7[z[1]] ^ S8[z[0]] ^ S8[z[12]]) & 0x1f;
+
+		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
+		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
+		xed = byte2int(Scalar32.encode(x0));
+		System.arraycopy(xed, 0, x, 0, 4);
+		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
+		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
+		xed = byte2int(Scalar32.encode(x4));
+		System.arraycopy(xed, 0, x, 4, 4);
+		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
+		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
+		xed = byte2int(Scalar32.encode(x8));
+		System.arraycopy(xed, 0, x, 8, 4);
+		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
+		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
+		xed = byte2int(Scalar32.encode(xc));
+		System.arraycopy(xed, 0, x, 12, 4);
+		// K5  = S5[x3] ^ S6[x2] ^ S7[xC] ^ S8[xD] ^ S5[x8]
+		Kr[5] = (S5[x[3]] ^ S6[x[2]] ^ S7[x[12]] ^ S8[x[13]] ^ S5[x[8]]) & 0x1f;
+		// K6  = S5[x1] ^ S6[x0] ^ S7[xE] ^ S8[xF] ^ S6[xD]
+		Kr[6] = (S5[x[1]] ^ S6[x[0]] ^ S7[x[14]] ^ S8[x[15]] ^ S6[x[13]]) & 0x1f;
+		// K7  = S5[x7] ^ S6[x6] ^ S7[x8] ^ S8[x9] ^ S7[x3]
+		Kr[7] = (S5[x[7]] ^ S6[x[6]] ^ S7[x[8]] ^ S8[x[9]] ^ S7[x[3]]) & 0x1f;
+		// K8  = S5[x5] ^ S6[x4] ^ S7[xA] ^ S8[xB] ^ S8[x7]
+		Kr[8] = (S5[x[5]] ^ S6[x[4]] ^ S7[x[10]] ^ S8[x[11]] ^ S8[x[7]]) & 0x1f;
+
+		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
+		x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
+		zed = byte2int(Scalar32.encode(z0));
+		System.arraycopy(zed, 0, z, 0, 4);
+		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
+		x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
+		zed = byte2int(Scalar32.encode(z4));
+		System.arraycopy(zed, 0, z, 4, 4);
+		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
+		xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
+		zed = byte2int(Scalar32.encode(z8));
+		System.arraycopy(zed, 0, z, 8, 4);
+		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
+		x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		zc = x4 ^ S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]];
+		zed = byte2int(Scalar32.encode(zc));
+		System.arraycopy(zed, 0, z, 12, 4);
+		// K9  = S5[z3] ^ S6[z2] ^ S7[zC] ^ S8[zD] ^ S5[z9]
+		Kr[9] = (S5[z[3]] ^ S6[z[2]] ^ S7[z[12]] ^ S8[z[13]] ^ S5[z[9]]) & 0x1f;
+		// K10 = S5[z1] ^ S6[z0] ^ S7[zE] ^ S8[zF] ^ S6[zC]
+		Kr[10] = (S5[z[1]] ^ S6[z[0]] ^ S7[z[14]] ^ S8[z[15]] ^ S6[z[12]]) & 0x1f;
+		// K11 = S5[z7] ^ S6[z6] ^ S7[z8] ^ S8[z9] ^ S7[z2]
+		Kr[11] = (S5[z[7]] ^ S6[z[6]] ^ S7[z[8]] ^ S8[z[9]] ^ S7[z[2]]) & 0x1f;
+		// K12 = S5[z5] ^ S6[z4] ^ S7[zA] ^ S8[zB] ^ S8[z6]
+		Kr[12] = (S5[z[5]] ^ S6[z[4]] ^ S7[z[10]] ^ S8[z[11]] ^ S8[z[6]]) & 0x1f;
+
+		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
+		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
+		xed = byte2int(Scalar32.encode(x0));
+		System.arraycopy(xed, 0, x, 0, 4);
+		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
+		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
+		xed = byte2int(Scalar32.encode(x4));
+		System.arraycopy(xed, 0, x, 4, 4);
+		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
+		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
+		xed = byte2int(Scalar32.encode(x8));
+		System.arraycopy(xed, 0, x, 8, 4);
+		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
+		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
+		xed = byte2int(Scalar32.encode(xc));
+		System.arraycopy(xed, 0, x, 12, 4);
+		// K13 = S5[x8] ^ S6[x9] ^ S7[x7] ^ S8[x6] ^ S5[x3]
+		Kr[13] = (S5[x[8]] ^ S6[x[9]] ^ S7[x[7]] ^ S8[x[6]] ^ S5[x[3]]) & 0x1f;
+		// K14 = S5[xA] ^ S6[xB] ^ S7[x5] ^ S8[x4] ^ S6[x7]
+		Kr[14] = (S5[x[10]] ^ S6[x[11]] ^ S7[x[5]] ^ S8[x[4]] ^ S6[x[7]]) & 0x1f;
+		// K15 = S5[xC] ^ S6[xD] ^ S7[x3] ^ S8[x2] ^ S7[x8]
+		Kr[15] = (S5[x[12]] ^ S6[x[13]]^ S7[x[3]] ^ S8[x[2]] ^ S7[x[8]]) & 0x1f;
+		// K16 = S5[xE] ^ S6[xF] ^ S7[x1] ^ S8[x0] ^ S8[xD]
+		Kr[16] = (S5[x[14]] ^ S6[x[15]] ^ S7[x[1]] ^ S8[x[0]] ^ S8[x[13]]) & 0x1f;
+
+	}
+
+	/*
+	 * Convert an int array to a byte array.
+	 */
+	private byte[] int2byte(int[] ints) {
+		byte[] newbytes = new byte[ints.length];
+		for (int i = 0; i < ints.length; ++i) {
+			newbytes[i] = (byte)(ints[i] & 0xff);
 		}
-
-		// Create rotate keys.
-		for (int i = 1; i <= rounds; ++i) {
-			Kr[i] = Km[i] & 0x1f;
-		}
-
+		return newbytes;
 	}
 
 	/*
