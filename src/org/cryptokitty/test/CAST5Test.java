@@ -151,7 +151,7 @@ public class CAST5Test {
 			if (Arrays.equals(c, cfbCiphertext1)) {
 				System.out.println("CAST5 CFB mode encryption test 1 passed!");
 				cipher = Cipher.getInstance("CAST5/CFB/NoPadding", "CryptoKitty");
-				cipher.init(Cipher.DECRYPT_MODE, key);
+				cipher.init(Cipher.DECRYPT_MODE, key, iv);
 				byte[] m = cipher.doFinal(cfbCiphertext1);
 				if (Arrays.equals(m, cfbPlaintext1)) {
 					System.out.println("CAST5 CFB mode decryption test 1 passed!");

@@ -25,7 +25,7 @@ public interface BlockMode {
 	/*
 	 * Encrypt a series of bits.
 	 */
-	public void encrypt(InputStream cleartext, OutputStream ciphertext)
+	public void encrypt(InputStream plaintext, OutputStream ciphertext)
 			throws IOException, IllegalBlockSizeException;
 
 	/*
