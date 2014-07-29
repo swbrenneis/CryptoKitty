@@ -24,7 +24,7 @@ public class CryptoKittyProvider extends Provider {
 		super("CryptoKitty", 0.1, INFO);
 
 		put("Cipher.CAST5", "org.cryptokitty.provider.CAST5Cipher");
-		put("Cipher.CAST5 SupportedModes", "CFB8");
+		put("Cipher.CAST5 SupportedModes", "CFB|CFB8");
 		put("Cipher.CAST5 SupportedPaddings", "NOPADDING");
 
 		put("KeyGenerator.S2K", "org.cryptokitty.provider.S2KKeyGenerator");

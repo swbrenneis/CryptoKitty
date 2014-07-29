@@ -33,8 +33,9 @@ public class CAST5Cipher extends CipherSpi {
 	 * Mode constants.
 	 */
 	private static final int BLOCK = 0;
-	private static final int CFB8 = 1;
-	private static final int PGPCFB = 2;
+	private static final int CFB = 2;
+	private static final int CFB8 = 3;
+	private static final int PGPCFB = 4;
 
 	/*
 	 * The cipher implementation.
@@ -88,7 +89,7 @@ public class CAST5Cipher extends CipherSpi {
 	/*
 	 * Do CFB8 encryption/decryption.
 	 */
-	private byte[] doCFB8(byte[] inBytes)
+	private byte[] doMode(byte[] inBytes)
 			throws IllegalBlockSizeException {
 
 		ByteArrayInputStream bytesIn =
@@ -150,9 +151,10 @@ public class CAST5Cipher extends CipherSpi {
 					return null;
 				}
 			}
+		case CFB:
 		case CFB8:
 		{
-			byte[] o = doCFB8(text);
+			byte[] o = doMode(text);
 			byte[] finalOut = Arrays.copyOf(o, o.length);
 			blockMode.reset();
 			blockOut.reset();
@@ -203,9 +205,10 @@ public class CAST5Cipher extends CipherSpi {
 					return 0;
 				}
 			}
+		case CFB:
 		case CFB8:
 		{
-			byte[] out = doCFB8(text);
+			byte[] out = doMode(text);
 			if (output.length - outputOffset < out.length) {
 				throw new ShortBufferException("Output buffer too small");
 			}
@@ -247,7 +250,8 @@ public class CAST5Cipher extends CipherSpi {
 
 		switch (mode) {
 		case BLOCK:
-			return 8;
+			return inputLength == 8 ? 8 : 0;
+		case CFB:
 		case CFB8:
 			return blockOut.size() + inputLength;
 		default:
@@ -283,7 +287,12 @@ public class CAST5Cipher extends CipherSpi {
 		byte[] ivBytes = new byte[8];
 		random.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
-		if (mode == CFB8) {
+		switch (mode) {
+		case CFB:
+			// Create the CFB mode.
+			blockMode = new CFB(cast5, iv.getIV());
+			break;
+		case CFB8:
 			// Create the CFB8 mode with a default segment size.
 			try {
 				blockMode = new CFB8(cast5, 1, ivBytes);
@@ -292,6 +301,7 @@ public class CAST5Cipher extends CipherSpi {
 				// Won't happen.
 				e.printStackTrace();
 			}
+			break;
 		}
 
 	}
@@ -312,7 +322,12 @@ public class CAST5Cipher extends CipherSpi {
 		cast5 = new CAST5(key);
 		if (params != null && params instanceof IvParameterSpec) {
 			iv = (IvParameterSpec)params;
-			if (mode == CFB8) {
+			switch (mode) {
+			case CFB:
+				// Create the CFB mode.
+				blockMode = new CFB(cast5, iv.getIV());
+				break;
+			case CFB8:
 				// Create the CFB8 mode with a default segment size.
 				try {
 					blockMode = new CFB8(cast5, 1, iv.getIV());
@@ -321,6 +336,7 @@ public class CAST5Cipher extends CipherSpi {
 					// Won't happen.
 					e.printStackTrace();
 				}
+				break;
 			}
 		}
 		else {
@@ -347,15 +363,21 @@ public class CAST5Cipher extends CipherSpi {
 		byte[] ivBytes = new byte[8];
 		random.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
-		if (mode == CFB8) {
+		switch (mode) {
+		case CFB:
+			// Create the CFB mode.
+			blockMode = new CFB(cast5, iv.getIV());
+			break;
+		case CFB8:
 			// Create the CFB8 mode with a default segment size.
 			try {
-				blockMode = new CFB8(cast5, 1, ivBytes);
+				blockMode = new CFB8(cast5, 1, iv.getIV());
 			}
 			catch (IllegalBlockSizeException e) {
 				// Won't happen.
 				e.printStackTrace();
 			}
+			break;
 		}
 
 	}
@@ -367,6 +389,9 @@ public class CAST5Cipher extends CipherSpi {
 	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
 
 		switch (mode) {
+		case "CFB":
+			this.mode = CFB;
+			break;
 		case "CFB8":
 			this.mode = CFB8;
 			break;
@@ -416,10 +441,11 @@ public class CAST5Cipher extends CipherSpi {
 					return null;
 				}
 			}
+		case CFB:
 		case CFB8:
 		{
 			try {
-				byte[] soFar = doCFB8(text);
+				byte[] soFar = doMode(text);
 				return Arrays.copyOf(soFar, soFar.length);
 			}
 			catch (IllegalBlockSizeException e) {
@@ -467,10 +493,11 @@ public class CAST5Cipher extends CipherSpi {
 					return 0;
 				}
 			}
+		case CFB:
 		case CFB8:
 		{
 			try {
-				byte[] out = doCFB8(text);
+				byte[] out = doMode(text);
 				if (output.length - outputOffset < out.length) {
 					throw new ShortBufferException("Output buffer too small");
 				}
