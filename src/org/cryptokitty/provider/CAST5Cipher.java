@@ -33,7 +33,7 @@ public class CAST5Cipher extends CipherSpi {
 	 * Mode constants.
 	 */
 	private static final int BLOCK = 0;
-	private static final int CFB = 1;
+	private static final int CFB8 = 1;
 	private static final int PGPCFB = 2;
 
 	/*
@@ -86,9 +86,9 @@ public class CAST5Cipher extends CipherSpi {
 	}
 
 	/*
-	 * Do CFB encryption/decryption.
+	 * Do CFB8 encryption/decryption.
 	 */
-	private byte[] doCFB(byte[] inBytes)
+	private byte[] doCFB8(byte[] inBytes)
 			throws IllegalBlockSizeException {
 
 		ByteArrayInputStream bytesIn =
@@ -150,9 +150,9 @@ public class CAST5Cipher extends CipherSpi {
 					return null;
 				}
 			}
-		case CFB:
+		case CFB8:
 		{
-			byte[] o = doCFB(text);
+			byte[] o = doCFB8(text);
 			byte[] finalOut = Arrays.copyOf(o, o.length);
 			blockMode.reset();
 			blockOut.reset();
@@ -203,9 +203,9 @@ public class CAST5Cipher extends CipherSpi {
 					return 0;
 				}
 			}
-		case CFB:
+		case CFB8:
 		{
-			byte[] out = doCFB(text);
+			byte[] out = doCFB8(text);
 			if (output.length - outputOffset < out.length) {
 				throw new ShortBufferException("Output buffer too small");
 			}
@@ -248,7 +248,7 @@ public class CAST5Cipher extends CipherSpi {
 		switch (mode) {
 		case BLOCK:
 			return 8;
-		case CFB:
+		case CFB8:
 			return blockOut.size() + inputLength;
 		default:
 			return 0;
@@ -283,10 +283,10 @@ public class CAST5Cipher extends CipherSpi {
 		byte[] ivBytes = new byte[8];
 		random.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
-		if (mode == CFB) {
-			// Create the CFB mode with a default segment size.
+		if (mode == CFB8) {
+			// Create the CFB8 mode with a default segment size.
 			try {
-				blockMode = new CFB(cast5, 1, ivBytes);
+				blockMode = new CFB8(cast5, 1, ivBytes);
 			}
 			catch (IllegalBlockSizeException e) {
 				// Won't happen.
@@ -312,10 +312,10 @@ public class CAST5Cipher extends CipherSpi {
 		cast5 = new CAST5(key);
 		if (params != null && params instanceof IvParameterSpec) {
 			iv = (IvParameterSpec)params;
-			if (mode == CFB) {
-				// Create the CFB mode with a default segment size.
+			if (mode == CFB8) {
+				// Create the CFB8 mode with a default segment size.
 				try {
-					blockMode = new CFB(cast5, 1, iv.getIV());
+					blockMode = new CFB8(cast5, 1, iv.getIV());
 				}
 				catch (IllegalBlockSizeException e) {
 					// Won't happen.
@@ -347,10 +347,10 @@ public class CAST5Cipher extends CipherSpi {
 		byte[] ivBytes = new byte[8];
 		random.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
-		if (mode == CFB) {
-			// Create the CFB mode with a default segment size.
+		if (mode == CFB8) {
+			// Create the CFB8 mode with a default segment size.
 			try {
-				blockMode = new CFB(cast5, 1, ivBytes);
+				blockMode = new CFB8(cast5, 1, ivBytes);
 			}
 			catch (IllegalBlockSizeException e) {
 				// Won't happen.
@@ -367,8 +367,8 @@ public class CAST5Cipher extends CipherSpi {
 	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
 
 		switch (mode) {
-		case "CFB":
-			this.mode = CFB;
+		case "CFB8":
+			this.mode = CFB8;
 			break;
 		case "PGPCFB":
 			this.mode = PGPCFB;
@@ -416,10 +416,10 @@ public class CAST5Cipher extends CipherSpi {
 					return null;
 				}
 			}
-		case CFB:
+		case CFB8:
 		{
 			try {
-				byte[] soFar = doCFB(text);
+				byte[] soFar = doCFB8(text);
 				return Arrays.copyOf(soFar, soFar.length);
 			}
 			catch (IllegalBlockSizeException e) {
@@ -467,10 +467,10 @@ public class CAST5Cipher extends CipherSpi {
 					return 0;
 				}
 			}
-		case CFB:
+		case CFB8:
 		{
 			try {
-				byte[] out = doCFB(text);
+				byte[] out = doCFB8(text);
 				if (output.length - outputOffset < out.length) {
 					throw new ShortBufferException("Output buffer too small");
 				}

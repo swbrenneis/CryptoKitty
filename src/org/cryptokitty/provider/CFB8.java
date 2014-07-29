@@ -20,7 +20,8 @@ import javax.crypto.ShortBufferException;
  * specified segment of plaintext to produce a cipher segment. The cipher segment
  * is then shifted into the shift register from the left (MSB) side and the
  * resulting block is applied to the cipher. The operation is repeated until all
- * segments of plaintext have been processed. 
+ * segments of plaintext have been processed. This is the self-synchronizing stream
+ * version of classic CFB.
  * 
  */
 public class CFB8 implements BlockMode {
