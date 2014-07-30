@@ -67,6 +67,33 @@ public class Scalar16 {
 	}
 
 	/*
+	 * returns a Scalar16 object that is the sum of addend and
+	 * this scalar.
+	 */
+	public Scalar16 add(Scalar16 addend) {
+		int sum = (value + addend.value) % 65536;
+		return new Scalar16(sum);
+	}
+
+	/*
+	 * returns a Scalar16 object that is the sum of addend and
+	 * this scalar.
+	 */
+	public Scalar16 add(int addend) {
+		int sum = (value + addend) % 65536;
+		return new Scalar16(sum);
+	}
+
+	/*
+	 * Checks equality of a scalar to this scalar. Proper class
+	 * cast is up to the caller.
+	 */
+	@Override
+	public boolean equals(Object other) {
+		return value == ((Scalar16)other).value;
+	}
+
+	/*
 	 * Get the encoded value.
 	 */
 	public byte[] getEncoded() {
