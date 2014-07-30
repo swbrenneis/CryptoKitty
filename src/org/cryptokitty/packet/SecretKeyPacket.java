@@ -6,6 +6,7 @@ package org.cryptokitty.packet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -121,10 +122,14 @@ public class SecretKeyPacket extends PublicKeyPacket {
 			}
 
 			if (encrypted) {
+				String cipherName = "";
 				switch (keyAlgorithm) {
 				case KeyAlgorithms.IDEA:
 				case KeyAlgorithms.TRIPLE_DES:
 				case KeyAlgorithms.CAST5:
+					cipherName = "CAST5/CFB/NoPadding";
+					initialVector = new byte[8];
+					break;
 				case KeyAlgorithms.BLOWFISH:
 					initialVector = new byte[8];
 					break;
@@ -148,9 +153,10 @@ public class SecretKeyPacket extends PublicKeyPacket {
 					spec.setKeyAlgorithm(keyAlgorithm);
 					keygen.init(spec);
 					Key key = keygen.generateKey();
-					Cipher cipher = Cipher.getInstance("CAST5/CFB/NoPadding", "CryptoKitty");
+					Cipher cipher = Cipher.getInstance(cipherName, "CryptoKitty");
 					in.read(initialVector);
 					IvParameterSpec iv = new IvParameterSpec(initialVector);
+					cipher.init(Cipher.DECRYPT_MODE, key, iv);
 				}
 				catch (UnsupportedAlgorithmException e) {
 					throw new InvalidPacketException("Unsupported key algorithm");
@@ -166,6 +172,9 @@ public class SecretKeyPacket extends PublicKeyPacket {
 				}
 				catch (NoSuchPaddingException e) {
 					throw new InvalidPacketException("Invalid padding specified");
+				}
+				catch (InvalidKeyException e) {
+					throw new InvalidPacketException("Invalid symmetric key");
 				}
 
 			}

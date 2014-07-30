@@ -51,37 +51,6 @@ public class PrivateKeyTest {
 			if (reader.getPacketTag() == PacketReader.SECRET_KEY_PACKET) {
 				InputStream in = reader.getInputStream();
 				SecretKeyPacket keyPacket = new SecretKeyPacket("zct5j1IF", in);
-				/*
-				KeySpec keySpec = null;
-				KeyFactory keyFactory = null;
-				switch (keyPacket.getPKAlgorithm()) {
-				case KeyAlgorithms.DSA:
-					keySpec = new DSAPrivateKeySpec(keyPacket.getDSAPublicKey().toBigInteger(),
-													keyPacket.getDSAPrime().toBigInteger(),
-													keyPacket.getDSAGroupOrder().toBigInteger(),
-													keyPacket.getDSAGroupGenerator().toBigInteger());
-					keyFactory = KeyFactory.getInstance("DSA");
-					break;
-				case KeyAlgorithms.ELGAMAL:
-					// Oops. No native Java support.
-					break;
-				case KeyAlgorithms.RSA:
-				case KeyAlgorithms.RSA_ENCRYPT:
-				case KeyAlgorithms.RSA_SIGN:
-					keySpec = new RSAPrivateKeySpec(keyPacket.getRSAModulus().toBigInteger(),
-													keyPacket.getRSAExponent().toBigInteger());
-					keyFactory = KeyFactory.getInstance("RSA");
-					break;
-				}
-
-				if (keySpec != null) {
-					PrivateKey key = keyFactory.generatePrivate(keySpec);
-				}
-				else {
-					System.err.println("Illegal public key algorithm.");
-					System.err.println("Public key test 1 failed.");
-				}
-				*/
 			}
 			else {
 				System.err.println("Not a private key packet");

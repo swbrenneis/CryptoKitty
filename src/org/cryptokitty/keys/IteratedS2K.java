@@ -50,12 +50,7 @@ public class IteratedS2K extends String2Key {
 			throws UnsupportedAlgorithmException {
 		super(passPhrase, algorithm);
 		// Salt is always 8 bytes.
-		if (salt.length != 8) {
-			this.salt = Arrays.copyOf(salt, 8);
-		}
-		else {
-			this.salt = salt;
-		}
+		this.salt = Arrays.copyOf(salt, 8);
 
 		this.c = c;
 		// Now calculate count. This is really lovely. The RFC gives no particular
