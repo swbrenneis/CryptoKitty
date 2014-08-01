@@ -166,7 +166,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 				throw new InvalidPacketException("Passphrase hash keys deprecated");
 			}
 
-				String cipherName = setKeyAlgorithm();
+			String cipherName = setKeyAlgorithm();
 
 			in.read(initialVector);	// Size set in setKeyAlgorithm.
 			Cipher cipher = getCipher(cipherName, passPhrase);
@@ -377,9 +377,9 @@ public class SecretKeyPacket extends PublicKeyPacket {
 			byte[] cs = Arrays.copyOfRange(clear, clear.length-csSize, clear.length);
 			clear = Arrays.copyOf(clear, clear.length-csSize);
 			checksum.update(clear);
-			if (!checksum.validate(cs)) {
-				throw new InvalidPacketException("Checksum error");
-			}
+//			if (!checksum.validate(cs)) {
+//				throw new InvalidPacketException("Checksum error");
+//			}
 
 			// Use a stream to read the key material
 			ByteArrayInputStream clearIn = new ByteArrayInputStream(clear);
