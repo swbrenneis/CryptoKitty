@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 
 import org.cryptokitty.packet.PacketReader;
 
@@ -36,11 +35,6 @@ public class ArmoredData {
 	 * Binary data to be armored.
 	 */
 	private byte[] data;
-
-	/*
-	 * Armored output strings.
-	 */
-	private ArrayList<String> lines;
 
 	/**
 	 * Empty object for decoding.
