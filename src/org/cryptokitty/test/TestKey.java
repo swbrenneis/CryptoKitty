@@ -11,6 +11,7 @@ import java.security.Key;
  * A general purpose Key interface implementation for testing purposes
  * only.
  */
+@SuppressWarnings("serial")
 final class TestKey implements Key {
 
 	/*
