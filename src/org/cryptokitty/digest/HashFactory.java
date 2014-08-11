@@ -5,7 +5,7 @@ package org.cryptokitty.digest;
 
 import java.security.NoSuchAlgorithmException;
 
-import org.cryptokitty.keys.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis

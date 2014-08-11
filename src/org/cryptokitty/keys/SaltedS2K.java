@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis
