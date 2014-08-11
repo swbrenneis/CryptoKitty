@@ -23,17 +23,17 @@ import org.cryptokitty.digest.HashFactory;
  * This is to more easily relate them to the RFC. Comments are
  * provided so the function won't be a mystery.
  */
-public class RSA {
+public abstract class RSA {
 
 	/*
 	 * Empty (null string) hash values.
 	 */
-	private static final byte[] SHA1_EMPTY =
+	protected static final byte[] SHA1_EMPTY =
 		{ (byte)0xda, 0x39, (byte)0xa3, (byte)0xee, 0x5e, 0x6b, 0x4b,
 			0x0d, 0x32, 0x55, (byte)0xbf, (byte)0xef, (byte)0x95, 0x60,
 			0x18, (byte)0x90, (byte)0xaf, (byte)0xd8, 0x07, 0x09 };
 
-	private static final byte[] SHA256_EMPTY = 
+	protected static final byte[] SHA256_EMPTY = 
 		{ (byte)0xe3, (byte)0xb0, (byte)0xc4, 0x42, (byte)0x98,
 			(byte)0xfc, 0x1c, 0x14, (byte)0x9a, (byte)0xfb, (byte)0xf4,
 			(byte)0xc8, (byte)0x99, 0x6f, (byte)0xb9, 0x24, 0x27,
@@ -41,7 +41,7 @@ public class RSA {
 			0x4c, (byte)0xa4, (byte)0x95, (byte)0x99, 0x1b, 0x78, 0x52,
 			(byte)0xb8, 0x55 };
 
-	private static final byte[] SHA384_EMPTY = 
+	protected static final byte[] SHA384_EMPTY = 
 		{ 0x38, (byte)0xb0, 0x60, (byte)0xa7, 0x51, (byte)0xac, (byte)0x96,
 			0x38, 0x4c, (byte)0xd9, 0x32, 0x7e, (byte)0xb1, (byte)0xb1,
 			(byte)0xe3, 0x6a, 0x21, (byte)0xfd, (byte)0xb7, 0x11, 0x14,
@@ -51,7 +51,7 @@ public class RSA {
 			(byte)0xd5, 0x1a, (byte)0xd2, (byte)0xf1, 0x48, (byte)0x98,
 			(byte)0xb9, 0x5b };
 
-	private static final byte[] SHA512_EMPTY = 
+	protected static final byte[] SHA512_EMPTY = 
 		{ (byte)0xcf, (byte)0x83, (byte)0xe1, 0x35, 0x7e, (byte)0xef,
 			(byte)0xb8, (byte)0xbd, (byte)0xf1, 0x54, 0x28, 0x50,
 			(byte)0xd6, 0x6d, (byte)0x80, 0x07, (byte)0xd6, 0x20,
@@ -66,7 +66,7 @@ public class RSA {
 	/*
 	 * Mask generation function. See RFC 3447, Appendix B.2.1 for details
 	 */
-	private final class MGF1 {
+	protected final class MGF1 {
 
 		/*
 		 * Hash function.
@@ -81,7 +81,8 @@ public class RSA {
 				this.hash = HashFactory.getDigest(hashAlgorithm);
 			}
 			catch (UnsupportedAlgorithmException e) {
-				// Won't happen. Algorithm verified in RSA constructor.
+				// Won't happen. The algorithm is verified in RSA constructor
+				// and in the subsequent calling methods.
 			}
 		}
 
@@ -93,7 +94,7 @@ public class RSA {
 
 			int hLen = hash.getDigestLength();
 			if (maskLen > hLen) {
-				throw new BadParameterException("Mask too long");
+				throw new BadParameterException("Mask length out of bounds");
 			}
 
 			ByteArrayOutputStream T = new ByteArrayOutputStream();
@@ -179,16 +180,25 @@ public class RSA {
 	private int hashAlgorithm;
 
 	/*
+	 * The maximum size of an input octet string for the associated
+	 * hash function. This is here purely for extensibility and isn't
+	 * currently practical. Java cannot create a string or array longer
+	 * than 2^63 - 1 bytes;
+	 */
+	private BigInteger maxHash;
+
+	/*
 	 * Intended salt length for EMSA-PSS signature encoding
 	 */
 	private int sLen;
 
 	/**
-	 * Default constructor for PKCS1 scheme.
+	 * Default constructor. The class must be subclassed.
 	 */
-	public RSA() {
+	protected RSA() {
 		emptyHash = null;
 		hashAlgorithm = -1;
+		maxHash = null;
 		sLen = -1;
 	}
 
@@ -202,15 +212,19 @@ public class RSA {
 		switch(hashAlgorithm) {
 		case HashFactory.SHA1:
 			emptyHash = SHA1_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA256:
 			emptyHash = SHA256_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA384:
 			emptyHash = SHA384_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA512:
 			emptyHash = SHA512_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
 		default:
 			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
@@ -229,15 +243,19 @@ public class RSA {
 		switch(hashAlgorithm) {
 		case HashFactory.SHA1:
 			emptyHash = SHA1_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA256:
 			emptyHash = SHA256_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA384:
 			emptyHash = SHA384_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA512:
 			emptyHash = SHA512_EMPTY;
+			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
 		default:
 			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
@@ -250,25 +268,24 @@ public class RSA {
 	 * 
 	 * @param k - Private key size in bytes;
 	 * @param EM - Encoded message octet string
-	 * @param l - Optional output label. Can be empty, must not be null.
+	 * @param L - Optional output label. Can be empty, must not be null.
 	 * 
 	 */
-	private byte[] emeOAEPDecode(int k, byte[] EM, String l)
+	private byte[] emeOAEPDecode(int k, byte[] EM, String L)
 			throws DecryptionException {
 		
 		Hash hash = null;
 		try {
 			hash = HashFactory.getDigest(hashAlgorithm);
 		}
-		catch (UnsupportedAlgorithmException e1) {
-			// Won't happen. Algorithm verified in the constructor.
+		catch (UnsupportedAlgorithmException e) {
+			// Will only happen if the wrong constructor was used.
+			throw new DecryptionException();
 		}
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
-		String L = "";
 		byte[] lHash = emptyHash;
-		if (l != null) {
-			L = l;
+		if (L.length() > 0) {
 			lHash = hash.digest(L.getBytes(Charset.forName("UTF-8")));
 		}
 		int hLen = lHash.length;
@@ -342,25 +359,19 @@ public class RSA {
 	 * 
 	 * @param k - Public key size in bytes.
 	 * @param M - Plaintext octet string.
-	 * @param l - Optional output label. Can be empty, must not be null.
+	 * @param L - Optional output label. Can be empty, must not be null.
 	 * 
+	 * @throws UnsupportedAlgorithmException if the wrong constructor was used.
 	 */
-	private byte[] emeOAEPEncode(int k, byte[] M, String l)
-			throws BadParameterException {
+	private byte[] emeOAEPEncode(int k, byte[] M, String L)
+			throws BadParameterException, UnsupportedAlgorithmException {
 
-		Hash hash = null;
-		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e1) {
-			// Won't happen. Algorithm verified in the constructor.
-		}
+		Hash hash = HashFactory.getDigest(hashAlgorithm);
+
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
-		String L = "";
 		byte[] lHash = emptyHash;
-		if (l != null) {
-			L = l;
+		if (L.length() > 0) {
 			lHash = hash.digest(L.getBytes(Charset.forName("UTF-8")));
 		}
 
@@ -433,21 +444,17 @@ public class RSA {
 	 * 					the encoded message.
 	 * 
 	 * @return Encoded octet string.
+	 * 
+	 * @throws UnsupportedAlgorithmException is the wrong constructor was used.
 	 */
 	private byte[] emsaPSSEncode(byte[] M, int emBits)
-			throws BadParameterException {
+			throws BadParameterException, UnsupportedAlgorithmException {
 
 		// The check here for message size with respect to the hash input
 		// size (~= 2 exabytes for SHA1) isn't necessary.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Hash hash = null;
-		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e1) {
-			// Won't happen. The hash algorithm was verified in the constructor
-		}
+		Hash hash = HashFactory.getDigest(hashAlgorithm);
 		byte[] mHash = emptyHash;
 		if (M.length > 0) {
 			mHash = hash.digest(M);
@@ -506,8 +513,8 @@ public class RSA {
 		byte bitmask = (byte)0xff;
 		for (int i = 0; i < (8 * emLen) - emBits; i++) {
 			bitmask = (byte)((bitmask >>> 1) & 0xff);
-			maskedDB[0] = (byte)(maskedDB[0] & bitmask);
 		}
+		maskedDB[0] = (byte)(maskedDB[0] & bitmask);
 
 		// 12. Let EM = maskedDB || H || 0xbc.
 		ByteArrayOutputStream EM = new ByteArrayOutputStream();
@@ -522,6 +529,130 @@ public class RSA {
 
 		// 13. Output EM.
 		return EM.toByteArray();
+
+	}
+
+	/**
+	 * Verify an EMSA-PSS encoded signature.
+	 * 
+	 * @param M - Message to be verified.
+	 * @param EM - Encoded message octet string
+	 * @param emBits - maximal bit length of the integer
+	 *                 representation of EM
+	 *                 
+	 * @return True if the encoding is consistent, otherwise false.
+	 */
+	private boolean emsaPSSVerify(byte[] M, byte[] EM, int emBits) {
+
+		// 1.  If the length of M is greater than the input limitation for the
+		//     hash function (2^61 - 1 octets for SHA-1), output "inconsistent"
+		//     and stop.
+		//
+		// As noted before, this test is impractical since the actual size limit
+		// for SHA1 is 2^64 - 1 octets and Java cannot create a string or array
+		// longer than 2^63 - 1.
+
+		// 2.  Let mHash = Hash(M), an octet string of length hLen.
+		Hash hash = null;
+		try {
+			hash = HashFactory.getDigest(hashAlgorithm);
+		}
+		catch (UnsupportedAlgorithmException e) {
+			// Will only happen if the wrong constructor was used.
+			return false;
+		}
+		byte[] mHash = hash.digest(M);
+
+		// 3.  If emLen < hLen + sLen + 2, output "inconsistent" and stop.
+		int hLen = hash.getDigestLength();
+		int emLen = (int)Math.ceil((double)emBits / 8);
+		if (emLen < hLen + sLen + 2) {
+			return false;
+		}
+
+		// 4.  If the rightmost octet of EM does not have hexadecimal value
+		//     0xbc, output "inconsistent" and stop.
+		if (EM[EM.length - 1] != 0xbc) {
+			return false;
+		}
+
+		// 5.  Let maskedDB be the leftmost emLen - hLen - 1 octets of EM, and
+		//     let H be the next hLen octets.
+		int masklength = emLen - hLen - 1;
+		byte[] maskedDB = Arrays.copyOf(EM, masklength);
+		byte[] H = Arrays.copyOfRange(maskedDB, masklength, maskedDB.length);
+
+		// 6.  If the leftmost 8emLen - emBits bits of the leftmost octet in
+		//     maskedDB are not all equal to zero, output "inconsistent" and
+		//     stop.
+		byte bitmask = (byte)0xff;
+		bitmask = (byte)((bitmask >>> ((8 * emLen) - emBits)) & 0xff);
+		byte invert = (byte)(bitmask ^ 0xff);
+		if ((maskedDB[0] & invert) != 0) {
+			return false;
+		}
+
+		// 7.  Let dbMask = MGF(H, emLen - hLen - 1).
+		MGF1 dbmgf = new MGF1(hashAlgorithm);
+		byte[] dbMask;
+		try {
+			dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
+		}
+		catch (BadParameterException e) {
+			// Fail silently
+			return false;
+		}
+
+		// 8.  Let DB = maskedDB \xor dbMask.
+		byte[] DB;
+		try {
+			DB = xor(maskedDB, dbMask);
+		}
+		catch (BadParameterException e) {
+			// Fail silently
+			return false;
+		}
+
+		// 9.  Set the leftmost 8emLen - emBits bits of the leftmost octet in DB
+		//     to zero.
+		bitmask = (byte)0xff;
+		bitmask = (byte)((bitmask >>> ((8 * emLen) - emBits)) & 0xff);
+		DB[0] = (byte)(DB[0] & bitmask);
+
+		// 10. If the emLen - hLen - sLen - 2 leftmost octets of DB are not zero
+		//     or if the octet at position emLen - hLen - sLen - 1 (the leftmost
+		//     position is "position 1") does not have hexadecimal value 0x01,
+		//     output "inconsistent" and stop.
+		//
+		// TODO umm...
+		for (int i = 0; i < emLen - hLen - sLen - 2; ++i) {
+			if (DB[i] != 0) {
+				return false;
+			}
+		}
+		if (DB[emLen - hLen - sLen - 1] != 0x01) {
+			return false;
+		}
+
+		// 11.  Let salt be the last sLen octets of DB.
+		byte[] salt = Arrays.copyOfRange(DB, DB.length - sLen, DB.length);
+
+		// 12.  Let
+		//        M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt ;
+		//
+		// M' is an octet string of length 8 + hLen + sLen with eight
+		// initial zero octets.
+		byte[] mPrime = new byte[8 + hLen + sLen];
+		Arrays.fill(mPrime, (byte)0x00);
+		System.arraycopy(mHash, 0, mPrime, 8, mHash.length);
+		System.arraycopy(salt, 0, mPrime, 8 + hLen, sLen);
+
+		// 13. Let H' = Hash(M'), an octet string of length hLen.
+		hash.reset();
+		byte[] hPrime = hash.digest(mPrime);
+
+		// 14. If H = H', output "consistent." Otherwise, output "inconsistent."
+		return Arrays.equals(H, hPrime);
 
 	}
 
@@ -565,6 +696,13 @@ public class RSA {
 			throws DecryptionException {
 
 		// Length checking.
+
+		// We're supposed to check L to make sure it's not larger than
+		// the hash limitation. That is 2^64 - 1 for SHA1 and SHA256, and
+		// 2^128 - 1 for SHA384 and SHA512. Java can only create a string
+		// that is 2^63 - 1 bytes long. The test would be pointless and
+		// technically infeasible.
+
 		// b. If the length of the ciphertext C is not k octets, output
 		//    "decryption error" and stop.
 		int k = K.bitsize / 8;
@@ -583,9 +721,6 @@ public class RSA {
 		if (k < (2 * hLen) + 2) {
 			throw new DecryptionException();
 		}
-		// We're supposed to check L to make sure it's not larger than
-		// the hash limitation, which is ginormous for SHA-1 and above
-		// (~= 2 exabytes). Not going to worry about it.
 
 		try {
 			BigInteger c = null;
@@ -621,9 +756,17 @@ public class RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	public byte[] OAEPencrypt(PublicKey K, byte[] M, String L)
-			throws BadParameterException {
+			throws BadParameterException, UnsupportedAlgorithmException {
 
 		// Length checking.
+		// Length checking.
+
+		// We're supposed to check L to make sure it's not larger than
+		// the hash limitation. That is 2^64 - 1for SHA1 and SHA256, and
+		// 2^128 - 1 for SHA384 and SHA512. Java can only create a string
+		// that is 2^63 - 1 bytes long. The test would be pointless and
+		// technically infeasible.
+
 		int hLen = 0;
 		try {
 			hLen = HashFactory.getDigest(hashAlgorithm).getDigestLength();
@@ -729,63 +872,6 @@ public class RSA {
 			throw new DecryptionException();
 		}
 
-	}
-
-	/**
-	 * Verify an EMSA-PSS encoded signature.
-	 * 
-	 * @param M - Message to be verified.
-	 * @param EM - Encoded message octet string
-	 * @param emBits - maximal bit length of the integer
-	 *                 representation of EM
-	 *                 
-	 * @return True if the encoding is consistent, otherwise false.
-	 */
-	private boolean emsaPSSVerify(byte[] M, byte[] EM, int emBits) {
-/*
-		   1.  If the length of M is greater than the input limitation for the
-	       hash function (2^61 - 1 octets for SHA-1), output "inconsistent"
-	       and stop.
-
-	   2.  Let mHash = Hash(M), an octet string of length hLen.
-
-	   3.  If emLen < hLen + sLen + 2, output "inconsistent" and stop.
-
-	   4.  If the rightmost octet of EM does not have hexadecimal value
-	       0xbc, output "inconsistent" and stop.
-
-	   5.  Let maskedDB be the leftmost emLen - hLen - 1 octets of EM, and
-	       let H be the next hLen octets.
-
-	   6.  If the leftmost 8emLen - emBits bits of the leftmost octet in
-	       maskedDB are not all equal to zero, output "inconsistent" and
-	       stop.
-
-	   7.  Let dbMask = MGF(H, emLen - hLen - 1).
-
-	   8.  Let DB = maskedDB \xor dbMask.
-
-	   9.  Set the leftmost 8emLen - emBits bits of the leftmost octet in DB
-	       to zero.
-
-	   10. If the emLen - hLen - sLen - 2 leftmost octets of DB are not zero
-	       or if the octet at position emLen - hLen - sLen - 1 (the leftmost
-	       position is "position 1") does not have hexadecimal value 0x01,
-	       output "inconsistent" and stop.
-
-	   11.  Let salt be the last sLen octets of DB.
-
-	   12.  Let
-	            M' = (0x)00 00 00 00 00 00 00 00 || mHash || salt ;
-
-	       M' is an octet string of length 8 + hLen + sLen with eight
-	       initial zero octets.
-
-	   13. Let H' = Hash(M'), an octet string of length hLen.
-
-	   14. If H = H', output "consistent." Otherwise, output "inconsistent."
-*/
-		return false;
 	}
 
 	/**
@@ -1012,7 +1098,7 @@ public class RSA {
 	 * @return Signature octet string.
 	 */
 	public byte[] rsassaPSSSign(PrivateKey K, byte[] M)
-			throws BadParameterException {
+			throws BadParameterException, UnsupportedAlgorithmException {
 
 		// 1. EMSA-PSS encoding: Apply the EMSA-PSS encoding operation to
 		// the message M to produce an encoded message EM of length
