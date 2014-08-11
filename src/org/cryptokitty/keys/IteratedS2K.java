@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis
@@ -55,10 +56,7 @@ public class IteratedS2K extends String2Key {
 		this.c = c;
 		// Now calculate count. This is really lovely. The RFC gives no particular
 		// reason for this algorithm.
-		long first = 16 + (c & 0x0f);
-		long second = (c >> 4) + EXPBIAS;
-		count = first << second;
-//		count = (byte)((16 + (c & 0x0f)) << ((c >> 4) +6));
+		count = ((16 + (c & 0x0f)) << ((c >> 4) + EXPBIAS));
 	}
 
 	/**
@@ -83,9 +81,7 @@ public class IteratedS2K extends String2Key {
 		}
 		// Now calculate count. This is really lovely. The RFC gives no particular
 		// reason for this algorithm.
-		long first = 16 + (c & 0x0f);
-		long second = (c >> 4) + EXPBIAS;
-		count = first << second;
+		count = ((16 + (c & 0x0f)) << ((c >> 4) + EXPBIAS));
 	}
 
 	/*
@@ -130,58 +126,50 @@ public class IteratedS2K extends String2Key {
 		// This is going to be ugly.
 		int keysize = bitsize / 8;
 		int hashsize = digest.getDigestLength();
-		int numhashes = (keysize / hashsize) + (bitsize % hashsize != 0 ? 1 : 0);
+		// Number of hash contexts needed
+		int numhashes = (keysize + (hashsize - 1)) / hashsize;
 		Hash[] hashes = new Hash[numhashes];
+		// Always need one
 		hashes[0] = digest;
 		for (int i = 1; i < numhashes; ++i) {
-			byte[] pad = new byte[i];
-			Arrays.fill(pad, (byte)0);
 			try {
 				hashes[i] = HashFactory.getDigest(algorithm);
 			}
 			catch (UnsupportedAlgorithmException e) {
 				// We did this once.
 			}
+			// Pad the hash contexts with zeros, second context = 1, third = 2, etc.
+			byte[] pad = new byte[i];
+			Arrays.fill(pad, (byte)0);
 			hashes[i].update(pad);
 		}
+
 		byte[] pBytes = passPhrase.getBytes(Charset.forName("UTF-8"));
+		byte[] toHash = new byte[salt.length + pBytes.length];
+		System.arraycopy(salt, 0, toHash, 0, salt.length);
+		System.arraycopy(pBytes, 0, toHash, salt.length, pBytes.length);
+		
+		// All contexts will be updated with the full salt + passphrase.
 		for (int i = 0; i < numhashes; ++i) {
-			hashes[i].update(salt);
-			hashes[i].update(pBytes);
+			hashes[i].update(toHash);
 		}
 
-		long index = count - (salt.length + pBytes.length);
+		// Index is a byte count. Repeatedly hash the salt + passPhrase until the
+		// specified number of bytes have been digested.
+		long index = count - toHash.length;
 		while (index > 0) {
-			if (index < salt.length) {
-				for (int i = 0; i < numhashes; ++i) {
-					hashes[i].update(salt, 0, (int)index);
-				}
-				index = 0;
+			for (int i = 0; i < numhashes; ++i) {
+				hashes[i].update(Arrays.copyOf(toHash,
+									(int)Math.min(toHash.length, index)));
 			}
-			else {
-				for (int i = 0; i < numhashes; ++i) {
-					hashes[i].update(salt);
-				}
-				index -= salt.length;
-				if (index < pBytes.length) {
-					for (int i = 0; i < numhashes; ++i) {
-						hashes[i].update(pBytes, 0, (int)index);
-					}
-					index = 0;
-				}
-				else {
-					for (int i = 0; i < numhashes; ++i) {
-						hashes[i].update(pBytes);
-					}
-					digest.update(pBytes);
-					index -= pBytes.length;
-				}
-			}
+			index -= toHash.length;
 		}
 		if (keysize <= hashsize) {
+			// Key is leftmost (MSB) bytes.
 			return Arrays.copyOf(hashes[0].digest(), keysize);
 		}
 		else {
+			// Hashes are copied serially until the key if filled.
 			int remain = keysize;
 			byte[] key = new byte[keysize];
 			for (int i = 0; i < numhashes; ++i) {

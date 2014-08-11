@@ -6,7 +6,6 @@ import org.cryptokitty.keys.IteratedS2K;
 import org.cryptokitty.keys.KeyAlgorithms;
 import org.cryptokitty.keys.SaltedS2K;
 import org.cryptokitty.keys.String2Key;
-import org.cryptokitty.keys.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis

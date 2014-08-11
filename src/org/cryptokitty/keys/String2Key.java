@@ -8,6 +8,7 @@ import java.io.InputStream;
 
 import org.cryptokitty.digest.HashFactory;
 import org.cryptokitty.packet.InvalidPacketException;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis
@@ -28,7 +29,7 @@ public abstract class String2Key {
 	 * Get an S2K specifier from an input stream.
 	 */
 	public static String2Key getS2K(InputStream in, String passPhrase)
-			throws InvalidPacketException {
+			throws InvalidPacketException, UnsupportedAlgorithmException {
 		try {
 			int s2kType = in.read();
 			switch (s2kType) {
@@ -55,9 +56,7 @@ public abstract class String2Key {
 		catch (IOException e) {
 			throw new InvalidPacketException(e);
 		}
-		catch (KeyException e) {
-			throw new InvalidPacketException(e);
-		}
+
 	}
 
 	/*

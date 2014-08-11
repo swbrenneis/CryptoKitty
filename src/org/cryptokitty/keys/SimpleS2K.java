@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis
@@ -26,7 +27,8 @@ public class SimpleS2K extends String2Key {
 	/**
 	 *
 	 */
-	public SimpleS2K(String passPhrase, int algorithm) throws KeyException {
+	public SimpleS2K(String passPhrase, int algorithm)
+			throws UnsupportedAlgorithmException {
 		super(passPhrase, algorithm);
 		// Nothing to do here.
 	}

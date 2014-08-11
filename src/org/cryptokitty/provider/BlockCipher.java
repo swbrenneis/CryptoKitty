@@ -14,7 +14,8 @@ public interface BlockCipher {
 	/*
 	 * Decrypt a block of ciphertext.
 	 */
-	public byte[] decrypt(byte[] ciphertext);
+	public byte[] decrypt(byte[] ciphertext)
+			throws DecryptionException;
 
 	/*
 	 * Encrypt a block of plaintext.

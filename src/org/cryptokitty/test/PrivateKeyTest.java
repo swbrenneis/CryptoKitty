@@ -6,24 +6,14 @@ package org.cryptokitty.test;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.security.Security;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-
-import org.cryptokitty.keys.UnsupportedAlgorithmException;
+import org.cryptokitty.keys.PGPPrivateKey;
 import org.cryptokitty.packet.InvalidPacketException;
 import org.cryptokitty.packet.PacketException;
 import org.cryptokitty.packet.PacketReader;
 import org.cryptokitty.packet.SecretKeyPacket;
 import org.cryptokitty.provider.CryptoKittyProvider;
-import org.cryptokitty.provider.S2KParameterSpec;
 
 /**
  * @author stevebrenneis
@@ -51,6 +41,8 @@ public class PrivateKeyTest {
 			if (reader.getPacketTag() == PacketReader.SECRET_KEY_PACKET) {
 				InputStream in = reader.getInputStream();
 				SecretKeyPacket keyPacket = new SecretKeyPacket("zct5j1IF", in);
+				PGPPrivateKey key = new PGPPrivateKey(keyPacket);
+				System.out.println("Private key test 1 passed!");
 			}
 			else {
 				System.err.println("Not a private key packet");

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cryptokitty.keys.String2Key;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis
@@ -60,6 +61,9 @@ public class SymmetricKeyEncryptedSessionKey {
 			}
 		}
 		catch (IOException e) {
+			throw new InvalidPacketException(e);
+		}
+		catch (UnsupportedAlgorithmException e) {
 			throw new InvalidPacketException(e);
 		}
 

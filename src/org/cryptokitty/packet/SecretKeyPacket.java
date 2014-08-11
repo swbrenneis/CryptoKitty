@@ -24,11 +24,10 @@ import javax.crypto.spec.IvParameterSpec;
 import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.MPI;
 import org.cryptokitty.data.Scalar16;
-import org.cryptokitty.data.Scalar32;
 import org.cryptokitty.keys.KeyAlgorithms;
 import org.cryptokitty.keys.String2Key;
-import org.cryptokitty.keys.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.S2KParameterSpec;
+import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis
@@ -147,7 +146,8 @@ public class SecretKeyPacket extends PublicKeyPacket {
 	 * @param in
 	 * @throws InvalidPacketException
 	 */
-	public SecretKeyPacket(String passPhrase, InputStream in) throws InvalidPacketException {
+	public SecretKeyPacket(String passPhrase, InputStream in)
+			throws InvalidPacketException {
 		super(in);
 		// TODO Variable validation.
 
@@ -178,6 +178,9 @@ public class SecretKeyPacket extends PublicKeyPacket {
 			}
 		}
 		catch (IOException e) {
+			throw new InvalidPacketException(e);
+		}
+		catch (UnsupportedAlgorithmException e) {
 			throw new InvalidPacketException(e);
 		}
 
@@ -377,9 +380,9 @@ public class SecretKeyPacket extends PublicKeyPacket {
 			byte[] cs = Arrays.copyOfRange(clear, clear.length-csSize, clear.length);
 			clear = Arrays.copyOf(clear, clear.length-csSize);
 			checksum.update(clear);
-//			if (!checksum.validate(cs)) {
-//				throw new InvalidPacketException("Checksum error");
-//			}
+			if (!checksum.validate(cs)) {
+				throw new InvalidPacketException("Checksum error");
+			}
 
 			// Use a stream to read the key material
 			ByteArrayInputStream clearIn = new ByteArrayInputStream(clear);
