@@ -272,8 +272,8 @@ public class CAST5Cipher extends CipherSpi {
 	}
 
 	/*
-	 * Initializes the cipher using the specified key. The secure random
-	 * is used to generate the initialization vector.
+	 * Initializes the cipher using the specified key. The provided secure random
+	 * is not used to generate the initialization vector. This is a security issue.
 	 * 
 	 *  (non-Javadoc)
 	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.SecureRandom)
@@ -285,7 +285,8 @@ public class CAST5Cipher extends CipherSpi {
 		this.opmode = opmode;
 		cast5 = new CAST5(key);
 		byte[] ivBytes = new byte[8];
-		random.nextBytes(ivBytes);
+		SecureRandom rnd = new SecureRandom();
+		rnd.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
 		switch (mode) {
 		case CFB:
@@ -347,7 +348,8 @@ public class CAST5Cipher extends CipherSpi {
 
 	/*
 	 * Initializes the cipher using the specified key and parameters. The
-	 * secure random is used to generate the initialization vector.
+	 * secure random is not used to generate the initialization vector. This
+	 * is a security issue.
 	 * 
 	 *  (non-Javadoc)
 	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.AlgorithmParameters, java.security.SecureRandom)
@@ -361,7 +363,8 @@ public class CAST5Cipher extends CipherSpi {
 		cast5 = new CAST5(key);
 		this.params = params;
 		byte[] ivBytes = new byte[8];
-		random.nextBytes(ivBytes);
+		SecureRandom rnd = new SecureRandom();
+		rnd.nextBytes(ivBytes);
 		iv = new IvParameterSpec(ivBytes);
 		switch (mode) {
 		case CFB:
