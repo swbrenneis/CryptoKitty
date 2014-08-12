@@ -84,6 +84,8 @@ public class RSACipher extends CipherSpi {
 		if (rsa == null) {
 			throw new BadPaddingException("Padding not set");
 		}
+		
+		return null;
 
 	}
 
