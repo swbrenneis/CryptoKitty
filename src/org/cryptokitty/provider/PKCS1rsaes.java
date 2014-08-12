@@ -57,8 +57,11 @@ public class PKCS1rsaes extends RSA {
 			if (K instanceof ModulusPrivateKey) {
 				m = rsadp((ModulusPrivateKey)K, os2ip(C));
 			}
-			else {
+			else if (K instanceof CRTPrivateKey) {
 				m = rsadp((CRTPrivateKey)K, os2ip(C));
+			}
+			else {
+				throw new DecryptionException();
 			}
 
 			// If RSADP outputs "ciphertext representative out of range"

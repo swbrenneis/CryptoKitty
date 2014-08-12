@@ -99,8 +99,11 @@ public class OAEPrsaes extends RSA {
 				// Do decryption primitive
 				c = rsadp((ModulusPrivateKey)K, os2ip(C));
 			}
-			else {
+			else if (K instanceof CRTPrivateKey) {
 				c = rsadp((CRTPrivateKey)K, os2ip(C));
+			}
+			else {
+				throw new DecryptionException();
 			}
 
 			// Do decoding.

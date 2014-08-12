@@ -206,8 +206,11 @@ public class PSSrsassa extends RSA {
 		if (K instanceof ModulusPrivateKey) {
 			s = rsasp1((ModulusPrivateKey)K, m);
 		}
-		else {
+		if (K instanceof CRTPrivateKey) {
 			s = rsasp1((CRTPrivateKey)K, m);
+		}
+		else {
+			throw new BadParameterException("Invalid private key");
 		}
 
 		// c. Convert the signature representative s to a signature S of

@@ -6,8 +6,6 @@ package org.cryptokitty.provider;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 import org.cryptokitty.data.Scalar32;
@@ -136,7 +134,7 @@ public abstract class RSA {
 	/*
 	 * Base class for private keys
 	 */
-	protected class PrivateKey {
+	public class PrivateKey {
 		// Key size in bits.
 		public int bitsize;
 	}

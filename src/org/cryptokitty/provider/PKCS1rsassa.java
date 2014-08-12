@@ -3,7 +3,10 @@
  */
 package org.cryptokitty.provider;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
@@ -11,32 +14,60 @@ import org.cryptokitty.digest.HashFactory;
 /**
  * @author Steve Brenneis
  *
- * This class implements the PKCS 1 v1.5 encoded signing.
+ * This class implements the PKCS #1 v1.5 encoded signing.
  */
 public class PKCS1rsassa extends RSA {
+
+	/*
+	 * DER hash algorithm identifiers.
+	 */
+	private final static byte[] SHA1_DER =
+				{ 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e,
+					0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14 };
+	private final static byte[] SHA256_DER =
+				{ 0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte)0x86, 
+					0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05,
+					0x00, 0x04, 0x20 };
+	private final static byte[] SHA384_DER = 
+				{ 0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte)0x86,
+					0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05,
+					0x00, 0x04, 0x30 };
+	private final static byte[] SHA512_DER = 
+				{ 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte)0x86,
+					0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05,
+					0x00, 0x04, 0x40 };
+
+	/*
+	 * The ASN.1 hash algorithm identifier.
+	 */
+	private byte[] algorithmOID;
 
 	/**
 	 * 
 	 */
-	public PKCS1rsassa(int hashAgorithm)
+	public PKCS1rsassa(int hashAlgorithm)
 			throws UnsupportedAlgorithmException {
 
 		this.hashAlgorithm = hashAlgorithm;
 		switch(hashAlgorithm) {
 		case HashFactory.SHA1:
 			emptyHash = SHA1_EMPTY;
+			algorithmOID = SHA1_DER;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA256:
 			emptyHash = SHA256_EMPTY;
+			algorithmOID = SHA256_DER;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA384:
 			emptyHash = SHA384_EMPTY;
+			algorithmOID = SHA384_DER;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
 		case HashFactory.SHA512:
 			emptyHash = SHA512_EMPTY;
+			algorithmOID = SHA512_DER;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
 		default:
@@ -52,41 +83,63 @@ public class PKCS1rsassa extends RSA {
 	 * @param M - The message to be signed.
 	 * 
 	 * @return The signature as an octet string.
+	 * @throws BadParameterException 
 	 */
-	public byte[] sign(PrivateKey K, byte[] M) {
+	public byte[] sign(PrivateKey K, byte[] M)
+			throws BadParameterException {
 
 		// 1. EMSA-PKCS1-v1_5 encoding: Apply the EMSA-PKCS1-v1_5 encoding
 		//    operation (Section 9.2) to the message M to produce an encoded
 		//    message EM of length k octets:
-
-		int k = K.bitsize / 8;
-		byte[] EM = emsaPKCS1Encode(M, k);
-
+		//
 		// If the encoding operation outputs "message too long," output
 		// "message too long" and stop.  If the encoding operation outputs
 		// "intended encoded message length too short," output "RSA modulus
 		// too short" and stop.
 
-/*	   2. RSA signature:
+		int k = K.bitsize / 8;
+		byte[] EM = null;
+		try {
+			EM = emsaPKCS1Encode(M, k);
+		}
+		catch (BadParameterException e) {
+			if (e.getMessage() == "Intended encoded message length too short") {
+				throw new BadParameterException("RSA modulus too short");
+			}
+			else {
+				throw e;
+			}
+		}
 
-	      a. Convert the encoded message EM to an integer message
-	         representative m (see Section 4.2):
+		// RSA signature
+		//
+		// Convert the encoded message EM to an integer message
+		// representative m
+		//
+		//    m = OS2IP (EM).
+		//
+		// Apply the RSASP1 signature primitive (Section 5.2.1) to the RSA
+		// private key K and the message representative m to produce an
+		// integer signature representative s:
+		//
+		//    s = RSASP1 (K, m).
+		BigInteger s;
+		if (K instanceof ModulusPrivateKey) {
+			s = rsasp1((ModulusPrivateKey)K, os2ip(EM));
+		}
+		else if (K instanceof CRTPrivateKey) {
+			s = rsasp1((CRTPrivateKey)K, os2ip(EM));
+		}
+		else {
+			throw new BadParameterException("Invalid private key");
+		}
 
-	            m = OS2IP (EM).
+		// Convert the signature representative s to a signature S of
+		// length k octets:
+		//
+		//    S = I2OSP (s, k).
+		return i2osp(s, k);
 
-	      b. Apply the RSASP1 signature primitive (Section 5.2.1) to the RSA
-	         private key K and the message representative m to produce an
-	         integer signature representative s:
-
-	            s = RSASP1 (K, m).
-
-	      c. Convert the signature representative s to a signature S of
-	         length k octets (see Section 4.1):
-
-	            S = I2OSP (s, k).
-
-	   3. Output the signature S.*/
-		return null;
 	}
 
 	/**
@@ -99,64 +152,76 @@ public class PKCS1rsassa extends RSA {
 	 * @return True if the signature is valid, otherwise false.
 	 */
 	public boolean verify(PublicKey K, byte[] M, byte[] S) {
-/*
-	   RSASSA-PKCS1-V1_5-VERIFY ((n, e), M, S)
 
-	   Input:
-	   (n, e)   signer's RSA public key
-	   M        message whose signature is to be verified, an octet string
-	   S        signature to be verified, an octet string of length k, where
-	            k is the length in octets of the RSA modulus n
+		// Length checking.
+		// If the length of the signature S is not k octets,
+		// output "invalid signature" and stop.
+		int k = K.bitsize / 8;
+		if (S.length != k) {
+			return false;
+		}
 
-	   Output:
-	   "valid signature" or "invalid signature"
+		// RSA verification
+		//
+		// Convert the signature S to an integer signature representative s:
+		//
+		//    s = OS2IP (S).
+		//
+		// Apply the RSAVP1 verification primitive (Section 5.2.2) to the
+		// RSA public key (n, e) and the signature representative s to
+		// produce an integer message representative m:
+		//
+		//    m = RSAVP1 ((n, e), s).
+		BigInteger m;
+		try {
+			m = rsavp1(K, os2ip(S));
+		}
+		catch (BadParameterException e) {
+			// Fail silently
+			return false;
+		}
 
-	   Errors: "message too long"; "RSA modulus too short"
+		// Convert the message representative m to an encoded message EM
+		// of length k octets:
+		//
+		//    EM = I2OSP (m, k).
+		byte[] EM;
+		try {
+			EM = i2osp(m, k);
+		}
+		catch (BadParameterException e) {
+			// Fail silently
+			return false;
+		}
 
-	   Steps:
+		// Apply the EMSA-PKCS1-v1_5 encoding operation to the message M
+		// to produce a second encoded message EM' of length k octets:
+		//
+		//    EM' = EMSA-PKCS1-V1_5-ENCODE (M, k).
+		//
+		// The RFC says:
+		//
+		// If the encoding operation outputs "message too long," output
+		// "message too long" and stop.  If the encoding operation outputs
+		// "intended encoded message length too short," output "RSA modulus
+		// too short" and stop.
+		//
+		// This would violate the best practice of voiding the creation of
+		// oracles. We will just fail silently on any exceptions.
+		byte[] emPrime;
+		try {
+			emPrime = emsaPKCS1Encode(M, k);
+		}
+		catch (BadParameterException e) {
+			// Fail silently
+			return false;
+		}
 
-	   1. Length checking: If the length of the signature S is not k octets,
-	      output "invalid signature" and stop.
+		// Compare the encoded message EM and the second encoded message EM'.
+		// If they are the same, output "valid signature"; otherwise, output
+		// "invalid signature."
+		return Arrays.equals(EM, emPrime);
 
-	   2. RSA verification:
-
-	      a. Convert the signature S to an integer signature representative
-	         s (see Section 4.2):
-
-	            s = OS2IP (S).
-
-	      b. Apply the RSAVP1 verification primitive (Section 5.2.2) to the
-	         RSA public key (n, e) and the signature representative s to
-	         produce an integer message representative m:
-
-	            m = RSAVP1 ((n, e), s).
-
-	         If RSAVP1 outputs "signature representative out of range,"
-	         output "invalid signature" and stop.
-
-	      c. Convert the message representative m to an encoded message EM
-	         of length k octets (see Section 4.1):
-
-	            EM' = I2OSP (m, k).
-
-	         If I2OSP outputs "integer too large," output "invalid
-	         signature" and stop.
-
-	   3. EMSA-PKCS1-v1_5 encoding: Apply the EMSA-PKCS1-v1_5 encoding
-	      operation (Section 9.2) to the message M to produce a second
-	      encoded message EM' of length k octets:
-
-	            EM' = EMSA-PKCS1-V1_5-ENCODE (M, k).
-
-	      If the encoding operation outputs "message too long," output
-	      "message too long" and stop.  If the encoding operation outputs
-	      "intended encoded message length too short," output "RSA modulus
-	      too short" and stop.
-
-	   4. Compare the encoded message EM and the second encoded message EM'.
-	      If they are the same, output "valid signature"; otherwise, output
-	      "invalid signature." */
-		return false;
 	}
 
 	/**
@@ -167,26 +232,9 @@ public class PKCS1rsassa extends RSA {
 	 * 
 	 * @return - The encoded message as an octet string
 	 */
-	private byte[] emsaPKCS1Encode(byte[] M, int emLen) {
-	   /*   EMSA-PKCS1-v1_5-ENCODE (M, emLen)
+	private byte[] emsaPKCS1Encode(byte[] M, int emLen)
+			throws BadParameterException {
 
-	      Option:
-	      Hash     hash function (hLen denotes the length in octets of the hash
-	               function output)
-
-	      Input:
-	      M        message to be encoded
-	      emLen    intended length in octets of the encoded message, at least
-	               tLen + 11, where tLen is the octet length of the DER
-	               encoding T of a certain value computed during the encoding
-	               operation
-
-	      Output:
-	      EM       encoded message, an octet string of length emLen
-
-	      Errors:
-	      "message too long"; "intended encoded message length too short"
-*/
 		// 1. Apply the hash function to the message M to produce a hash value
 		//     H:
 		//
@@ -197,6 +245,10 @@ public class PKCS1rsassa extends RSA {
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Won't happen. The hash algorithm was verified in the constructor.
+		}
+		byte[] H = emptyHash;
+		if (M.length > 0) {
+			H = hash.digest(M);
 		}
 
 		// 2. Encode the algorithm ID for the hash function and the hash value
@@ -211,22 +263,40 @@ public class PKCS1rsassa extends RSA {
 		//    The first field identifies the hash function and the second
 		//    contains the hash value.  Let T be the DER encoding of the
 		//    DigestInfo value and let tLen be the length in octets of T.
+		int tLen = H.length + algorithmOID.length;
+		byte[] T = new byte[tLen];
+		System.arraycopy(algorithmOID, 0, T, 0, algorithmOID.length);
+		System.arraycopy(H, 0, T, algorithmOID.length, H.length);
 
-/*	      3. If emLen < tLen + 11, output "intended encoded message length too
-	         short" and stop.
+		// 3. If emLen < tLen + 11, output "intended encoded message length too
+		//    short" and stop.
+		if (emLen < tLen + 11) {
+			throw new BadParameterException("Intended encoded message length too short");
+		}
 
-	      4. Generate an octet string PS consisting of emLen - tLen - 3 octets
-	         with hexadecimal value 0xff.  The length of PS will be at least 8
-	         octets.
+		// 4. Generate an octet string PS consisting of emLen - tLen - 3 octets
+		//    with hexadecimal value 0xff.  The length of PS will be at least 8
+		//    octets.
+		byte[] PS = new byte[emLen - tLen - 3];
+		Arrays.fill(PS, (byte)0xff);
 
-	      5. Concatenate PS, the DER encoding T, and other padding to form the
-	         encoded message EM as
-
-	            EM = 0x00 || 0x01 || PS || 0x00 || T.
-
-	      6. Output EM. */
+		// 5. Concatenate PS, the DER encoding T, and other padding to form the
+		//    encoded message EM as
+		//
+		//       EM = 0x00 || 0x01 || PS || 0x00 || T.
+		ByteArrayOutputStream EM = new ByteArrayOutputStream();
+		try {
+			EM.write(0x00);
+			EM.write(0x01);
+			EM.write(PS);
+			EM.write(0x00);
+			EM.write(T);
+		}
+		catch (IOException e) {
+			// Not happening.
+		}
 		
-		return null;
+		return EM.toByteArray();
 		
 	}
 
