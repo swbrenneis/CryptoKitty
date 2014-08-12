@@ -20,24 +20,6 @@ import org.cryptokitty.digest.HashFactory;
  */
 public class OAEPrsaes extends RSA {
 
-	/*
-	 * The empty hash value.
-	 */
-	private byte[] emptyHash;
-
-	/*
-	 * Hash algorithm for OAEP.
-	 */
-	private int hashAlgorithm;
-
-	/*
-	 * The maximum size of an input octet string for the associated
-	 * hash function. This is here purely for extensibility and isn't
-	 * currently practical. Java cannot create a string or array longer
-	 * than 2^63 - 1 bytes;
-	 */
-	private BigInteger maxHash;
-
 	/**
 	 * @param hashAlgorithm
 	 * @throws UnsupportedAlgorithmException
@@ -148,8 +130,7 @@ public class OAEPrsaes extends RSA {
 			hash = HashFactory.getDigest(hashAlgorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
-			// Will only happen if the wrong constructor was used.
-			throw new DecryptionException();
+			// Won't happen. Hash algorithm was verified in the constructor.
 		}
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
@@ -233,9 +214,15 @@ public class OAEPrsaes extends RSA {
 	 * @throws UnsupportedAlgorithmException if the wrong constructor was used.
 	 */
 	private byte[] emeOAEPEncode(int k, byte[] M, String L)
-			throws BadParameterException, UnsupportedAlgorithmException {
+			throws BadParameterException {
 
-		Hash hash = HashFactory.getDigest(hashAlgorithm);
+		Hash hash = null;
+		try {
+			hash = HashFactory.getDigest(hashAlgorithm);
+		}
+		catch (UnsupportedAlgorithmException e1) {
+			// Won't happen. Hash algorithm was verified in the constructor.
+		}
 
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
@@ -318,9 +305,8 @@ public class OAEPrsaes extends RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	public byte[] encrypt(PublicKey K, byte[] M, String L)
-			throws BadParameterException, UnsupportedAlgorithmException {
+			throws BadParameterException {
 
-		// Length checking.
 		// Length checking.
 
 		// We're supposed to check L to make sure it's not larger than

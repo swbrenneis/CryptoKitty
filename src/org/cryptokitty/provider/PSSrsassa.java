@@ -11,11 +11,6 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
-import org.cryptokitty.provider.RSA.CRTPrivateKey;
-import org.cryptokitty.provider.RSA.MGF1;
-import org.cryptokitty.provider.RSA.ModulusPrivateKey;
-import org.cryptokitty.provider.RSA.PrivateKey;
-import org.cryptokitty.provider.RSA.PublicKey;
 
 /**
  * @author Steve Brenneis
@@ -23,24 +18,6 @@ import org.cryptokitty.provider.RSA.PublicKey;
  * This class implements the RSA PSS signing scheme
  */
 public class PSSrsassa extends RSA {
-
-	/*
-	 * The empty hash value.
-	 */
-	private byte[] emptyHash;
-
-	/*
-	 * Hash algorithm for OAEP.
-	 */
-	private int hashAlgorithm;
-
-	/*
-	 * The maximum size of an input octet string for the associated
-	 * hash function. This is here purely for extensibility and isn't
-	 * currently practical. Java cannot create a string or array longer
-	 * than 2^63 - 1 bytes;
-	 */
-	private BigInteger maxHash;
 
 	/*
 	 * Intended salt length for EMSA-PSS signature encoding
@@ -92,13 +69,20 @@ public class PSSrsassa extends RSA {
 	 * @throws UnsupportedAlgorithmException is the wrong constructor was used.
 	 */
 	private byte[] emsaPSSEncode(byte[] M, int emBits)
-			throws BadParameterException, UnsupportedAlgorithmException {
+			throws BadParameterException {
 
 		// The check here for message size with respect to the hash input
 		// size (~= 2 exabytes for SHA1) isn't necessary.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Hash hash = HashFactory.getDigest(hashAlgorithm);
+		Hash hash = null;
+		try {
+			hash = HashFactory.getDigest(hashAlgorithm);
+		}
+		catch (UnsupportedAlgorithmException e) {
+			// Won't happen. Hash algorithm was verified in the constructor.
+			e.printStackTrace();
+		}
 		byte[] mHash = emptyHash;
 		if (M.length > 0) {
 			mHash = hash.digest(M);
@@ -185,7 +169,7 @@ public class PSSrsassa extends RSA {
 	 * @return Signature octet string.
 	 */
 	public byte[] sign(PrivateKey K, byte[] M)
-			throws BadParameterException, UnsupportedAlgorithmException {
+			throws BadParameterException {
 
 		// 1. EMSA-PSS encoding: Apply the EMSA-PSS encoding operation to
 		// the message M to produce an encoded message EM of length
@@ -261,8 +245,7 @@ public class PSSrsassa extends RSA {
 			hash = HashFactory.getDigest(hashAlgorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
-			// Will only happen if the wrong constructor was used.
-			return false;
+			// Won't happen. The has algorithm was verified in the constructor.
 		}
 		byte[] mHash = hash.digest(M);
 
