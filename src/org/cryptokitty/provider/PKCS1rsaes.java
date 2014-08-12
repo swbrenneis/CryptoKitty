@@ -7,11 +7,6 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import org.cryptokitty.provider.RSA.CRTPrivateKey;
-import org.cryptokitty.provider.RSA.ModulusPrivateKey;
-import org.cryptokitty.provider.RSA.PrivateKey;
-import org.cryptokitty.provider.RSA.PublicKey;
-
 /**
  * @author Steve Brenneis
  *
