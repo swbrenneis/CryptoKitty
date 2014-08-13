@@ -201,7 +201,8 @@ public abstract class RSA {
 	/*
 	 * General encryption method.
 	 */
-	public abstract byte[] encrypt(PublicKey K, byte[] C);
+	public abstract byte[] encrypt(PublicKey K, byte[] C)
+			throws BadParameterException;
 
 	/*
 	 * Convert an integer representation to an octet string.
