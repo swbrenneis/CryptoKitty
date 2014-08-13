@@ -88,17 +88,10 @@ public class RSACipher extends CipherSpi {
 			throws IllegalBlockSizeException, BadPaddingException {
 
 		if (rsa == null) {
-			throw new BadPaddingException("Padding not set");
+			throw new IllegalStateException("Cipher not initialized");
 		}
-
 		
-		//try {
-			accumulator.write(input, inputOffset, inputLen);
-		//}
-		//catch (IOException e) {
-			// Not going to happen, but...
-		//	throw new IllegalBlockSizeException("Accumulator error");
-		//}
+		accumulator.write(input, inputOffset, inputLen);
 
 		if (mode == null) {
 			if (opmode == Cipher.DECRYPT_MODE) {
@@ -110,11 +103,16 @@ public class RSACipher extends CipherSpi {
 				}
 			}
 			else if (opmode == Cipher.ENCRYPT_MODE) {
-				return rsa.encrypt(publicKey, accumulator.toByteArray());
+				try {
+					return rsa.encrypt(publicKey, accumulator.toByteArray());
+				}
+				catch (BadParameterException e) {
+					// Message size is the only exception we'll get
+					throw new IllegalBlockSizeException("Message size too long");
+				}
 			}
 			else {
-				// Will we ever get here?
-				return null;
+				throw new IllegalStateException("Cipher not initialized");
 			}
 		}
 		else {
@@ -133,10 +131,48 @@ public class RSACipher extends CipherSpi {
 			IllegalBlockSizeException, BadPaddingException {
 
 		if (rsa == null) {
-			throw new BadPaddingException("Padding not set");
+			throw new IllegalStateException("Cipher not initialized");
+		}
+		
+		accumulator.write(input, inputOffset, inputLen);
+
+		if (mode == null) {
+			if (opmode == Cipher.DECRYPT_MODE) {
+				try {
+					byte[] m = rsa.decrypt(privateKey, accumulator.toByteArray());
+					if (output.length - outputOffset > m.length) {
+						throw new ShortBufferException("Output buffer too small");
+					}
+					System.arraycopy(m, 0, output, outputOffset, m.length);
+					return m.length;
+				}
+				catch (DecryptionException e) {
+					return 0;
+				}
+			}
+			else if (opmode == Cipher.ENCRYPT_MODE) {
+				try {
+					byte[] c = rsa.encrypt(publicKey, accumulator.toByteArray());
+					if (output.length - outputOffset > c.length) {
+						throw new ShortBufferException("Output buffer too small");
+					}
+					System.arraycopy(c, 0, output, outputOffset, c.length);
+					return c.length;
+				}
+				catch (BadParameterException e) {
+					// Message size is the only exception we'll get
+					throw new IllegalBlockSizeException("Message size too long");
+				}
+			}
+			else {
+				throw new IllegalStateException("Cipher not initialized");
+			}
+		}
+		else {
+			// TODO Implement ECB
+			return 0;
 		}
 
-		return 0;
 	}
 
 	/* (non-Javadoc)
@@ -146,8 +182,7 @@ public class RSACipher extends CipherSpi {
 	protected int engineGetBlockSize() {
 		// RSA isn't a block cipher, but Java doesn't care.
 		// Raw RSA always returns k (key size in bytes).
-		return opmode == Cipher.ENCRYPT_MODE ? publicKey.bitsize / 8
-												: privateKey.bitsize / 8;
+		return k;
 	}
 
 	/* (non-Javadoc)
@@ -166,8 +201,7 @@ public class RSACipher extends CipherSpi {
 	protected int engineGetOutputSize(int inputLen) {
 		if (mode == null) {
 			// Raw RSA always returns k (key size in bytes).
-			return opmode == Cipher.ENCRYPT_MODE ? publicKey.bitsize / 8
-													: privateKey.bitsize / 8;
+			return k;
 		}
 		else {
 			// TODO Implement ECB
@@ -193,14 +227,6 @@ public class RSACipher extends CipherSpi {
 
 		this.opmode = opmode;
 		// We won't use the passed in SecureRandom. Potential security risk!
-		// The default RSA implementation is OAEP encoding with SHA-256.
-		try {
-			rsa = new OAEPrsaes(HashFactory.SHA256);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen.
-		}
-
 		// Set up the appropriate key.
 		setKey(key);
 
@@ -214,19 +240,7 @@ public class RSACipher extends CipherSpi {
 			SecureRandom random) throws InvalidKeyException,
 			InvalidAlgorithmParameterException {
 
-		// There is no applicable AlgorithmParameterSpec class.
-		this.opmode = opmode;
-		// We won't use the passed in SecureRandom. Potential security risk!
-		// The default RSA implementation is OAEP encoding with SHA-256.
-		try {
-			rsa = new OAEPrsaes(HashFactory.SHA256);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen.
-		}
-
-		// Set up the appropriate key.
-		setKey(key);
+		engineInit(opmode, key, null);
 
 	}
 
@@ -238,19 +252,7 @@ public class RSACipher extends CipherSpi {
 			SecureRandom random) throws InvalidKeyException,
 			InvalidAlgorithmParameterException {
 
-		// There is no applicable AlgorithmParameters class.
-		this.opmode = opmode;
-		// We won't use the passed in SecureRandom. Potential security risk!
-		// The default RSA implementation is OAEP encoding with SHA-256.
-		try {
-			rsa = new OAEPrsaes(HashFactory.SHA256);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen.
-		}
-
-		// Set up the appropriate key.
-		setKey(key);
+		engineInit(opmode, key, null);
 
 	}
 
@@ -304,7 +306,7 @@ public class RSACipher extends CipherSpi {
 	 */
 	@Override
 	protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-		// TODO Auto-generated method stub
+		// TODO Implement ECB
 		return null;
 	}
 
@@ -314,7 +316,7 @@ public class RSACipher extends CipherSpi {
 	@Override
 	protected int engineUpdate(byte[] input, int inputOffset, int inputLen,
 			byte[] output, int outputOffset) throws ShortBufferException {
-		// TODO Auto-generated method stub
+		// TODO Implement ECB
 		return 0;
 	}
 

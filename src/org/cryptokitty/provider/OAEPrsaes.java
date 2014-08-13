@@ -53,10 +53,18 @@ public class OAEPrsaes extends RSA {
 
 	/**
 	 * Decrypt an octet string of ciphertext
+	 * 
+	 * @param K - The private key.
+	 * @param C - The ciphertext message octet string.
+	 * 
+	 * @return Cleartext as an octet string.
+	 * 
+	 * @throws DecryptionException
 	 */
 	@Override
 	public byte[] decrypt(PrivateKey K, byte[] C)
 			throws DecryptionException {
+		// For now, we won't be using anything but an empty string for L.
 		return decrypt(K, C, "");
 	}
 
@@ -305,6 +313,22 @@ public class OAEPrsaes extends RSA {
 	}
 
 	/**
+	 * Encrypt an octet string of cleartext.
+	 * 
+	 * @param K - The public key in the form of (n,e).
+	 * @param M - The plaintext octet string.
+	 * 
+	 * @return Ciphertext octet string.
+	 * 
+	 * @throws BadParameterException 
+	 */
+	@Override
+	public byte[] encrypt(PublicKey K, byte[] M) throws BadParameterException {
+		// For now, we won't be using anything but an empty string for L.
+		return encrypt(K, M, "");
+	}
+
+	/**
 	 * Encrypt a plaintext octet string using OAEP encoding with hash function
 	 * and MGF padding.
 	 * 
@@ -350,12 +374,6 @@ public class OAEPrsaes extends RSA {
 		// Return octet string.
 		return i2osp(c, k);
 
-	}
-
-	@Override
-	public byte[] encrypt(PublicKey K, byte[] C) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

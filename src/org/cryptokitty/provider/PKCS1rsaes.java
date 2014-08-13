@@ -31,6 +31,7 @@ public class PKCS1rsaes extends RSA {
 	 * 
 	 * @throws BadParameterException if M is too long
 	 */
+	@Override
 	public byte[] decrypt(PrivateKey K, byte[] C)
 			throws DecryptionException {
 
@@ -116,6 +117,7 @@ public class PKCS1rsaes extends RSA {
 	 * 
 	 * @throws BadParameterException if M is too long
 	 */
+	@Override
 	public byte[] encrypt(PublicKey K, byte[] M)
 			throws BadParameterException {
 

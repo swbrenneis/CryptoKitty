@@ -57,6 +57,16 @@ public class PSSrsassa extends RSA {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#decrypt(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	 */
+	@Override
+	public byte[] decrypt(PrivateKey K, byte[] C) {
+		// Operation not supported. Fail silently.
+		return null;
+	}
+
 	/**
 	 * Message signature encoding operation.
 	 * 
@@ -158,6 +168,16 @@ public class PSSrsassa extends RSA {
 		// 13. Output EM.
 		return EM.toByteArray();
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
+	 */
+	@Override
+	public byte[] encrypt(PublicKey K, byte[] M)
+		throws BadParameterException {
+		throw new BadParameterException("Operation not supported");
 	}
 
 	/**

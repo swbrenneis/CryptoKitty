@@ -10,6 +10,8 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.provider.RSA.PrivateKey;
+import org.cryptokitty.provider.RSA.PublicKey;
 
 /**
  * @author Steve Brenneis
@@ -74,6 +76,26 @@ public class PKCS1rsassa extends RSA {
 			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
 		}
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#decrypt(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	 */
+	@Override
+	public byte[] decrypt(PrivateKey K, byte[] C) {
+		// Operation not supported. Fail silently.
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
+	 */
+	@Override
+	public byte[] encrypt(PublicKey K, byte[] M)
+		throws BadParameterException {
+		throw new BadParameterException("Operation not supported");
 	}
 
 	/**
