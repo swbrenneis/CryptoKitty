@@ -52,6 +52,15 @@ public class OAEPrsaes extends RSA {
 	}
 
 	/**
+	 * Decrypt an octet string of ciphertext
+	 */
+	@Override
+	public byte[] decrypt(PrivateKey K, byte[] C)
+			throws DecryptionException {
+		return decrypt(K, C, "");
+	}
+
+	/**
 	 * Decrypt a ciphertext octet string using OAEP encoding with hash function
 	 * and MGF padding.
 	 * 
@@ -341,6 +350,12 @@ public class OAEPrsaes extends RSA {
 		// Return octet string.
 		return i2osp(c, k);
 
+	}
+
+	@Override
+	public byte[] encrypt(PublicKey K, byte[] C) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

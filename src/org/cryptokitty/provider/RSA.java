@@ -193,6 +193,17 @@ public abstract class RSA {
 	}
 
 	/*
+	 * General decryption method.
+	 */
+	public abstract byte[] decrypt(PrivateKey K, byte[] C)
+			throws DecryptionException;
+
+	/*
+	 * General encryption method.
+	 */
+	public abstract byte[] encrypt(PublicKey K, byte[] C);
+
+	/*
 	 * Convert an integer representation to an octet string.
 	 */
 	protected byte[] i2osp(BigInteger x, int xLen)
