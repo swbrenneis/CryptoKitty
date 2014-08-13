@@ -4,6 +4,7 @@
 package org.cryptokitty.provider;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -37,6 +38,11 @@ public class RSACipher extends CipherSpi {
 	 */
 	private ByteArrayOutputStream accumulator;
 	
+	/*
+	 * Key size in bytes.
+	 */
+	private int k;
+
 	/*
 	 * Block mode. Will be ECB.
 	 */
@@ -84,8 +90,37 @@ public class RSACipher extends CipherSpi {
 		if (rsa == null) {
 			throw new BadPaddingException("Padding not set");
 		}
+
 		
-		return null;
+		//try {
+			accumulator.write(input, inputOffset, inputLen);
+		//}
+		//catch (IOException e) {
+			// Not going to happen, but...
+		//	throw new IllegalBlockSizeException("Accumulator error");
+		//}
+
+		if (mode == null) {
+			if (opmode == Cipher.DECRYPT_MODE) {
+				try {
+					return rsa.decrypt(privateKey, accumulator.toByteArray());
+				}
+				catch (DecryptionException e) {
+					return null;
+				}
+			}
+			else if (opmode == Cipher.ENCRYPT_MODE) {
+				return rsa.encrypt(publicKey, accumulator.toByteArray());
+			}
+			else {
+				// Will we ever get here?
+				return null;
+			}
+		}
+		else {
+			// TODO Implement ECB
+			return null;
+		}
 
 	}
 
@@ -295,6 +330,7 @@ public class RSACipher extends CipherSpi {
 				publicKey.n = ((RSAPublicKey) key).getModulus();
 				publicKey.e = ((RSAPublicKey) key).getPublicExponent();
 				publicKey.bitsize = publicKey.n.bitLength();
+				k = publicKey.bitsize / 8;
 			}
 			else {
 				throw new InvalidKeyException("Not a valid RSA public key");
@@ -311,6 +347,7 @@ public class RSACipher extends CipherSpi {
 				BigInteger n = crt.p.multiply(crt.q);
 				privateKey.bitsize = n.bitLength();
 				privateKey = crt;
+				k = privateKey.bitsize / 8;
 			}
 			else if (key instanceof RSAPrivateKey) {
 				RSA.ModulusPrivateKey mod = rsa.new ModulusPrivateKey();
@@ -318,6 +355,7 @@ public class RSACipher extends CipherSpi {
 				mod.d = ((RSAPrivateKey) key).getPrivateExponent();
 				privateKey.bitsize = mod.n.bitLength();
 				privateKey = mod;
+				k = privateKey.bitsize / 8;
 			}
 			else {
 				throw new InvalidKeyException("Not a valid RSA private key");
