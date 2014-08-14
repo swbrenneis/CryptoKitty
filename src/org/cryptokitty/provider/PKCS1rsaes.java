@@ -119,7 +119,7 @@ public class PKCS1rsaes extends RSA {
 	 */
 	@Override
 	public byte[] encrypt(PublicKey K, byte[] M)
-			throws BadParameterException {
+			throws IllegalMessageSizeException, BadParameterException {
 
 		// 1. Length checking: If mLen > k - 11, output "message too long" and
 		//    stop.
@@ -166,6 +166,26 @@ public class PKCS1rsaes extends RSA {
 		//    length k octets:
 		return i2osp(c, k);
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#sign(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	 */
+	@Override
+	public byte[] sign(PrivateKey K, byte[] M)
+			throws ProviderException {
+		throw new ProviderException("Illegal operation");
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#verify(org.cryptokitty.provider.RSA.PublicKey, byte[], byte[])
+	 */
+	@Override
+	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+		// Unsupported operation. Fail silently.
+		return false;
 	}
 
 }

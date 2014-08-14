@@ -12,7 +12,8 @@ package org.cryptokitty.provider;
 public interface BlockCipher {
 
 	/*
-	 * Decrypt a block of ciphertext.
+	 * Decrypt a block of ciphertext. Only throws decryption exception
+	 * to prevent inadvertent oracles.
 	 */
 	public byte[] decrypt(byte[] ciphertext)
 			throws DecryptionException;
@@ -20,11 +21,13 @@ public interface BlockCipher {
 	/*
 	 * Encrypt a block of plaintext.
 	 */
-	public byte[] encrypt(byte[] plaintext);
+	public byte[] encrypt(byte[] plaintext)
+			throws ProviderException;
 
 	/*
-	 * Get the cipher block size in bytes.
+	 * Get the cipher block size in bytes. Throws an exception if the
+	 * size cannot be determined.
 	 */
-	public int getBlockSize();
+	public int getBlockSize() throws ProviderException;
 
 }

@@ -8,7 +8,7 @@ package org.cryptokitty.provider;
  *
  */
 @SuppressWarnings("serial")
-public class IllegalMessageSizeException extends Exception {
+public class IllegalMessageSizeException extends ProviderException {
 
 	/**
 	 * 

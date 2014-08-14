@@ -76,23 +76,16 @@ public class PSSrsassa extends RSA {
 	 * 
 	 * @return Encoded octet string.
 	 * 
-	 * @throws UnsupportedAlgorithmException is the wrong constructor was used.
+	 * @throws ProviderException
 	 */
 	private byte[] emsaPSSEncode(byte[] M, int emBits)
-			throws BadParameterException {
+			throws ProviderException {
 
 		// The check here for message size with respect to the hash input
 		// size (~= 2 exabytes for SHA1) isn't necessary.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Hash hash = null;
-		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen. Hash algorithm was verified in the constructor.
-			e.printStackTrace();
-		}
+		Hash hash = HashFactory.getDigest(hashAlgorithm);
 		byte[] mHash = emptyHash;
 		if (M.length > 0) {
 			mHash = hash.digest(M);
@@ -102,7 +95,7 @@ public class PSSrsassa extends RSA {
 		int hLen = hash.getDigestLength();
 		int emLen = (int)Math.ceil((double)emBits / 8);
 		if (emLen < hLen + sLen + 2) {
-			throw new BadParameterException("Encoding error");
+			throw new EncodingException("Encoding error");
 		}
 
 		// 4.  Generate a random octet string salt of length sLen; if sLen = 0,
@@ -163,6 +156,7 @@ public class PSSrsassa extends RSA {
 		}
 		catch (IOException e) {
 			// Not happening
+			throw new EncodingException("Illegal array operation");
 		}
 
 		// 13. Output EM.
@@ -175,9 +169,8 @@ public class PSSrsassa extends RSA {
 	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
 	 */
 	@Override
-	public byte[] encrypt(PublicKey K, byte[] M)
-		throws BadParameterException {
-		throw new BadParameterException("Operation not supported");
+	public byte[] encrypt(PublicKey K, byte[] M) throws ProviderException {
+		throw new ProviderException("Illegal operation");
 	}
 
 	/**
@@ -189,7 +182,7 @@ public class PSSrsassa extends RSA {
 	 * @return Signature octet string.
 	 */
 	public byte[] sign(PrivateKey K, byte[] M)
-			throws BadParameterException {
+			throws ProviderException {
 
 		// 1. EMSA-PSS encoding: Apply the EMSA-PSS encoding operation to
 		// the message M to produce an encoded message EM of length
@@ -269,6 +262,7 @@ public class PSSrsassa extends RSA {
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Won't happen. The has algorithm was verified in the constructor.
+			return false;
 		}
 		byte[] mHash = hash.digest(M);
 
@@ -415,7 +409,7 @@ public class PSSrsassa extends RSA {
 			return emsaPSSVerify(M, EM, K.bitsize - 1);
 
 		}
-		catch (BadParameterException e) {
+		catch (ProviderException e) {
 			// Fail silently
 			return false;
 		}

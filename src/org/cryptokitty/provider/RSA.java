@@ -20,6 +20,7 @@ import org.cryptokitty.digest.HashFactory;
  * Some of the variable names and method names are a bit opaque.
  * This is to more easily relate them to the RFC. Comments are
  * provided so the function won't be a mystery.
+ * 
  */
 public abstract class RSA {
 
@@ -189,7 +190,6 @@ public abstract class RSA {
 	 * Default constructor. The class must be subclassed.
 	 */
 	protected RSA() {
-		// Nothing to do here.
 	}
 
 	/*
@@ -202,7 +202,7 @@ public abstract class RSA {
 	 * General encryption method.
 	 */
 	public abstract byte[] encrypt(PublicKey K, byte[] C)
-			throws BadParameterException;
+			throws ProviderException ;
 
 	/*
 	 * Convert an integer representation to an octet string.
@@ -241,13 +241,13 @@ public abstract class RSA {
 	 * RSA decryption primitive, modulus and exponent
 	 */
 	protected BigInteger rsadp(ModulusPrivateKey K, BigInteger c)
-		throws BadParameterException {
+		throws DecryptionException {
 
 		//   1. If the ciphertext representative c is not between 0 and n - 1,
 		//      output "ciphertext representative out of range" and stop.
 		if (c.compareTo(BigInteger.ZERO) < 1 
 				|| c.compareTo(K.n.subtract(BigInteger.ONE)) > 0) {
-			throw new BadParameterException("Ciphertext representative out of range");
+			throw new DecryptionException();
 		}
 
 		// 2. Let m = c^d mod n.
@@ -268,7 +268,7 @@ public abstract class RSA {
 	 * @throws BadParameterException if ciphertext representative is out of range
 	 */
 	protected BigInteger rsadp(CRTPrivateKey K, BigInteger c)
-		throws BadParameterException {
+		throws DecryptionException {
 
 		// We have to compute the modulus for the range check
 		BigInteger n = K.p.multiply(K.q);
@@ -277,7 +277,7 @@ public abstract class RSA {
 		//      output "ciphertext representative out of range" and stop.
 		if (c.compareTo(BigInteger.ZERO) < 1 
 				|| c.compareTo(n.subtract(BigInteger.ONE)) > 0) {
-			throw new BadParameterException("Ciphertext representative out of range");
+			throw new DecryptionException();
 		}
 
 		// i.    Let m_1 = c^dP mod p and m_2 = c^dQ mod q.
@@ -303,13 +303,13 @@ public abstract class RSA {
 	 * @throws BadParameterException 
 	 */
 	protected BigInteger rsaep(PublicKey K, BigInteger m)
-			throws BadParameterException {
+			throws IllegalMessageSizeException {
 
 		// 1. If the message representative m is not between 0 and n - 1, output
 		//  "message representative out of range" and stop.
 		if (m.compareTo(BigInteger.ZERO) < 1 
 				|| m.compareTo(K.n.subtract(BigInteger.ONE)) > 0) {
-			throw new BadParameterException("Message representative out of range");
+			throw new IllegalMessageSizeException("Message representative out of range");
 		}
 
 		// 2. Let c = m^e mod n.
@@ -330,13 +330,13 @@ public abstract class RSA {
 	 * @throws BadParameterException if message representative is out of range
 	 */
 	protected BigInteger rsasp1(ModulusPrivateKey K, BigInteger m)
-			throws BadParameterException {
+			throws IllegalMessageSizeException {
 
 		//   1. If the message representative c is not between 0 and n - 1,
 		//      output "message representative out of range" and stop.
 		if (m.compareTo(BigInteger.ZERO) < 1 
 				|| m.compareTo(K.n.subtract(BigInteger.ONE)) > 0) {
-			throw new BadParameterException("Message representative out of range");
+			throw new IllegalMessageSizeException("Message representative out of range");
 		}
 
 		// Let s = m^d mod n.
@@ -357,7 +357,7 @@ public abstract class RSA {
 	 * @throws BadParameterException if message representative is out of range
 	 */
 	protected BigInteger rsasp1(CRTPrivateKey K, BigInteger m)
-			throws BadParameterException {
+			throws IllegalMessageSizeException {
 
 		// We have to compute the modulus for the range check
 		BigInteger n = K.p.multiply(K.q);
@@ -366,7 +366,7 @@ public abstract class RSA {
 		//      output "message representative out of range" and stop.
 		if (m.compareTo(BigInteger.ZERO) < 1 
 				|| m.compareTo(n.subtract(BigInteger.ONE)) > 0) {
-			throw new BadParameterException("Message representative out of range");
+			throw new IllegalMessageSizeException("Message representative out of range");
 		}
 
 		// i.    Let s_1 = m^dP mod p and s_2 = m^dQ mod q.
@@ -394,13 +394,13 @@ public abstract class RSA {
 	 * @throws BadParameterException if message representative is out of range
 	 */
 	protected BigInteger rsavp1(PublicKey K, BigInteger s)
-			throws BadParameterException {
+			throws SignatureException {
 
 		// 1. If the signature representative m is not between 0 and n - 1, output
 		//  "signature representative out of range" and stop.
 		if (s.compareTo(BigInteger.ZERO) < 1 
 				|| s.compareTo(K.n.subtract(BigInteger.ONE)) > 0) {
-			throw new BadParameterException("Signature representative out of range");
+			throw new SignatureException();
 		}
 
 		// 2. Let m = s^e mod n.
@@ -409,6 +409,28 @@ public abstract class RSA {
 		return m;
 
 	}
+
+	/**
+	 * Sign a message
+	 * 
+	 * @param K - The private key.
+	 * @param M - Message to be signed.
+	 * 
+	 * @return The signature octet array.
+	 */
+	public abstract byte[] sign(PrivateKey K, byte[] M)
+			throws ProviderException;
+
+	/**
+	 * Sign a message
+	 * 
+	 * @param K - The public key.
+	 * @param M - The signed message.
+	 * @param S - The signature to be verified.
+	 * 
+	 * @return The signature octet array.
+	 */
+	public abstract boolean verify(PublicKey K, byte[] M, byte[] S);
 
 	/*
 	 * Byte array bitwise exclusive or.

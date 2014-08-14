@@ -1,10 +1,7 @@
 package org.cryptokitty.provider;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import javax.crypto.IllegalBlockSizeException;
 
 /**
  * 
@@ -19,11 +16,16 @@ import javax.crypto.IllegalBlockSizeException;
  */
 public class ECB implements BlockMode {
 
+	/*
+	 * The BlockCipher object.
+	 */
+	private BlockCipher cipher;
+
 	/**
 	 * 
 	 */
-	public ECB() {
-		// TODO Auto-generated constructor stub
+	public ECB(BlockCipher cipher) {
+		this.cipher = cipher;
 	}
 
 	/* (non-Javadoc)
@@ -31,9 +33,7 @@ public class ECB implements BlockMode {
 	 */
 	@Override
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws IOException, IllegalBlockSizeException {
-		// TODO Auto-generated method stub
-
+			throws DecryptionException {
 	}
 
 	/* (non-Javadoc)
@@ -41,7 +41,7 @@ public class ECB implements BlockMode {
 	 */
 	@Override
 	public void encrypt(InputStream plaintext, OutputStream ciphertext)
-			throws IOException, IllegalBlockSizeException {
+			throws ProviderException {
 		// TODO Auto-generated method stub
 
 	}

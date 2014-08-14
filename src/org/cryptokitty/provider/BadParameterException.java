@@ -8,7 +8,7 @@ package org.cryptokitty.provider;
  *
  */
 @SuppressWarnings("serial")
-public class BadParameterException extends Exception {
+public class BadParameterException extends ProviderException {
 
 	/**
 	 * 
