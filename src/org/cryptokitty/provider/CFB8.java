@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.ShortBufferException;
 
 /**
  * @author Steve Brenneis
@@ -58,7 +57,7 @@ public class CFB8 implements BlockMode {
 	 * @param iv - Initialization vector.
 	 */
 	public CFB8(BlockCipher cipher, int segmentSize, byte[] iv)
-			throws IllegalBlockSizeException {
+			throws ProviderException, IllegalBlockSizeException {
 		this.cipher = cipher;
 		this.iv = iv;
 		shiftRegister = Arrays.copyOf(iv, iv.length);
@@ -76,7 +75,7 @@ public class CFB8 implements BlockMode {
 	 */
 	@Override
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws IOException, IllegalBlockSizeException {
+			throws DecryptionException {
 		// TODO Auto-generated method stub
 
 	}
@@ -87,22 +86,27 @@ public class CFB8 implements BlockMode {
 	 */
 	@Override
 	public void encrypt(InputStream cleartext, OutputStream ciphertext)
-			throws IOException, IllegalBlockSizeException {
+			throws ProviderException {
 
-		byte[] cipherSeg = new byte[segmentSize];
-		byte[] clearSeg = new byte[segmentSize];
-		int read = cleartext.read(clearSeg);
-		while (read == segmentSize) {
-			for (int n = 0; n < segmentSize; n++) {
-				cipherSeg[n] = (byte)(clearSeg[n] ^ cipherBlock[n]);
+		try {
+			byte[] cipherSeg = new byte[segmentSize];
+			byte[] clearSeg = new byte[segmentSize];
+			int read = cleartext.read(clearSeg);
+			while (read == segmentSize) {
+				for (int n = 0; n < segmentSize; n++) {
+					cipherSeg[n] = (byte)(clearSeg[n] ^ cipherBlock[n]);
+				}
+				ciphertext.write(cipherSeg);
+				shiftIn(cipherSeg);
+				cipherBlock = cipher.encrypt(shiftRegister);
+				read = cleartext.read(cipherSeg);
 			}
-			ciphertext.write(cipherSeg);
-			shiftIn(cipherSeg);
-			cipherBlock = cipher.encrypt(shiftRegister);
-			read = cleartext.read(cipherSeg);
+			if (read > 0) {
+				throw new IllegalMessageSizeException("Illegal segment");
+			}
 		}
-		if (read > 0) {
-			throw new IllegalBlockSizeException("Illegal segment");
+		catch (IOException e) {
+			throw new ProviderException("Invlaid stream operation");
 		}
 
 	}

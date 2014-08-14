@@ -3,11 +3,8 @@
  */
 package org.cryptokitty.provider;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import javax.crypto.IllegalBlockSizeException;
 
 /**
  * @author Steve Brenneis
@@ -32,7 +29,7 @@ public class PGPCFB implements BlockMode {
 	 */
 	@Override
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws IOException, IllegalBlockSizeException {
+			throws DecryptionException {
 		// TODO Auto-generated method stub
 
 	}
@@ -42,7 +39,7 @@ public class PGPCFB implements BlockMode {
 	 */
 	@Override
 	public void encrypt(InputStream cleartext, OutputStream ciphertext)
-			throws IOException, IllegalBlockSizeException {
+			throws ProviderException {
 		// TODO Auto-generated method stub
 
 	}

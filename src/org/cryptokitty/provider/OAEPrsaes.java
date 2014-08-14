@@ -105,6 +105,7 @@ public class OAEPrsaes extends RSA {
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Not happening. Algorithm was verified in the constructor.
+			throw new DecryptionException();
 		}
 		if (k < (2 * hLen) + 2) {
 			throw new DecryptionException();
@@ -151,6 +152,7 @@ public class OAEPrsaes extends RSA {
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Won't happen. Hash algorithm was verified in the constructor.
+			throw new DecryptionException();
 		}
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
@@ -216,7 +218,7 @@ public class OAEPrsaes extends RSA {
 			return Arrays.copyOfRange(DB, found + 1, DB.length);
 
 		}
-		catch (BadParameterException e) {
+		catch (ProviderException e) {
 			// Caught for debug only.
 			// Fail silently.
 			throw new DecryptionException();
@@ -231,18 +233,12 @@ public class OAEPrsaes extends RSA {
 	 * @param M - Plaintext octet string.
 	 * @param L - Optional output label. Can be empty, must not be null.
 	 * 
-	 * @throws UnsupportedAlgorithmException if the wrong constructor was used.
+	 * @throws EncodingException
 	 */
 	private byte[] emeOAEPEncode(int k, byte[] M, String L)
-			throws BadParameterException {
+			throws ProviderException {
 
-		Hash hash = null;
-		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e1) {
-			// Won't happen. Hash algorithm was verified in the constructor.
-		}
+		Hash hash = HashFactory.getDigest(hashAlgorithm);
 
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
@@ -306,6 +302,7 @@ public class OAEPrsaes extends RSA {
 		}
 		catch (IOException e) {
 			// Not happening
+			throw new EncodingException("Invalid array operation");
 		}
 
 		return EM.toByteArray();
@@ -323,7 +320,8 @@ public class OAEPrsaes extends RSA {
 	 * @throws BadParameterException 
 	 */
 	@Override
-	public byte[] encrypt(PublicKey K, byte[] M) throws BadParameterException {
+	public byte[] encrypt(PublicKey K, byte[] M)
+			throws ProviderException {
 		// For now, we won't be using anything but an empty string for L.
 		return encrypt(K, M, "");
 	}
@@ -341,7 +339,7 @@ public class OAEPrsaes extends RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	public byte[] encrypt(PublicKey K, byte[] M, String L)
-			throws BadParameterException {
+			throws ProviderException {
 
 		// Length checking.
 
@@ -351,17 +349,11 @@ public class OAEPrsaes extends RSA {
 		// that is 2^63 - 1 bytes long. The test would be pointless and
 		// technically infeasible.
 
-		int hLen = 0;
-		try {
-			hLen = HashFactory.getDigest(hashAlgorithm).getDigestLength();
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Not happening. Algorithm was verified in the constructor.
-		}
+		int hLen = HashFactory.getDigest(hashAlgorithm).getDigestLength();
 		int k = K.bitsize / 8;
 		int mLen = M.length;
 		if (mLen > k - (2 * hLen) - 2) {
-			throw new BadParameterException("Message too long");
+			throw new IllegalMessageSizeException("Message too long");
 		}
 		// We're supposed to check L to make sure it's not larger than
 		// the hash limitation, which is ginormous for SHA-1 and above
@@ -374,6 +366,26 @@ public class OAEPrsaes extends RSA {
 		// Return octet string.
 		return i2osp(c, k);
 
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#sign(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	 */
+	@Override
+	public byte[] sign(PrivateKey K, byte[] M)
+			throws ProviderException {
+		throw new ProviderException("Illegal operation");
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#verify(org.cryptokitty.provider.RSA.PublicKey, byte[], byte[])
+	 */
+	@Override
+	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+		// Unsupported operation. Fail silently.
+		return false;
 	}
 
 }

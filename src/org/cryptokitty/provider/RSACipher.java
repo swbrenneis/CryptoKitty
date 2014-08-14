@@ -4,7 +4,6 @@
 package org.cryptokitty.provider;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -44,11 +43,6 @@ public class RSACipher extends CipherSpi {
 	private int k;
 
 	/*
-	 * Block mode. Will be ECB.
-	 */
-	private BlockMode mode;
-
-	/*
 	 * Operation mode. One of Cipher.ENCRYPT or Cipher.DECRYPT.
 	 */
 	int opmode;
@@ -76,7 +70,6 @@ public class RSACipher extends CipherSpi {
 		rsa = null;
 		publicKey = null;
 		privateKey = null;
-		mode = null;
 		accumulator = new ByteArrayOutputStream();
 	}
 
@@ -93,31 +86,25 @@ public class RSACipher extends CipherSpi {
 		
 		accumulator.write(input, inputOffset, inputLen);
 
-		if (mode == null) {
-			if (opmode == Cipher.DECRYPT_MODE) {
-				try {
-					return rsa.decrypt(privateKey, accumulator.toByteArray());
-				}
-				catch (DecryptionException e) {
-					return null;
-				}
+		if (opmode == Cipher.DECRYPT_MODE) {
+			try {
+				return rsa.decrypt(privateKey, accumulator.toByteArray());
 			}
-			else if (opmode == Cipher.ENCRYPT_MODE) {
-				try {
-					return rsa.encrypt(publicKey, accumulator.toByteArray());
-				}
-				catch (BadParameterException e) {
-					// Message size is the only exception we'll get
-					throw new IllegalBlockSizeException("Message size too long");
-				}
+			catch (DecryptionException e) {
+				return null;
 			}
-			else {
-				throw new IllegalStateException("Cipher not initialized");
+		}
+		else if (opmode == Cipher.ENCRYPT_MODE) {
+			try {
+				return rsa.encrypt(publicKey, accumulator.toByteArray());
+			}
+			catch (ProviderException e) {
+				// Message size is the only exception we'll get
+				throw new IllegalBlockSizeException("Message size too long");
 			}
 		}
 		else {
-			// TODO Implement ECB
-			return null;
+			throw new IllegalStateException("Cipher not initialized");
 		}
 
 	}
@@ -136,41 +123,35 @@ public class RSACipher extends CipherSpi {
 		
 		accumulator.write(input, inputOffset, inputLen);
 
-		if (mode == null) {
-			if (opmode == Cipher.DECRYPT_MODE) {
-				try {
-					byte[] m = rsa.decrypt(privateKey, accumulator.toByteArray());
-					if (output.length - outputOffset > m.length) {
-						throw new ShortBufferException("Output buffer too small");
-					}
-					System.arraycopy(m, 0, output, outputOffset, m.length);
-					return m.length;
+		if (opmode == Cipher.DECRYPT_MODE) {
+			try {
+				byte[] m = rsa.decrypt(privateKey, accumulator.toByteArray());
+				if (output.length - outputOffset > m.length) {
+					throw new ShortBufferException("Output buffer too small");
 				}
-				catch (DecryptionException e) {
-					return 0;
-				}
+				System.arraycopy(m, 0, output, outputOffset, m.length);
+				return m.length;
 			}
-			else if (opmode == Cipher.ENCRYPT_MODE) {
-				try {
-					byte[] c = rsa.encrypt(publicKey, accumulator.toByteArray());
-					if (output.length - outputOffset > c.length) {
-						throw new ShortBufferException("Output buffer too small");
-					}
-					System.arraycopy(c, 0, output, outputOffset, c.length);
-					return c.length;
-				}
-				catch (BadParameterException e) {
-					// Message size is the only exception we'll get
-					throw new IllegalBlockSizeException("Message size too long");
-				}
+			catch (DecryptionException e) {
+				return 0;
 			}
-			else {
-				throw new IllegalStateException("Cipher not initialized");
+		}
+		else if (opmode == Cipher.ENCRYPT_MODE) {
+			try {
+				byte[] c = rsa.encrypt(publicKey, accumulator.toByteArray());
+				if (output.length - outputOffset > c.length) {
+					throw new ShortBufferException("Output buffer too small");
+				}
+				System.arraycopy(c, 0, output, outputOffset, c.length);
+				return c.length;
+			}
+			catch (ProviderException e) {
+				// Message size is the only exception we'll get
+				throw new IllegalBlockSizeException("Message size too long");
 			}
 		}
 		else {
-			// TODO Implement ECB
-			return 0;
+			throw new IllegalStateException("Cipher not initialized");
 		}
 
 	}
@@ -181,8 +162,7 @@ public class RSACipher extends CipherSpi {
 	@Override
 	protected int engineGetBlockSize() {
 		// RSA isn't a block cipher, but Java doesn't care.
-		// Raw RSA always returns k (key size in bytes).
-		return k;
+		return 0;
 	}
 
 	/* (non-Javadoc)
@@ -190,7 +170,7 @@ public class RSACipher extends CipherSpi {
 	 */
 	@Override
 	protected byte[] engineGetIV() {
-		// TODO ECB?
+		// RSA is not a block cipher and doesn't use an initialization vector.
 		return null;
 	}
 
@@ -199,14 +179,9 @@ public class RSACipher extends CipherSpi {
 	 */
 	@Override
 	protected int engineGetOutputSize(int inputLen) {
-		if (mode == null) {
-			// Raw RSA always returns k (key size in bytes).
-			return k;
-		}
-		else {
-			// TODO Implement ECB
-			return -1;
-		}
+		// RSA doesn't use block chaining. This is an irrelevant question.
+		// The answer is always k.
+		return k;
 	}
 
 	/* (non-Javadoc)
@@ -261,8 +236,8 @@ public class RSACipher extends CipherSpi {
 	 */
 	@Override
 	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
-		// TODO Implement ECB mode.
-		throw new NoSuchAlgorithmException(mode + " not supported");
+		// RSA is not a block cipher and doesn't use block chaining.
+		// Mode is ignored.
 	}
 
 	/* (non-Javadoc)
@@ -306,8 +281,19 @@ public class RSACipher extends CipherSpi {
 	 */
 	@Override
 	protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-		// TODO Implement ECB
-		return null;
+		// RSA is not a block cipher. This does exactly the same thing as engineDoFinal.
+		// It is important to note that there are no exceptions thrown from this method,
+		// so it should be avoided.
+		try {
+			return engineDoFinal(input, inputOffset, inputLen);
+		}
+		catch (IllegalBlockSizeException e) {
+			return null;
+		}
+		catch (BadPaddingException e) {
+			return null;
+		}
+	
 	}
 
 	/* (non-Javadoc)
@@ -316,8 +302,18 @@ public class RSACipher extends CipherSpi {
 	@Override
 	protected int engineUpdate(byte[] input, int inputOffset, int inputLen,
 			byte[] output, int outputOffset) throws ShortBufferException {
-		// TODO Implement ECB
-		return 0;
+		// RSA is not a block cipher. This does exactly the same thing as engineDoFinal.
+		// It is important to note that the only exception thrown from this method is
+		// the short block exception, so it should be avoided.
+		try {
+			return engineDoFinal(input, inputOffset, inputLen, output, outputOffset);
+		}
+		catch (IllegalBlockSizeException e) {
+			return 0;
+		}
+		catch (BadPaddingException e) {
+			return 0;
+		}
 	}
 
 	/*

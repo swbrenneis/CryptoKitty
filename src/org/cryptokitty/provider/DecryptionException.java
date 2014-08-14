@@ -13,7 +13,7 @@ package org.cryptokitty.provider;
  *
  */
 @SuppressWarnings("serial")
-public final class DecryptionException extends Exception {
+public final class DecryptionException extends ProviderException {
 
 	/**
 	 * 

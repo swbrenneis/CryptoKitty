@@ -8,7 +8,7 @@ package org.cryptokitty.provider;
  *
  */
 @SuppressWarnings("serial")
-public class EncodingException extends Exception {
+public class EncodingException extends ProviderException {
 
 	/**
 	 * 

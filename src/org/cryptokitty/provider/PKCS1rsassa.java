@@ -10,8 +10,6 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Hash;
 import org.cryptokitty.digest.HashFactory;
-import org.cryptokitty.provider.RSA.PrivateKey;
-import org.cryptokitty.provider.RSA.PublicKey;
 
 /**
  * @author Steve Brenneis
@@ -94,8 +92,8 @@ public class PKCS1rsassa extends RSA {
 	 */
 	@Override
 	public byte[] encrypt(PublicKey K, byte[] M)
-		throws BadParameterException {
-		throw new BadParameterException("Operation not supported");
+		throws ProviderException {
+		throw new ProviderException("Operation not supported");
 	}
 
 	/**
@@ -108,7 +106,7 @@ public class PKCS1rsassa extends RSA {
 	 * @throws BadParameterException 
 	 */
 	public byte[] sign(PrivateKey K, byte[] M)
-			throws BadParameterException {
+			throws ProviderException {
 
 		// 1. EMSA-PKCS1-v1_5 encoding: Apply the EMSA-PKCS1-v1_5 encoding
 		//    operation (Section 9.2) to the message M to produce an encoded
@@ -124,7 +122,7 @@ public class PKCS1rsassa extends RSA {
 		try {
 			EM = emsaPKCS1Encode(M, k);
 		}
-		catch (BadParameterException e) {
+		catch (EncodingException e) {
 			if (e.getMessage() == "Intended encoded message length too short") {
 				throw new BadParameterException("RSA modulus too short");
 			}
@@ -165,88 +163,6 @@ public class PKCS1rsassa extends RSA {
 	}
 
 	/**
-	 * PKCS 1 v1.5 signing
-	 * 
-	 * @param K - Signer's public key.
-	 * @param M - The message whose signature is to be verified.
-	 * @param S - The signature to verify.
-	 * 
-	 * @return True if the signature is valid, otherwise false.
-	 */
-	public boolean verify(PublicKey K, byte[] M, byte[] S) {
-
-		// Length checking.
-		// If the length of the signature S is not k octets,
-		// output "invalid signature" and stop.
-		int k = K.bitsize / 8;
-		if (S.length != k) {
-			return false;
-		}
-
-		// RSA verification
-		//
-		// Convert the signature S to an integer signature representative s:
-		//
-		//    s = OS2IP (S).
-		//
-		// Apply the RSAVP1 verification primitive (Section 5.2.2) to the
-		// RSA public key (n, e) and the signature representative s to
-		// produce an integer message representative m:
-		//
-		//    m = RSAVP1 ((n, e), s).
-		BigInteger m;
-		try {
-			m = rsavp1(K, os2ip(S));
-		}
-		catch (BadParameterException e) {
-			// Fail silently
-			return false;
-		}
-
-		// Convert the message representative m to an encoded message EM
-		// of length k octets:
-		//
-		//    EM = I2OSP (m, k).
-		byte[] EM;
-		try {
-			EM = i2osp(m, k);
-		}
-		catch (BadParameterException e) {
-			// Fail silently
-			return false;
-		}
-
-		// Apply the EMSA-PKCS1-v1_5 encoding operation to the message M
-		// to produce a second encoded message EM' of length k octets:
-		//
-		//    EM' = EMSA-PKCS1-V1_5-ENCODE (M, k).
-		//
-		// The RFC says:
-		//
-		// If the encoding operation outputs "message too long," output
-		// "message too long" and stop.  If the encoding operation outputs
-		// "intended encoded message length too short," output "RSA modulus
-		// too short" and stop.
-		//
-		// This would violate the best practice of voiding the creation of
-		// oracles. We will just fail silently on any exceptions.
-		byte[] emPrime;
-		try {
-			emPrime = emsaPKCS1Encode(M, k);
-		}
-		catch (BadParameterException e) {
-			// Fail silently
-			return false;
-		}
-
-		// Compare the encoded message EM and the second encoded message EM'.
-		// If they are the same, output "valid signature"; otherwise, output
-		// "invalid signature."
-		return Arrays.equals(EM, emPrime);
-
-	}
-
-	/**
 	 * EMSA-PKCS1 encoding.
 	 * 
 	 * @param - M the message to be encoded.
@@ -255,7 +171,7 @@ public class PKCS1rsassa extends RSA {
 	 * @return - The encoded message as an octet string
 	 */
 	private byte[] emsaPKCS1Encode(byte[] M, int emLen)
-			throws BadParameterException {
+			throws EncodingException {
 
 		// 1. Apply the hash function to the message M to produce a hash value
 		//     H:
@@ -293,7 +209,7 @@ public class PKCS1rsassa extends RSA {
 		// 3. If emLen < tLen + 11, output "intended encoded message length too
 		//    short" and stop.
 		if (emLen < tLen + 11) {
-			throw new BadParameterException("Intended encoded message length too short");
+			throw new EncodingException("Intended encoded message length too short");
 		}
 
 		// 4. Generate an octet string PS consisting of emLen - tLen - 3 octets
@@ -320,6 +236,88 @@ public class PKCS1rsassa extends RSA {
 		
 		return EM.toByteArray();
 		
+	}
+
+	/**
+	 * PKCS 1 v1.5 verification.
+	 * 
+	 * @param K - Signer's public key.
+	 * @param M - The message whose signature is to be verified.
+	 * @param S - The signature to verify.
+	 * 
+	 * @return True if the signature is valid, otherwise false.
+	 */
+	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+
+		// Length checking.
+		// If the length of the signature S is not k octets,
+		// output "invalid signature" and stop.
+		int k = K.bitsize / 8;
+		if (S.length != k) {
+			return false;
+		}
+
+		// RSA verification
+		//
+		// Convert the signature S to an integer signature representative s:
+		//
+		//    s = OS2IP (S).
+		//
+		// Apply the RSAVP1 verification primitive (Section 5.2.2) to the
+		// RSA public key (n, e) and the signature representative s to
+		// produce an integer message representative m:
+		//
+		//    m = RSAVP1 ((n, e), s).
+		BigInteger m;
+		try {
+			m = rsavp1(K, os2ip(S));
+		}
+		catch (SignatureException e) {
+			// Fail silently
+			return false;
+		}
+
+		// Convert the message representative m to an encoded message EM
+		// of length k octets:
+		//
+		//    EM = I2OSP (m, k).
+		byte[] EM;
+		try {
+			EM = i2osp(m, k);
+		}
+		catch (BadParameterException e) {
+			// Fail silently
+			return false;
+		}
+
+		// Apply the EMSA-PKCS1-v1_5 encoding operation to the message M
+		// to produce a second encoded message EM' of length k octets:
+		//
+		//    EM' = EMSA-PKCS1-V1_5-ENCODE (M, k).
+		//
+		// The RFC says:
+		//
+		// If the encoding operation outputs "message too long," output
+		// "message too long" and stop.  If the encoding operation outputs
+		// "intended encoded message length too short," output "RSA modulus
+		// too short" and stop.
+		//
+		// This would violate the best practice of voiding the creation of
+		// oracles. We will just fail silently on any exceptions.
+		byte[] emPrime;
+		try {
+			emPrime = emsaPKCS1Encode(M, k);
+		}
+		catch (EncodingException e) {
+			// Fail silently
+			return false;
+		}
+
+		// Compare the encoded message EM and the second encoded message EM'.
+		// If they are the same, output "valid signature"; otherwise, output
+		// "invalid signature."
+		return Arrays.equals(EM, emPrime);
+
 	}
 
 }

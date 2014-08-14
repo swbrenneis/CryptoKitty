@@ -5,7 +5,6 @@ package org.cryptokitty.provider;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -90,32 +89,18 @@ public class CAST5Cipher extends CipherSpi {
 	 * Do CFB8 encryption/decryption.
 	 */
 	private byte[] doMode(byte[] inBytes)
-			throws IllegalBlockSizeException {
+			throws ProviderException {
 
 		ByteArrayInputStream bytesIn =
 				new ByteArrayInputStream(inBytes);
 
 		switch (opmode) {
 		case Cipher.DECRYPT_MODE:
-			try {
-				blockMode.decrypt(bytesIn, blockOut);
-				return blockOut.toByteArray();
-			}
-			catch (IOException e) {
-				// TODO This won't happen.
-				e.printStackTrace();
-				return null;
-			}
+			blockMode.decrypt(bytesIn, blockOut);
+			return blockOut.toByteArray();
 		case Cipher.ENCRYPT_MODE:
-			try {
-				blockMode.encrypt(bytesIn, blockOut);
-				return blockOut.toByteArray();
-			}
-			catch (IOException e) {
-				// TODO This won't happen.
-				e.printStackTrace();
-				return null;
-			}
+			blockMode.encrypt(bytesIn, blockOut);
+			return blockOut.toByteArray();
 		case Cipher.UNWRAP_MODE:
 		case Cipher.WRAP_MODE:
 		default:
@@ -154,11 +139,18 @@ public class CAST5Cipher extends CipherSpi {
 		case CFB:
 		case CFB8:
 		{
-			byte[] o = doMode(text);
-			byte[] finalOut = Arrays.copyOf(o, o.length);
-			blockMode.reset();
-			blockOut.reset();
-			return finalOut;
+			try {
+				byte[] o = doMode(text);
+				byte[] finalOut = Arrays.copyOf(o, o.length);
+				blockMode.reset();
+				blockOut.reset();
+				return finalOut;
+			}
+			catch (ProviderException e) {
+				// The only time this will happen is on a decryption error in the block mode.
+				// The CAST5 cipher doesn't throw exceptions.
+				return null;
+			}
 		}
 		default:
 			// Invalid cipher mode. Shouldn't ever happen.
@@ -208,13 +200,21 @@ public class CAST5Cipher extends CipherSpi {
 		case CFB:
 		case CFB8:
 		{
-			byte[] out = doMode(text);
-			if (output.length - outputOffset < out.length) {
-				throw new ShortBufferException("Output buffer too small");
+			try {
+				byte[] out = doMode(text);
+				if (output.length - outputOffset < out.length) {
+					throw new ShortBufferException("Output buffer too small");
+				}
+				System.arraycopy(out, 0, output, outputOffset, out.length);
+				blockMode.reset();
+				blockOut.reset();
+				return out.length;
 			}
-			System.arraycopy(out, 0, output, outputOffset, out.length);
-			blockMode.reset();
-			blockOut.reset();
+			catch (ProviderException e) {
+				// The only time this will happen is on a decryption error in the block mode.
+				// The CAST5 cipher doesn't throw exceptions.
+				return 0;
+			}
 		}
 		default:
 			// Invalid cipher mode. Shouldn't ever happen.
@@ -291,7 +291,13 @@ public class CAST5Cipher extends CipherSpi {
 		switch (mode) {
 		case CFB:
 			// Create the CFB mode.
-			blockMode = new CFB(cast5, iv.getIV());
+			try {
+				blockMode = new CFB(cast5, iv.getIV());
+			}
+			catch (ProviderException e) {
+				// Shouldn't happen
+				throw new IllegalStateException("Cipher unknown state");
+			}
 			break;
 		case CFB8:
 			// Create the CFB8 mode with a default segment size.
@@ -299,8 +305,15 @@ public class CAST5Cipher extends CipherSpi {
 				blockMode = new CFB8(cast5, 1, ivBytes);
 			}
 			catch (IllegalBlockSizeException e) {
-				// Won't happen.
-				e.printStackTrace();
+				// TODO Figure out what to do with these.
+			}
+			catch (Exception e) {
+				// Java and/or Eclipse are being stupid about this.
+				// The CFB8 constructor throws a ProviderException. However
+				// Eclipse won't let you put it in the catch block because
+				// it claims it is unreachable code. If you don't add it to the
+				// catch block, Java claims it is an uncaught exception.
+				// TODO Figure out what to do with these.
 			}
 			break;
 		}
@@ -326,7 +339,14 @@ public class CAST5Cipher extends CipherSpi {
 			switch (mode) {
 			case CFB:
 				// Create the CFB mode.
-				blockMode = new CFB(cast5, iv.getIV());
+				try {
+					blockMode = new CFB(cast5, iv.getIV());
+				}
+				catch (ProviderException e1) {
+					// CAST5 get block size always returns 8.
+					// No need to handle this.
+					e1.printStackTrace();
+				}
 				break;
 			case CFB8:
 				// Create the CFB8 mode with a default segment size.
@@ -334,8 +354,15 @@ public class CAST5Cipher extends CipherSpi {
 					blockMode = new CFB8(cast5, 1, iv.getIV());
 				}
 				catch (IllegalBlockSizeException e) {
-					// Won't happen.
-					e.printStackTrace();
+					// TODO Figure out what to do with these.
+				}
+				catch (Exception e) {
+					// Java and/or Eclipse are being stupid about this.
+					// The CFB8 constructor throws a ProviderException. However
+					// Eclipse won't let you put it in the catch block because
+					// it claims it is unreachable code. If you don't add it to the
+					// catch block, Java claims it is an uncaught exception.
+					// TODO Figure out what to do with these.
 				}
 				break;
 			}
@@ -369,7 +396,14 @@ public class CAST5Cipher extends CipherSpi {
 		switch (mode) {
 		case CFB:
 			// Create the CFB mode.
-			blockMode = new CFB(cast5, iv.getIV());
+			try {
+				blockMode = new CFB(cast5, iv.getIV());
+			}
+			catch (ProviderException e1) {
+				// CAST5 get block size always returns 8.
+				// No need to handle this.
+				e1.printStackTrace();
+			}
 			break;
 		case CFB8:
 			// Create the CFB8 mode with a default segment size.
@@ -377,8 +411,15 @@ public class CAST5Cipher extends CipherSpi {
 				blockMode = new CFB8(cast5, 1, iv.getIV());
 			}
 			catch (IllegalBlockSizeException e) {
-				// Won't happen.
-				e.printStackTrace();
+				// TODO Figure out what to do with these.
+			}
+			catch (Exception e) {
+				// Java and/or Eclipse are being stupid about this.
+				// The CFB8 constructor throws a ProviderException. However
+				// Eclipse won't let you put it in the catch block because
+				// it claims it is unreachable code. If you don't add it to the
+				// catch block, Java claims it is an uncaught exception.
+				// TODO Figure out what to do with these.
 			}
 			break;
 		}
@@ -451,8 +492,10 @@ public class CAST5Cipher extends CipherSpi {
 				byte[] soFar = doMode(text);
 				return Arrays.copyOf(soFar, soFar.length);
 			}
-			catch (IllegalBlockSizeException e) {
-				e.printStackTrace();
+			catch (ProviderException e) {
+				// This will only happen on a block mode decrypt.
+				// CAST5 cipher doesn't throw exceptions.
+				return null;
 			}
 		}
 		default:
@@ -507,8 +550,9 @@ public class CAST5Cipher extends CipherSpi {
 				System.arraycopy(out, 0, output, outputOffset, out.length);
 				return out.length;
 			}
-			catch (IllegalBlockSizeException e) {
-				e.printStackTrace();
+			catch (ProviderException e) {
+				// This will only happen on a block mode decrypt.
+				// CAST5 cipher doesn't throw exceptions.
 				return 0;
 			}
 		}

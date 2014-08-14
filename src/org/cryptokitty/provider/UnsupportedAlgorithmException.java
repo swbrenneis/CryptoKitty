@@ -8,7 +8,7 @@ package org.cryptokitty.provider;
  *
  */
 @SuppressWarnings("serial")
-public class UnsupportedAlgorithmException extends Exception {
+public class UnsupportedAlgorithmException extends ProviderException {
 
 	/**
 	 * 
