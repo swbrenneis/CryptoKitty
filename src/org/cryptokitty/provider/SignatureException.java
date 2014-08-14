@@ -6,10 +6,10 @@ package org.cryptokitty.provider;
 /**
  * @author Steve Brenneis
  *
- * Non-oracle exception.
+ * Basic signature exception with a single message.
  */
 @SuppressWarnings("serial")
-public class SignatureException extends Exception {
+public class SignatureException extends ProviderException {
 
 	/**
 	 * 
