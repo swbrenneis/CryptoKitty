@@ -6,6 +6,8 @@ package org.cryptokitty.provider;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -102,8 +104,19 @@ public class PSSrsassa extends RSA {
 		//     then salt is the empty string.
 		byte[] salt = new byte[sLen];
 		if (salt.length > 0) {
-			SecureRandom rnd = new SecureRandom();
-			rnd.nextBytes(salt);
+			try {
+				SecureRandom rnd =
+						SecureRandom.getInstance("CMWC", "CryptoKitty");
+				rnd.nextBytes(salt);
+			}
+			catch (NoSuchAlgorithmException e) {
+				// Shouldn't happen, but...
+				throw new EncodingException(e);
+			}
+			catch (NoSuchProviderException e) {
+				// Shouldn't happen, but...
+				throw new EncodingException(e);
+			}
 		}
 
 		// 5.  Let

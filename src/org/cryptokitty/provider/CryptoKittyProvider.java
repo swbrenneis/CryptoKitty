@@ -36,15 +36,22 @@ public class CryptoKittyProvider extends Provider {
 				+ "OAEPWithSHA-256AndMGF1Padding|OAEPWithSHA-384AndMGF1Padding|"
 				+ "OAEPWithSHA-512AndMGF1Padding");
 
-		// Support all RSA v2.1 PSS SHA has algorithms. Does not support MD2 or MD5 hashes.
+		// Support all RSA v2.1 PSS SHA hash algorithms. Does not support MD2 or MD5 hashes.
 		// The hash algorithm will be passed in with the algorithm parameters along with
 		// the selection of the EMSA encoding (PSS or PKCS1).
-		put("Signature.SHA1withRSA", "org.cryptokitty.provider.RSASignature");
-		put("Signature.SHA256withRSA", "org.cryptokitty.provider.RSASignature");
-		put("Signature.SHA384withRSA", "org.cryptokitty.provider.RSASignature");
-		put("Signature.SHA512withRSA", "org.cryptokitty.provider.RSASignature");
+		put("Signature.SHA1withRSA", "org.cryptokitty.provider.SHA1RSASignature");
+		put("Signature.SHA256withRSA", "org.cryptokitty.provider.SHA256RSASignature");
+		put("Signature.SHA384withRSA", "org.cryptokitty.provider.SHA384RSASignature");
+		put("Signature.SHA512withRSA", "org.cryptokitty.provider.SHA512RSASignature");
+		put("Signature.SHA256withRSAPKCS1", "org.cryptokitty.provider.SHA256PKCSRSASignature");
+
+		put("SecureRandom.CMWC", "org.cryptokitty.provider.CMWCSecureRandom");
+		put("SecureRandom.BBS", "org.cryptokitty.provider.BBSSecureRandom");
+		// Initialize the randomizer array.
+		new CMWCSecureRandom();
 
 		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.RSAKeyPairGenerator");
+
 	}
 
 }
