@@ -2,10 +2,10 @@ package org.cryptokitty.provider;
 
 import java.security.spec.AlgorithmParameterSpec;
 
-import org.cryptokitty.keys.IteratedS2K;
-import org.cryptokitty.keys.KeyAlgorithms;
-import org.cryptokitty.keys.SaltedS2K;
-import org.cryptokitty.keys.String2Key;
+import org.cryptokitty.pgp.keys.IteratedS2K;
+import org.cryptokitty.pgp.keys.KeyAlgorithms;
+import org.cryptokitty.pgp.keys.SaltedS2K;
+import org.cryptokitty.pgp.keys.String2Key;
 
 /**
  * @author Steve Brenneis

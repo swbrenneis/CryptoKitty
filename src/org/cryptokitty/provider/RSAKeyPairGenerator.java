@@ -12,6 +12,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 
+import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPublicKey;
+
 /**
  * @author Steve Brenneis
  *
@@ -48,12 +51,12 @@ public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
 		catch (NoSuchAlgorithmException e) {
 			// Provider hasn't been set up yet. It would be a strange
 			// circumstance, but it could happen.
-			throw new IllegalStateException("CryptoKitty provide not initialized");
+			throw new IllegalStateException("CryptoKitty provider not initialized");
 		}
 		catch (NoSuchProviderException e) {
 			// Provider hasn't been set up yet. It would be a strange
 			// circumstance, but it could happen.
-			e.printStackTrace();
+			throw new IllegalStateException("CryptoKitty provider not initialized");
 		}
 
 	}

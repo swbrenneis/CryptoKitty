@@ -45,11 +45,6 @@ public class CryptoKittyProvider extends Provider {
 		put("Signature.SHA512withRSA", "org.cryptokitty.provider.SHA512RSASignature");
 		put("Signature.SHA256withRSAPKCS1", "org.cryptokitty.provider.SHA256PKCSRSASignature");
 
-		put("SecureRandom.CMWC", "org.cryptokitty.provider.CMWCSecureRandom");
-		put("SecureRandom.BBS", "org.cryptokitty.provider.BBSSecureRandom");
-		// Initialize the randomizer array.
-		new CMWCSecureRandom();
-
 		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.RSAKeyPairGenerator");
 
 	}

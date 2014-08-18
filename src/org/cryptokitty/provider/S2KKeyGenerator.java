@@ -10,8 +10,8 @@ import java.security.spec.AlgorithmParameterSpec;
 import javax.crypto.KeyGeneratorSpi;
 import javax.crypto.SecretKey;
 
-import org.cryptokitty.keys.S2KSecretKey;
-import org.cryptokitty.keys.String2Key;
+import org.cryptokitty.pgp.keys.S2KSecretKey;
+import org.cryptokitty.pgp.keys.String2Key;
 
 /**
  * @author Steve Brenneis
