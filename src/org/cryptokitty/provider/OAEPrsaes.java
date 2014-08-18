@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -272,8 +274,19 @@ public class OAEPrsaes extends RSA {
 
 		// d. Generate a random octet string seed of length hLen.
 		byte[] seed = new byte[hLen];
-		SecureRandom rnd = new SecureRandom();
-		rnd.nextBytes(seed);
+		try {
+			SecureRandom rnd =
+					SecureRandom.getInstance("CMWC", "CryptoKitty");
+			rnd.nextBytes(seed);
+		}
+		catch (NoSuchAlgorithmException e) {
+			// Shouldn't happen, but...
+			throw new EncodingException(e);
+		}
+		catch (NoSuchProviderException e) {
+			// Shouldn't happen, but...
+			throw new EncodingException(e);
+		}
 
 		// e. Let dbMask = MGF(seed, k - hLen - 1).
 		MGF1 dmgf = new MGF1(hashAlgorithm);

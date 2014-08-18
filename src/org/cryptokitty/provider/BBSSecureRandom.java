@@ -4,6 +4,9 @@
 package org.cryptokitty.provider;
 
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
 import java.security.SecureRandomSpi;
 import java.util.Random;
 
@@ -40,6 +43,14 @@ public class BBSSecureRandom extends SecureRandomSpi {
 	 * 
 	 */
 	public BBSSecureRandom() {
+		M = null;
+	}
+
+	/*
+	 * Initialize the generator state.
+	 */
+	private void initialize() {
+
 		BigInteger p = new BigInteger(512, 100, new Random());
 		// Check for congruence to 3 (mod 4). Generate new prime if not.
 		while (p.mod(FOUR).compareTo(THREE) != 0) {
@@ -55,6 +66,7 @@ public class BBSSecureRandom extends SecureRandomSpi {
 		// Compute the initial seed.
 		byte[] seed = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
 		setSeed(seed);
+
 	}
 
 	/*
@@ -66,11 +78,19 @@ public class BBSSecureRandom extends SecureRandomSpi {
 	 */
 	private void setSeed(byte[] seed) {
 
-		BigInteger s = new BigInteger(1, seed);
-		Random rnd = new Random(s.longValue());
-		X = new BigInteger(64, 100, rnd);
-		while (X.gcd(M).compareTo(BigInteger.ONE) != 0) {
+		try {
+			SecureRandom rnd = SecureRandom.getInstance("CMWC", "CryptoKitty");
+			rnd.setSeed(seed);
 			X = new BigInteger(64, 100, rnd);
+			while (X.gcd(M).compareTo(BigInteger.ONE) != 0) {
+				X = new BigInteger(64, 100, rnd);
+			}
+		}
+		catch (NoSuchAlgorithmException e) {
+			// Not happening.
+		}
+		catch (NoSuchProviderException e) {
+			// Not happening.
 		}
 
 	}
@@ -80,7 +100,7 @@ public class BBSSecureRandom extends SecureRandomSpi {
 	 */
 	@Override
 	protected void engineSetSeed(byte[] seed) {
-		setSeed(seed);
+		// Does nothing. Prevents known input attacks.
 	}
 
 	/* (non-Javadoc)
@@ -89,11 +109,15 @@ public class BBSSecureRandom extends SecureRandomSpi {
 	@Override
 	protected void engineNextBytes(byte[] bytes) {
 
+		if (M == null) {
+			initialize();
+		}
+
 		X = X.modPow(TWO, M);	// X(n) = X(n-1)**2 mod M.
 		int bitLength = X.bitLength();
 		int byteCount = bytes.length;
 
-		while (byteCount > 0) {
+		while (byteCount >= 0) {
 			// Count bits to make a byte.
 			byte thisByte = 0;
 			for (int b = 0; b < 8; ++b) {

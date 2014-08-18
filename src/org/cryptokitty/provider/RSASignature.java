@@ -14,6 +14,7 @@ import java.security.SignatureSpi;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.AlgorithmParameterSpec;
 
 /**
  * @author Steve Brenneis
@@ -37,17 +38,17 @@ public class RSASignature extends SignatureSpi {
 	private RSA.PublicKey publicKey;
 
 	/*
-	 * The cipher implementation.
+	 * The signature implementation.
 	 */
 	private RSA rsa;
 
 	/**
 	 * 
 	 */
-	public RSASignature() {
+	public RSASignature(RSA rsa) {
 		privateKey = null;
 		publicKey = null;
-		rsa = null;
+		this.rsa = rsa;
 	}
 
 	/* (non-Javadoc)
@@ -176,9 +177,22 @@ public class RSASignature extends SignatureSpi {
 		throw new InvalidParameterException("Method deprecated");
 	}
 
-	//@Override
-	//protected AlgorithmParameters getParameters() {
-	//	return null;
-	//}
+	/*
+	 * (non-Javadoc)
+	 * @see java.security.SignatureSpi#engineGetParameters()
+	 */
+	@Override
+	protected AlgorithmParameters engineGetParameters() {
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.security.SignatureSpi#engineSetParameter(java.security.spec.AlgorithmParameterSpec)
+	 */
+	@Override
+	protected void engineSetParameter(AlgorithmParameterSpec params) {
+		
+	}
 
 }
