@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cryptokitty.digest.HashFactory;
-import org.cryptokitty.packet.InvalidPacketException;
+import org.cryptokitty.pgp.packet.InvalidPacketException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
 /**

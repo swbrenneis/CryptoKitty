@@ -5,7 +5,7 @@ package org.cryptokitty.pgp.keys;
 
 import java.security.PrivateKey;
 
-import org.cryptokitty.packet.SecretKeyPacket;
+import org.cryptokitty.pgp.packet.SecretKeyPacket;
 
 /**
  * @author Steve Brenneis

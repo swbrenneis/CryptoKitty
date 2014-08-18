@@ -8,8 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.cryptokitty.encode.ArmoredData;
-import org.cryptokitty.encode.EncodingException;
+import org.cryptokitty.pgp.encode.ArmoredData;
+import org.cryptokitty.pgp.encode.EncodingException;
 
 /**
  * @author stevebrenneis
