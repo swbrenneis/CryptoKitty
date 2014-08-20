@@ -14,6 +14,7 @@ import java.io.InputStream;
  * decoding is required.
  */
 public class Scalar32 {
+
 	/*
 	 * Convenience methods.
 	 */
@@ -114,6 +115,7 @@ public class Scalar32 {
 	 * functions.
 	 */
 	public Scalar32 rol(int n) {
+
 		int rotated = value;
 		while (n-- > 0) {
 			boolean msb = (rotated & 0x80000000) != 0;
@@ -123,11 +125,31 @@ public class Scalar32 {
 			}
 		}
 		return new Scalar32(rotated);
+
+	}
+
+	/*
+	 * Rotate right. This returns a Scalar32 that has been rotated
+	 * right n places. Rotate is a shift right, but the LSB that 
+	 * rotates off is moved to the new MSB. Generally used for cipher
+	 * functions.
+	 */
+	public Scalar32 ror(int n) {
+
+		int rotated = value;
+		while (n-- > 0) {
+			boolean lsb = (rotated & 0x1) != 0;
+			rotated = rotated >>> 1;
+			if (lsb) {
+				rotated |= 0x8000;
+			}
+		}
+		return new Scalar32(rotated);
+
 	}
 
 	/*
 	 * Returns a Scalar32 that is the difference of this scalar and n.
-	 * Addition is done modulo 2**32.
 	 */
 	public Scalar32 subtract(int n) {
 		return new Scalar32(value - n);
