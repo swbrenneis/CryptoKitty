@@ -15,7 +15,7 @@ import org.cryptokitty.data.Scalar64;
  *
  * SHA-256 message digest implementation.
  */
-public class CKSHA256 {
+public class CKSHA256 implements Digest{
 
 	/*
 	 * Hash constants.
@@ -62,18 +62,22 @@ public class CKSHA256 {
 	}
 
 	/*
-	 * Finish the digest. The context is taken from the accumulator.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#digest()
 	 */
+	@Override
 	public byte[] digest() {
 		return digest(accumulator.toByteArray());
 	}
 
 	/*
-	 * Do the digest in one step. IMPORTANT! The accumulator is ignored.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#digest(byte[])
 	 */
+	@Override
 	public byte[] digest(byte[] in) {
 
-		// Pad the message to and even multiple of 512 bits..
+		// Pad the message to an even multiple of 512 bits.
 		byte[] context = pad(in);
 
 		// Split the message up into 512 bit chunks.
@@ -232,15 +236,19 @@ public class CKSHA256 {
 	}
 
 	/*
-	 * Update the digest with a single byte.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#update(byte)
 	 */
+	@Override
 	public void update(byte in) {
 		accumulator.write(in);
 	}
 
 	/*
-	 * Update the digest with a byte array.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#update(byte[])
 	 */
+	@Override
 	public void update(byte[] in) {
 		try {
 			accumulator.write(in);
@@ -251,14 +259,17 @@ public class CKSHA256 {
 	}
 
 	/*
-	 * Update the digest with a byte array.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#update(byte[], int, int)
 	 */
+	@Override
 	public void update(byte[] in, int offset, int length) {
 		accumulator.write(in, offset, length);
 	}
 
 	/*
-	 * W function.
+	 * W function. Compute expanded message blocks via the SHA-256
+	 * message schedule.
 	 */
 	private int[] W(byte[] chunk) {
 
@@ -266,7 +277,7 @@ public class CKSHA256 {
 
 		for (int j = 0; j < 16; ++j) {
 			int i = j * 4;
-			w[j] =Scalar32.decode(
+			w[j] = Scalar32.decode(
 					Arrays.copyOfRange(chunk, i, i + 4));
 		}
 
