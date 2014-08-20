@@ -29,7 +29,7 @@ public class Scalar64 {
 	/*
 	 * Convenience methods.
 	 */
-	public static byte[] encode(int scalar) {
+	public static byte[] encode(long scalar) {
 		return new Scalar64(scalar).getEncoded();
 	}
 

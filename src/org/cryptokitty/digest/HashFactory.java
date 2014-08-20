@@ -27,7 +27,7 @@ public class HashFactory {
 	/*
 	 * Return a message digest given an algorithm constant.
 	 */
-	public static Hash getDigest(int algorithm)
+/*	public static Hash getDigest(int algorithm)
 			throws UnsupportedAlgorithmException {
 
 		try {
@@ -56,7 +56,7 @@ public class HashFactory {
 		throw new UnsupportedAlgorithmException("Unknown algorithm identifier - "
 													+ String.valueOf(algorithm));
 	}
-
+*/
 	/**
 	 * 
 	 */

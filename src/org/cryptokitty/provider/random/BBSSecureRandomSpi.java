@@ -4,11 +4,9 @@
 package org.cryptokitty.provider.random;
 
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.security.SecureRandomSpi;
-import java.util.Random;
+
+import org.cryptokitty.data.Scalar64;
 
 /**
  * @author Steve Brenneis
@@ -35,7 +33,7 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 	private BigInteger M;
 
 	/* 
-	 * The seed.
+	 * The state.
 	 */
 	private BigInteger X;
 
@@ -51,46 +49,37 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 	 */
 	private void initialize() {
 
-		BigInteger p = new BigInteger(512, 100, new Random());
+		CMWCRandom rnd = new CMWCRandom();
+		BigInteger p = new BigInteger(512, 100, rnd);
 		// Check for congruence to 3 (mod 4). Generate new prime if not.
 		while (p.mod(FOUR).compareTo(THREE) != 0) {
-			p = new BigInteger(512, 20, new Random());
+			p = new BigInteger(512, 20, rnd);
 		}
-		BigInteger q = new BigInteger(512, 100, new Random());
+		BigInteger q = new BigInteger(512, 100, rnd);
 		// Check for inequality and congruence
 		while  (p.compareTo(q) == 0 || q.mod(FOUR).compareTo(THREE) != 0) {
-			q = new BigInteger(512, 100, new Random());
+			q = new BigInteger(512, 100, rnd);
 		}
 		// Compute the modulus
 		M = p.multiply(q);
 		// Compute the initial seed.
-		byte[] seed = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
-		setSeed(seed);
+		byte[] seed = Scalar64.encode(System.nanoTime());
+		setState(seed);
 
 	}
 
 	/*
-	 * Calculate the seed. It needs to be coprime with M so we
-	 * will use the input to seed the RNG used to create the prime.
-	 * We will start with a seed of a small bit magnitude to generate
-	 * as many randoms as possible before hitting the modulus. The
-	 * method resets the algorithm to the X n-1 state.
+	 * Calculate the state using the given seed. We use the given seed to seed
+	 * the RNG to generate the prime. X must be coprime with M. Note that
+	 * only 64 bits of the seed are used, so long seeds are pointless.
 	 */
-	private void setSeed(byte[] seed) {
+	private void setState(byte[] seed) {
 
-		try {
-			SecureRandom rnd = SecureRandom.getInstance("CMWC", "CryptoKitty");
-			rnd.setSeed(seed);
+		CMWCRandom rnd = new CMWCRandom();
+		rnd.setSeed(new BigInteger(seed).longValue());
+		X = new BigInteger(64, 100, rnd);
+		while (X.gcd(M).compareTo(BigInteger.ONE) != 0) {
 			X = new BigInteger(64, 100, rnd);
-			while (X.gcd(M).compareTo(BigInteger.ONE) != 0) {
-				X = new BigInteger(64, 100, rnd);
-			}
-		}
-		catch (NoSuchAlgorithmException e) {
-			// Not happening.
-		}
-		catch (NoSuchProviderException e) {
-			// Not happening.
 		}
 
 	}
