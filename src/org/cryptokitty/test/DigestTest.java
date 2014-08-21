@@ -5,9 +5,11 @@ package org.cryptokitty.test;
 
 import java.util.Arrays;
 
+import org.cryptokitty.provider.digest.CKSHA1;
+import org.cryptokitty.provider.digest.CKSHA224;
 import org.cryptokitty.provider.digest.CKSHA256;
-import org.cryptokitty.provider.digest.CKSHA512;
 import org.cryptokitty.provider.digest.CKSHA384;
+import org.cryptokitty.provider.digest.CKSHA512;
 
 /**
  * @author stevebrenneis
@@ -28,7 +30,7 @@ public class DigestTest {
 	public static void main(String[] args) {
 
 		byte[] message1 = 
-			{ 0x61, 0x62, 0x63 };
+			{ 0x61, 0x62, 0x63 };	// "abc"
 
 		byte[] answer1 =
 			{ (byte)0xba, 0x78, 0x16, (byte)0xbf, (byte)0x8f, 0x01, (byte)0xcf, (byte)0xea,
@@ -53,32 +55,61 @@ public class DigestTest {
 				0x43, (byte)0xff, 0x5b, (byte)0xed, (byte)0x80, (byte)0x86, 0x07, 0x2b,
 				(byte)0xa1, (byte)0xe7, (byte)0xcc, 0x23, 0x58, (byte)0xba, (byte)0xec,
 				(byte)0xa1, 0x34, (byte)0xc8, 0x25, (byte)0xa7 };
+
+		byte[] answer4 = 
+			{ (byte)0xa9, (byte)0x99, 0x3e, 0x36, 0x47, 0x06, (byte)0x81, 0x6a, (byte)0xba, 0x3e,
+				0x25, 0x71, 0x78, 0x50, (byte)0xc2, 0x6c, (byte)0x9c, (byte)0xd0, (byte)0xd8,
+				(byte)0x9d };
+	
+		byte[] answer5 = 
+			{ 0x23, 0x09, 0x7d, 0x22, 0x34, 0x05, (byte)0xd8, 0x22, (byte)0x86, 0x42, (byte)0xa4,
+				0x77, (byte)0xbd, (byte)0xa2, 0x55, (byte)0xb3, 0x2a, (byte)0xad, (byte)0xbc,
+				(byte)0xe4, (byte)0xbd, (byte)0xa0, (byte)0xb3, (byte)0xf7, (byte)0xe3, 0x6c,
+				(byte)0x9d, (byte)0xa7 };
 	
 		CKSHA256 sha256 = new CKSHA256();
 		byte[] digest1 = sha256.digest(message1);
 		if (Arrays.equals(digest1, answer1)) {
-			System.out.println("Message digest test 1 passed!");
+			System.out.println("SHA256 message digest test passed!");
 		}
 		else {
-			System.out.println("Message digest test 1 failed!");
+			System.out.println("SHA256 message digest test failed!");
 		}
 
 		CKSHA512 sha512 = new CKSHA512();
 		byte[] digest2 = sha512.digest(message1);
 		if (Arrays.equals(digest2, answer2)) {
-			System.out.println("Message digest test 2 passed!");
+			System.out.println("SHA512 message digest test passed!");
 		}
 		else {
-			System.out.println("Message digest test 2 failed!");
+			System.out.println("SHA512 message digest test failed!");
 		}
 
 		CKSHA384 sha384 = new CKSHA384();
 		byte[] digest3 = sha384.digest(message1);
 		if (Arrays.equals(digest3, answer3)) {
-			System.out.println("Message digest test 3 passed!");
+			System.out.println("SHA384 message digest test passed!");
 		}
 		else {
-			System.out.println("Message digest test 3 failed!");
+			System.out.println("SHA384 message digest test failed!");
+		}
+
+		CKSHA1 sha1 = new CKSHA1();
+		byte[] digest4 = sha1.digest(message1);
+		if (Arrays.equals(digest4, answer4)) {
+			System.out.println("SHA-1 message digest test passed!");
+		}
+		else {
+			System.out.println("SHA-1 message digest test failed!");
+		}
+
+		CKSHA224 sha224 = new CKSHA224();
+		byte[] digest5 = sha224.digest(message1);
+		if (Arrays.equals(digest5, answer5)) {
+			System.out.println("SHA224 message digest test passed!");
+		}
+		else {
+			System.out.println("SHA224 message digest test failed!");
 		}
 
 	}
