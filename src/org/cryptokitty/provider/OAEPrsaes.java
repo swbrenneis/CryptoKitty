@@ -12,8 +12,9 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.AlgorithmFactory;
+import org.cryptokitty.pgp.PGPConstants;
+import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -31,19 +32,19 @@ public class OAEPrsaes extends RSA {
 
 		this.hashAlgorithm = hashAlgorithm;
 		switch(hashAlgorithm) {
-		case HashFactory.SHA1:
+		case PGPConstants.SHA1:
 			emptyHash = SHA1_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA256:
+		case PGPConstants.SHA256:
 			emptyHash = SHA256_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA384:
+		case PGPConstants.SHA384:
 			emptyHash = SHA384_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA512:
+		case PGPConstants.SHA512:
 			emptyHash = SHA512_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
@@ -103,7 +104,7 @@ public class OAEPrsaes extends RSA {
 		// c. If k < 2hLen + 2, output "decryption error" and stop.
 		int hLen = 0;
 		try {
-			hLen = HashFactory.getDigest(hashAlgorithm).getDigestLength();
+			hLen = AlgorithmFactory.getDigest(hashAlgorithm).getDigestLength();
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Not happening. Algorithm was verified in the constructor.
@@ -148,9 +149,9 @@ public class OAEPrsaes extends RSA {
 	private byte[] emeOAEPDecode(int k, byte[] EM, String L)
 			throws DecryptionException {
 		
-		Hash hash = null;
+		Digest hash = null;
 		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
+			hash = AlgorithmFactory.getDigest(hashAlgorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Won't happen. Hash algorithm was verified in the constructor.
@@ -240,7 +241,7 @@ public class OAEPrsaes extends RSA {
 	private byte[] emeOAEPEncode(int k, byte[] M, String L)
 			throws ProviderException {
 
-		Hash hash = HashFactory.getDigest(hashAlgorithm);
+		Digest hash = AlgorithmFactory.getDigest(hashAlgorithm);
 
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
@@ -362,7 +363,7 @@ public class OAEPrsaes extends RSA {
 		// that is 2^63 - 1 bytes long. The test would be pointless and
 		// technically infeasible.
 
-		int hLen = HashFactory.getDigest(hashAlgorithm).getDigestLength();
+		int hLen = AlgorithmFactory.getDigest(hashAlgorithm).getDigestLength();
 		int k = K.bitsize / 8;
 		int mLen = M.length;
 		if (mLen > k - (2 * hLen) - 2) {
