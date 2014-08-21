@@ -18,18 +18,6 @@ import org.cryptokitty.data.Scalar64;
 public class CKSHA256 implements Digest{
 
 	/*
-	 * Hash constants.
-	 */
-	private static final int H1 = 0x6a09e667;
-	private static final int H2 = 0xbb67ae85;
-	private static final int H3 = 0x3c6ef372;
-	private static final int H4 = 0xa54ff53a;
-	private static final int H5 = 0x510e527f;
-	private static final int H6 = 0x9b05688c;
-	private static final int H7 = 0x1f83d9ab;
-	private static final int H8 = 0x5be0cd19;
-
-	/*
 	 * Round constants.
 	 */
 	private static final int[] K =
@@ -47,11 +35,33 @@ public class CKSHA256 implements Digest{
 	 */
 	private ByteArrayOutputStream accumulator;
 
+	/*
+	 * Hash constants.
+	 */
+	protected int H1;
+	protected int H2;
+	protected int H3;
+	protected int H4;
+	protected int H5;
+	protected int H6;
+	protected int H7;
+	protected int H8;
+
 	/**
 	 * 
 	 */
 	public CKSHA256() {
+
 		accumulator = new ByteArrayOutputStream();
+		H1 = 0x6a09e667;
+		H2 = 0xbb67ae85;
+		H3 = 0x3c6ef372;
+		H4 = 0xa54ff53a;
+		H5 = 0x510e527f;
+		H6 = 0x9b05688c;
+		H7 = 0x1f83d9ab;
+		H8 = 0x5be0cd19;
+
 	}
 
 	/*
