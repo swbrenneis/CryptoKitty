@@ -6,9 +6,9 @@ package org.cryptokitty.pgp.keys;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.AlgorithmFactory;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -39,9 +39,9 @@ public class SimpleS2K extends String2Key {
 	@Override
 	public byte[] generateKey(int bitsize) {
 
-		Hash digest = null;
+		Digest digest = null;
 		try {
-			digest = HashFactory.getDigest(algorithm);
+			digest = AlgorithmFactory.getDigest(algorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// This will have been taken care of in the constructor,
@@ -56,13 +56,13 @@ public class SimpleS2K extends String2Key {
 		int keysize = bitsize / 8;
 		int hashsize = digest.getDigestLength();
 		int numhashes = (bitsize / hashsize) + (bitsize % hashsize != 0 ? 1 : 0);
-		Hash[] hashes = new Hash[numhashes];
+		Digest[] hashes = new Digest[numhashes];
 		hashes[0] = digest;
 		for (int i = 1; i < numhashes; ++i) {
 			byte[] pad = new byte[i];
 			Arrays.fill(pad, (byte)0);
 			try {
-				hashes[i] = HashFactory.getDigest(algorithm);
+				hashes[i] = AlgorithmFactory.getDigest(algorithm);
 			}
 			catch (UnsupportedAlgorithmException e) {
 				// We did this once.

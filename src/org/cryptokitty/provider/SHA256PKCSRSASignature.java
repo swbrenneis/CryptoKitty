@@ -3,7 +3,7 @@
  */
 package org.cryptokitty.provider;
 
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.PGPConstants;
 
 /**
  * @author Steve Brenneis
@@ -18,7 +18,7 @@ public class SHA256PKCSRSASignature extends RSASignature {
 	 */
 	public SHA256PKCSRSASignature()
 			throws UnsupportedAlgorithmException {
-		super(new PKCS1rsassa(HashFactory.SHA256));
+		super(new PKCS1rsassa(PGPConstants.SHA256));
 	}
 
 }
