@@ -6,7 +6,7 @@ package org.cryptokitty.pgp.keys;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.PGPConstants;
 import org.cryptokitty.pgp.packet.InvalidPacketException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 
@@ -76,13 +76,13 @@ public abstract class String2Key {
 			throws UnsupportedAlgorithmException {
 		this.passPhrase = passPhrase;
 		switch (algorithm) {
-		case HashFactory.MD5:
-		case HashFactory.SHA1:
-		case HashFactory.RIPEMD160:
-		case HashFactory.SHA256:
-		case HashFactory.SHA384:
-		case HashFactory.SHA512:
-		case HashFactory.SHA224:
+		case PGPConstants.MD5:
+		case PGPConstants.SHA1:
+		case PGPConstants.RIPEMD160:
+		case PGPConstants.SHA256:
+		case PGPConstants.SHA384:
+		case PGPConstants.SHA512:
+		case PGPConstants.SHA224:
 			break;
 		default:
 			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
