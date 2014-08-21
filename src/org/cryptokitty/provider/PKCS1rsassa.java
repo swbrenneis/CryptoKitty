@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.AlgorithmFactory;
+import org.cryptokitty.pgp.PGPConstants;
+import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -50,22 +51,22 @@ public class PKCS1rsassa extends RSA {
 
 		this.hashAlgorithm = hashAlgorithm;
 		switch(hashAlgorithm) {
-		case HashFactory.SHA1:
+		case PGPConstants.SHA1:
 			emptyHash = SHA1_EMPTY;
 			algorithmOID = SHA1_DER;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA256:
+		case PGPConstants.SHA256:
 			emptyHash = SHA256_EMPTY;
 			algorithmOID = SHA256_DER;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA384:
+		case PGPConstants.SHA384:
 			emptyHash = SHA384_EMPTY;
 			algorithmOID = SHA384_DER;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA512:
+		case PGPConstants.SHA512:
 			emptyHash = SHA512_EMPTY;
 			algorithmOID = SHA512_DER;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
@@ -176,10 +177,10 @@ public class PKCS1rsassa extends RSA {
 		// 1. Apply the hash function to the message M to produce a hash value
 		//     H:
 		//
-		//         H = Hash(M).
-		Hash hash = null;
+		//         H = Digest(M).
+		Digest hash = null;
 		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
+			hash = AlgorithmFactory.getDigest(hashAlgorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Won't happen. The hash algorithm was verified in the constructor.
