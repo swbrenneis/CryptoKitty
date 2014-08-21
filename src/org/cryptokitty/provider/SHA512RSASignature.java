@@ -3,7 +3,8 @@
  */
 package org.cryptokitty.provider;
 
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.PGPConstants;
+
 
 /**
  * @author stevebrenneis
@@ -18,7 +19,7 @@ public class SHA512RSASignature extends RSASignature {
 	 */
 	public SHA512RSASignature()
 			throws UnsupportedAlgorithmException {
-		super(new PSSrsassa(HashFactory.SHA512, 8));
+		super(new PSSrsassa(PGPConstants.SHA512, 8));
 	}
 
 }

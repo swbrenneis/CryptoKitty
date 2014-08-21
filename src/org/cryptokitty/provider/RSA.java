@@ -9,8 +9,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.cryptokitty.data.Scalar32;
-import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.AlgorithmFactory;
+import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -70,14 +70,14 @@ public abstract class RSA {
 		/*
 		 * Hash function.
 		 */
-		private Hash hash;
+		private Digest hash;
 	
 		/*
 		 * Sole constructor.
 		 */
 		public MGF1(int hashAlgorithm) {
 			try {
-				this.hash = HashFactory.getDigest(hashAlgorithm);
+				this.hash = AlgorithmFactory.getDigest(hashAlgorithm);
 			}
 			catch (UnsupportedAlgorithmException e) {
 				// Won't happen. The algorithm is verified in RSA constructor
