@@ -23,7 +23,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.PGPConstants;
 
 /**
  * @author Steve Brenneis
@@ -252,16 +252,16 @@ public class RSACipher extends CipherSpi {
 				rsa = new PKCS1rsaes();
 				break;
 			case "OAEPWithSHA-1AndMGF1Padding":
-				rsa = new OAEPrsaes(HashFactory.SHA1);
+				rsa = new OAEPrsaes(PGPConstants.SHA1);
 				break;
 			case "OAEPWithSHA-256AndMGF1Padding":
-				rsa = new OAEPrsaes(HashFactory.SHA256);
+				rsa = new OAEPrsaes(PGPConstants.SHA256);
 				break;
 			case "OAEPWithSHA-384AndMGF1Padding":
-				rsa = new OAEPrsaes(HashFactory.SHA384);
+				rsa = new OAEPrsaes(PGPConstants.SHA384);
 				break;
 			case "OAEPWithSHA-512AndMGF1Padding":
-				rsa = new OAEPrsaes(HashFactory.SHA512);
+				rsa = new OAEPrsaes(PGPConstants.SHA512);
 				break;
 			default:
 				rsa = null;
