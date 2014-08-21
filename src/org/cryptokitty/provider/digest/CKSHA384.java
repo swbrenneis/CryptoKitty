@@ -36,4 +36,13 @@ public class CKSHA384 extends CKSHA512 {
 		return Arrays.copyOf(m, 48);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
+	 */
+	@Override
+	public int getDigestLength() {
+		return 48;
+	}
+
 }

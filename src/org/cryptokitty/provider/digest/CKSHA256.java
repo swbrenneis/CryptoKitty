@@ -170,6 +170,15 @@ public class CKSHA256 implements Digest{
 	}
 
 	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
+	 */
+	@Override
+	public int getDigestLength() {
+		return 32;
+	}
+
+	/*
 	 * Maj function.
 	 */
 	private int Maj(int x, int y, int z) {
