@@ -18,7 +18,7 @@ public class SHA1RSASignature extends RSASignature {
 	 */
 	public SHA1RSASignature()
 			throws UnsupportedAlgorithmException {
-		super(new PSSrsassa(HashFactory.SHA1, 8));
+		super(new PSSrsassa(HashFactory.CKSHA1, 8));
 	}
 
 }

@@ -15,7 +15,7 @@ import org.cryptokitty.data.Scalar64;
  *
  * SHA-512 message digest implementation
  */
-public class CKSHA512 {
+public class CKSHA512 implements Digest {
 
 	/*
 	 * Round constants.
@@ -83,15 +83,19 @@ public class CKSHA512 {
 	}
 
 	/*
-	 * Finish the digest. The context is taken from the accumulator.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#digest()
 	 */
+	@Override
 	public byte[] digest() {
 		return digest(accumulator.toByteArray());
 	}
 
 	/*
-	 * Do the digest in one step. IMPORTANT! The accumulator is ignored.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#digest(byte[])
 	 */
+	@Override
 	public byte[] digest(byte[] in) {
 
 		// Pad the message to an even multiple of 1024 bits.
@@ -187,6 +191,15 @@ public class CKSHA512 {
 	}
 
 	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
+	 */
+	@Override
+	public int getDigestLength() {
+		return 64;
+	}
+
+	/*
 	 * Maj function.
 	 */
 	private long Maj(long x, long y, long z) {
@@ -254,15 +267,19 @@ public class CKSHA512 {
 	}
 
 	/*
-	 * Update the digest with a single byte.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#update(byte)
 	 */
+	@Override
 	public void update(byte in) {
 		accumulator.write(in);
 	}
 
 	/*
-	 * Update the digest with a byte array.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#update(byte[])
 	 */
+	@Override
 	public void update(byte[] in) {
 		try {
 			accumulator.write(in);
@@ -273,8 +290,10 @@ public class CKSHA512 {
 	}
 
 	/*
-	 * Update the digest with a byte array.
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#update(byte[], int, int)
 	 */
+	@Override
 	public void update(byte[] in, int offset, int length) {
 		accumulator.write(in, offset, length);
 	}

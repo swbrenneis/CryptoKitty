@@ -7,9 +7,9 @@ import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.AlgorithmFactory;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -110,16 +110,14 @@ public class IteratedS2K extends String2Key {
 	@Override
 	public byte[] generateKey(int bitsize) {
 
-		Hash digest = null;
+		Digest digest = null;
 		try {
-			digest = HashFactory.getDigest(algorithm);
+			digest = AlgorithmFactory.getDigest(algorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// This will have been taken care of in the constructor,
 			// but just in case...
 			System.err.println(e.getMessage());
-		}
-		if (digest == null) {
 			return null;
 		}
 
@@ -128,12 +126,12 @@ public class IteratedS2K extends String2Key {
 		int hashsize = digest.getDigestLength();
 		// Number of hash contexts needed
 		int numhashes = (keysize + (hashsize - 1)) / hashsize;
-		Hash[] hashes = new Hash[numhashes];
+		Digest[] hashes = new Digest[numhashes];
 		// Always need one
 		hashes[0] = digest;
 		for (int i = 1; i < numhashes; ++i) {
 			try {
-				hashes[i] = HashFactory.getDigest(algorithm);
+				hashes[i] = AlgorithmFactory.getDigest(algorithm);
 			}
 			catch (UnsupportedAlgorithmException e) {
 				// We did this once.

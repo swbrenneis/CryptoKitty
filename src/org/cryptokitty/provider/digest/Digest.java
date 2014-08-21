@@ -21,6 +21,11 @@ public interface Digest {
 	public byte[] digest(byte[] message);
 
 	/*
+	 * Get the length of the hash in bytes.
+	 */
+	public int getDigestLength();
+
+	/*
 	 * Update the hash context.
 	 */
 	public void update(byte message);
