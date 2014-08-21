@@ -11,8 +11,9 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import org.cryptokitty.digest.Hash;
-import org.cryptokitty.digest.HashFactory;
+import org.cryptokitty.pgp.AlgorithmFactory;
+import org.cryptokitty.pgp.PGPConstants;
+import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -37,19 +38,19 @@ public class PSSrsassa extends RSA {
 		this.sLen = sLen;
 		this.hashAlgorithm = hashAlgorithm;
 		switch(hashAlgorithm) {
-		case HashFactory.SHA1:
+		case PGPConstants.SHA1:
 			emptyHash = SHA1_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA256:
+		case PGPConstants.SHA256:
 			emptyHash = SHA256_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA384:
+		case PGPConstants.SHA384:
 			emptyHash = SHA384_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
-		case HashFactory.SHA512:
+		case PGPConstants.SHA512:
 			emptyHash = SHA512_EMPTY;
 			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 			break;
@@ -87,7 +88,7 @@ public class PSSrsassa extends RSA {
 		// size (~= 2 exabytes for SHA1) isn't necessary.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Hash hash = HashFactory.getDigest(hashAlgorithm);
+		Digest hash = AlgorithmFactory.getDigest(hashAlgorithm);
 		byte[] mHash = emptyHash;
 		if (M.length > 0) {
 			mHash = hash.digest(M);
@@ -130,7 +131,7 @@ public class PSSrsassa extends RSA {
 		System.arraycopy(salt, 0, mPrime, hLen + 8, sLen);
 
 		// 6.  Let H = Hash(M'), an octet string of length hLen.
-		hash.reset();
+		// hash.reset(); Not needed CK hashes don't retain state.
 		byte[] H = hash.digest(mPrime);
 
 		// 7.  Generate an octet string PS consisting of emLen - sLen - hLen - 2
@@ -269,9 +270,9 @@ public class PSSrsassa extends RSA {
 		// longer than 2^63 - 1.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Hash hash = null;
+		Digest hash = null;
 		try {
-			hash = HashFactory.getDigest(hashAlgorithm);
+			hash = AlgorithmFactory.getDigest(hashAlgorithm);
 		}
 		catch (UnsupportedAlgorithmException e) {
 			// Won't happen. The has algorithm was verified in the constructor.
@@ -364,7 +365,7 @@ public class PSSrsassa extends RSA {
 		System.arraycopy(salt, 0, mPrime, 8 + hLen, sLen);
 
 		// 13. Let H' = Hash(M'), an octet string of length hLen.
-		hash.reset();
+		// hash.reset(); Not needed. CK digests don't retail state.
 		byte[] hPrime = hash.digest(mPrime);
 
 		// 14. If H = H', output "consistent." Otherwise, output "inconsistent."
