@@ -64,6 +64,7 @@ public class CKSHA512 implements Digest {
 	 * 
 	 */
 	public CKSHA512() {
+
 		accumulator = new ByteArrayOutputStream();
 		H1 = 0x6a09e667f3bcc908L;
 		H2 = 0xbb67ae8584caa73bL;
@@ -73,6 +74,7 @@ public class CKSHA512 implements Digest {
 		H6 = 0x9b05688c2b3e6c1fL;
 		H7 = 0x1f83d9abfb41bd6bL;
 		H8 = 0x5be0cd19137e2179L;
+
 	}
 
 	/*
@@ -209,18 +211,18 @@ public class CKSHA512 implements Digest {
 	/*
 	 * Pad the message.
 	 */
-	private byte[] pad(byte[] in) {
+	private byte[] pad(byte[] message) {
 
-		int bitsize = in.length * 8;
+		int bitsize = message.length * 8;
 		int padbits = 896 - (bitsize % 1024);
 		byte[] padding = new byte[padbits / 8];
 		Arrays.fill(padding, (byte)0);
 		padding[0] = (byte)0x80;
-		byte[] context = new byte[in.length + padding.length + 16];
-		System.arraycopy(in, 0, context, 0, in.length);
-		System.arraycopy(padding, 0, context, in.length, padding.length);
+		byte[] context = new byte[message.length + padding.length + 16];
+		System.arraycopy(message, 0, context, 0, message.length);
+		System.arraycopy(padding, 0, context, message.length, padding.length);
 		System.arraycopy(Scalar128.encode(bitsize), 0, context,
-											in.length + padding.length, 16);
+											message.length + padding.length, 16);
 		return context;
 
 	}
