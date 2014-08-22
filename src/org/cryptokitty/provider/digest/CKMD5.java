@@ -7,7 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.cryptokitty.data.Scalar32;
 import org.cryptokitty.data.Scalar64;
 
 
@@ -20,7 +19,7 @@ public class CKMD5 implements Digest {
 	/*
 	 * Sin function constants.
 	 */
-	private static final int[] T = 
+	private static final int[] K = 
 		{ 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 			0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
 			0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
@@ -39,6 +38,16 @@ public class CKMD5 implements Digest {
 			0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391 };
 
 	/*
+	 * Per round shift constants
+	 */
+	private static final int[] s = 
+		{ 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+			5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+			4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+			6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21 };
+
+
+	/*
 	 * Message accumulator.
 	 */
 	private ByteArrayOutputStream accumulator;
@@ -48,6 +57,29 @@ public class CKMD5 implements Digest {
 	 */
 	public CKMD5() {
 		accumulator = new ByteArrayOutputStream();
+	}
+
+	/*
+	 * MD5 is little-endian. Sigh.
+	 */
+	private byte[] byteswap(int x) {
+		byte[] answer = new byte[4];
+		answer[0] = (byte)(x & 0xff);
+		answer[1] = (byte)((x >> 8) & 0xff);
+		answer[2] = (byte)((x >> 16) & 0xff);
+		answer[3] = (byte)((x >> 24) & 0xff);
+		return answer;
+	}
+
+	/*
+	 * MD5 is little-endian. Sigh.
+	 */
+	private int byteswap(byte[] x) {
+		int answer = 0;
+		for (int i = 3; i <= 0; --i) {
+			answer = (answer << 8) | (x[i] & 0xff);
+		}
+		return answer;
 	}
 
 	/* (non-Javadoc)
@@ -64,97 +96,88 @@ public class CKMD5 implements Digest {
 	@Override
 	public byte[] digest(byte[] message) {
 
+		// Pad the message to an even multiple of 512 bits.
 		byte[] context = pad(message);
-		// Split the padded message into 32 bit integers
-		int N = context.length / 4;
-		int[] M = new int[N];
-		for (int n = 0; n < N; ++n) {
-			int i = n * 4;
-			M[n] = Scalar32.decode(
-							Arrays.copyOfRange(context, i, i + 4));
-		}
-		
-		int A = 0x67452301;
-		int B = 0xefcdab89;
-		int C = 0x98badcfe;
-		int D = 0x10325476;
-
-		int[] X = new int[16];
-
+		// Process each 512 bit chunk.
+		int N = context.length / 64;
+		byte[][] chunks = new byte[N][64];
 		for (int i = 0; i < N; ++i) {
+			int j = i * 64;
+			System.arraycopy(context, j, chunks[i], 0, 64);
+		}
 
-			for (int j = 0; j < 16; ++j) {
-				X[j] = M[i * 16 + j];
+		int A0 = 0x67452301;
+		int B0 = 0xefcdab89;
+		int C0 = 0x98badcfe;
+		int D0 = 0x10325476;
+
+		// Process each 512 byte chunk
+		for (int n = 0; n < N; ++n) {
+
+			// Split the padded message into 32 bit (little-endian) integers
+			int[] M = new int[16];
+			for (int i = 0; i < 16; ++i) {
+				int j = i * 4;
+				M[i] = byteswap(Arrays.copyOfRange(chunks[n], j, j + 4));
+			}
+			
+			int A = A0;
+			int B = B0;
+			int C = C0;
+			int D = D0;
+
+			// Rounds
+			int F;
+			int g;
+			for (int i = 0; i < 64; ++i) {
+
+				if (i <= 15) {
+					F = (B & C) | ((~B) & D);
+					g = i;
+				}
+				else if (i <= 31) {
+					F = (D & B) | ((~D) & C);
+					g = (5 * i + 1) % 16;
+				}
+				else if (i <= 47) {
+					F = B ^ C ^ D;
+					g = (3 * i + 5) % 16;
+				}
+				else {
+					F = C ^ (B | (~D));
+					g = (7 * i) % 16;
+				}
+
+				int dTemp = D;
+				D = C;
+				C = B;
+				B = B + rol((A + F + K[i] + M[g]), s[i]);
+				A = dTemp;
+
 			}
 
-			int AA = A;
-			int BB = B;
-			int CC = C;
-			int DD = D;
+			// Per chunk sum.
+			A0 = A0 + A;
+			B0 = B0 + B;
+			C0 = C0 + C;
+			D0 = D0 + D;
 
-			// Round 1
-			// abcd k s i
-			// a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s)
-			// [ABCD  0  7  1]
-			A = round1(A, B, C, D, X[0], 7, T[1]);
-			// [DABC  1 12  2]
-			D = round1(D, A, B, C, X[1], 12, T[2]);
-			// [CDAB  2 17  3]
-			C = round1(C, D, A, B, X[2], 17, T[3]);
-			// [BCDA  3 22  4]
-			B = round1(B, C, D, A, X[3], 22, T[4]);
-			// [ABCD  4  7  5] 
-			A = round1(A, B, C, D, X[4], 7, T[5]);
-			// [DABC  5 12  6]
-			D = round1(D, A, B, C, X[5], 12, T[6]);
-			// [CDAB  6 17  7]
-			C = round1(C, D, A, B, X[6], 17, T[7]);
-			// [BCDA  7 22  8]
-			B = round1(B, C, D, A, X[7], 22, T[8]);
-			// [ABCD  8  7  9]
-			A = round1(A, B, C, D, X[8], 7, T[9]);
-			// [DABC  9 12 10]
-			D = round1(D, A, B, C, X[9], 12, T[10]);
-			// [CDAB 10 17 11]
-			C = round1(C, D, A, B, X[10], 17, T[11]);
-			// [BCDA 11 22 12]
-			B = round1(B, C, D, A, X[11], 22, T[12]);
-			// [ABCD 12  7 13]
-			A = round1(A, B, C, D, X[12], 7, T[13]);
-			// [DABC 13 12 14]
-			D = round1(D, A, B, C, X[13], 12, T[14]);
-			// [CDAB 14 17 15]
-			C = round1(C, D, A, B, X[14], 17, T[15]);
-			// [BCDA 15 22 16]
-			B = round1(B, C, D, A, X[15], 22, T[16]);
-
-			// round 2
-			// abcd k s i
-			// a = b + ((a + G(b,c,d) + X[k] + T[i]) <<< s)
-			// [ABCD  1  5 17]
-			A = round2(A, B, C, D, X[1], 5, T[17]);
-			// [DABC  6  9 18]
-			D = round2(D, A, B, C, X[6], 9, T[18]);
-			// [CDAB 11 14 19]
-			C = round2(C, D, A, B, X[11], 14, T[19]);
-			// [BCDA  0 20 20]
-			B = round2(B, C, D, A, X[0], 20, T[20]);
-			// [ABCD  5  5 21]
-			// [DABC 10  9 22]
-			// [CDAB 15 14 23]
-			// [BCDA  4 20 24]
-			// [ABCD  9  5 25]
-			// [DABC 14  9 26]
-			// [CDAB  3 14 27]
-			// [BCDA  8 20 28]
-			// [ABCD 13  5 29]
-			// [DABC  2  9 30]
-			// [CDAB  7 14 31]
-			// [BCDA 12 20 32]
-			
 		}
 
-		return null;
+		ByteArrayOutputStream d = new ByteArrayOutputStream();
+		
+		try {
+			// For no good reason, MD5 is little-endian.
+			d.write(byteswap(A0));
+			d.write(byteswap(B0));
+			d.write(byteswap(C0));
+			d.write(byteswap(D0));
+		}
+		catch (IOException e) {
+			// Nope.
+		}
+
+		return d.toByteArray();
 
 	}
 
@@ -239,6 +262,20 @@ public class CKMD5 implements Digest {
 	 */
 	private int round2(int a, int b, int c, int d, int k, int s, int i) {
 		return b + rol((a + G(b, c, d) + k + i), s);
+	}
+
+	/*
+	 * Round 3
+	 */
+	private int round3(int a, int b, int c, int d, int k, int s, int i) {
+		return b + rol((a + H(b, c, d) + k + i), s);
+	}
+
+	/*
+	 * Round 4
+	 */
+	private int round4(int a, int b, int c, int d, int k, int s, int i) {
+		return b + rol((a + I(b, c, d) + k + i), s);
 	}
 
 	/* (non-Javadoc)

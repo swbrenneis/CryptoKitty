@@ -9,22 +9,11 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * @author stevebrenneis
+ * @author Steve Brenneis
  *
- * Encapsulates a 64 bit big-endian integer. Java BigInteger is
+ * Encapsulates a 64 bit unsigned big-endian integer.
  */
 public class Scalar64 {
-
-	/*
-	 * Modulus.
-	 */
-	private static final BigInteger MODULUS;
-	
-	static {
-		byte[] m = new byte[8];
-		Arrays.fill(m, (byte)0xff);
-		MODULUS = new BigInteger(1, m);
-	}
 
 	/*
 	 * Convenience methods.
@@ -38,9 +27,9 @@ public class Scalar64 {
 	}
 
 	/*
-	 * The value. Kept as a BigInteger to maintain unsigned-ness
+	 * The value.
 	 */
-	private BigInteger value;
+	private long value;
 
 	/**
 	 * Create a scalar from an input stream.
@@ -56,7 +45,7 @@ public class Scalar64 {
 			throw new DataException(e);
 		}
 
-		value = new BigInteger(1, encoded);
+		value = byte2long(encoded);
 
 	}
 
@@ -64,42 +53,51 @@ public class Scalar64 {
 	 * Create a scalar given a long value.
 	 */
 	public Scalar64(long value) {
-		this.value = BigInteger.valueOf(value);
+		this.value = value;
 	}
 
 	/**
 	 * Create a scalar given an encoded value
 	 */
 	public Scalar64(byte[] encoded) {
-		this.value = new BigInteger(1, encoded).and(MODULUS);
+		this.value = byte2long(encoded);
 	}
 
 	/*
-	 * Returns a Scalar32 that is the sum of this scalar and n.
+	 * Returns a Scalar64 that is the sum of this scalar and n.
 	 * Addition is done modulo 2**64.
 	 */
 	public Scalar64 add(long n) {
-		BigInteger sum = value.add(BigInteger.valueOf(n));
-		BigInteger mod = sum.and(MODULUS);
+		BigInteger v = BigInteger.valueOf(value);
+		BigInteger sum = v.add(BigInteger.valueOf(n));
+		byte[] m = { 1,0,0,0,0,0,0,0,0 };
+		BigInteger mod = sum.mod(new BigInteger(m));
 		return new Scalar64(mod.longValue());
+	}
+
+	/*
+	 * Convert a big-endian byte array to an unsigned long.
+	 */
+	private long byte2long(byte[] encoded) {
+		long answer = 0;
+		for (int i = 0; i < encoded.length; ++i) {
+			answer = (answer << 8) | (encoded[i] & 0xff);
+		}
+		return answer;
 	}
 
 	/*
 	 * Get the encoded value. Forces the output to be 64 bits
 	 */
 	public byte[] getEncoded() {
-		byte[] encoded = new byte[8];
-		Arrays.fill(encoded, (byte)(0));
-		byte[] v = value.toByteArray();
-		System.arraycopy(v, 0, encoded, 8 - v.length, v.length);
-		return encoded;
+		return long2byte(value);
 	}
 
 	/*
 	 * Get the scalar value.
 	 */
 	public long getValue() {
-		return value.longValue();
+		return value;
 	}
 
 	/*
@@ -122,19 +120,36 @@ public class Scalar64 {
 
 	/*
 	 * Returns a Scalar64 that is the difference of this scalar and n.
-	 */
+
 	public Scalar64 subtract(long n) {
 		BigInteger sub = BigInteger.valueOf(n);
 		return new Scalar64(value.subtract(sub).longValue());
 	}
-
+	 */
 	/*
 	 * Exclusive or. This returns a Scalar64 that is the result of a
 	 * bitwise XOR.
-	 */
+
 	public Scalar64 xor(long x) {
 		BigInteger xr = value.xor(BigInteger.valueOf(x));
 		return new Scalar64(xr.longValue());
+	}
+	 */
+
+	/*
+	 * Convert a long to a big-endian byte array.
+	 */
+	private byte[] long2byte(long x) {
+		byte[] answer = new byte[8];
+		answer[0] = (byte)((x >> 56) & 0xff);
+		answer[1] = (byte)((x >> 48) & 0xff);
+		answer[2] = (byte)((x >> 40) & 0xff);
+		answer[3] = (byte)((x >> 32) & 0xff);
+		answer[4] = (byte)((x >> 24) & 0xff);
+		answer[5] = (byte)((x >> 16) & 0xff);
+		answer[6] = (byte)((x >> 8) & 0xff);
+		answer[7] = (byte)(x & 0xff);
+		return answer;
 	}
 
 }
