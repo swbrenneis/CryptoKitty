@@ -46,7 +46,8 @@ public class CKSHA1 implements Digest {
 	 * Ch function.
 	 */
 	private int Ch (int x, int y, int z) {
-		return (x & y) ^ ((~x) & z);
+		int r = (x & y) ^ ((~x) & z);
+		return r;
 	}
 
 	/* (non-Javadoc)
@@ -161,7 +162,7 @@ public class CKSHA1 implements Digest {
 			return Parity(x, y, z);
 		}
 		else if (t <= 59) {
-			return Maj(x, y, x);
+			return Maj(x, y, z);
 		}
 		else {
 			return Parity(x, y, z);
@@ -182,7 +183,8 @@ public class CKSHA1 implements Digest {
 	 * Maj function.
 	 */
 	private int Maj(int x, int y, int z) {
-		return (x & y) ^ (x & z) ^ (y & z);
+		int r = (x & y) ^ (x & z) ^ (y & z);
+		return r;
 	}
 
 	/*
