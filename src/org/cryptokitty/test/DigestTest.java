@@ -6,6 +6,7 @@ package org.cryptokitty.test;
 import java.util.Arrays;
 
 import org.cryptokitty.provider.digest.CKMD5;
+import org.cryptokitty.provider.digest.CKRIPEMD160;
 import org.cryptokitty.provider.digest.CKSHA1;
 import org.cryptokitty.provider.digest.CKSHA224;
 import org.cryptokitty.provider.digest.CKSHA256;
@@ -110,6 +111,16 @@ public class DigestTest {
 			{ (byte)0xd4, 0x1d, (byte)0x8c, (byte)0xd9, (byte)0x8f, 0x00, (byte)0xb2, 0x04,
 				(byte)0xe9, (byte)0x80, 0x09, (byte)0x98, (byte)0xec, (byte)0xf8, 0x42, 0x7e };
 
+		byte[] abcAnswerRIPEMD160 = 
+			{ (byte)0x8e, (byte)0xb2, 0x08, (byte)0xf7, (byte)0xe0, 0x5d, (byte)0x98, 0x7a, (byte)0x9b,
+				0x04, 0x4a, (byte)0x8e, (byte)0x98, (byte)0xc6, (byte)0xb0, (byte)0x87, (byte)0xf1,
+				0x5a, 0x0b, (byte)0xfc };
+		
+		byte[] emptyAnswerRIPEMD160 =
+			{ (byte)0x9c, 0x11, (byte)0x85, (byte)0xa5, (byte)0xc5, (byte)0xe9, (byte)0xfc, 0x54,
+				0x61, 0x28, 0x08, (byte)0x97, 0x7e, (byte)0xe8, (byte)0xf5, 0x48, (byte)0xb2, 0x25,
+				(byte)0x8d, 0x31 };
+
 		CKSHA256 sha256 = new CKSHA256();
 		byte[] digestSHA256 = sha256.digest("".getBytes());
 		if (Arrays.equals(digestSHA256, emptyAnswerSHA256)) {
@@ -210,6 +221,23 @@ public class DigestTest {
 		}
 		else {
 			System.out.println("MD5 'abc' test failed!");
+		}
+
+		CKRIPEMD160 ripemd160 = new CKRIPEMD160();
+		byte[] digestRIPEMD160 = ripemd160.digest("".getBytes());
+		if (Arrays.equals(digestRIPEMD160, emptyAnswerRIPEMD160)) {
+			System.out.println("RIPEMD160 empty message test passed!");
+		}
+		else {
+			System.out.println("RIPEMD160 empty message test failed!");
+		}
+
+		digestRIPEMD160 = ripemd160.digest(abcMessage);
+		if (Arrays.equals(digestRIPEMD160, abcAnswerRIPEMD160)) {
+			System.out.println("RIPEMD160 'abc' test passed!");
+		}
+		else {
+			System.out.println("RIPEMD160 'abc' test failed!");
 		}
 
 	}

@@ -7,8 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.cryptokitty.data.Scalar64;
-
 
 /**
  * @author Steve Brenneis
@@ -327,34 +325,6 @@ public class CKMD5 implements Digest {
 			result = (result << 1) | carry;
 		}
 		return result;
-	}
-
-	/*
-	 * Round 1.
-	 */
-	private int round1(int a, int b, int c, int d, int k, int s, int i) {
-		return b + rol((a + F(b, c, d) + k + i), s);
-	}
-
-	/*
-	 * Round 2
-	 */
-	private int round2(int a, int b, int c, int d, int k, int s, int i) {
-		return b + rol((a + G(b, c, d) + k + i), s);
-	}
-
-	/*
-	 * Round 3
-	 */
-	private int round3(int a, int b, int c, int d, int k, int s, int i) {
-		return b + rol((a + H(b, c, d) + k + i), s);
-	}
-
-	/*
-	 * Round 4
-	 */
-	private int round4(int a, int b, int c, int d, int k, int s, int i) {
-		return b + rol((a + I(b, c, d) + k + i), s);
 	}
 
 	/* (non-Javadoc)
