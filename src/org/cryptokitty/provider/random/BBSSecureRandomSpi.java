@@ -28,6 +28,16 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 	private static final BigInteger FOUR = BigInteger.valueOf(4L);
 
 	/*
+	 * Byte limit before reseeding. 900 KBytes.
+	 */
+	private static final int RESEED = 900 * 1024;
+
+	/*
+	 * Reseeding counter.
+	 */
+	private int reseed;
+
+	/*
 	 * The modulus.
 	 */
 	private BigInteger M;
@@ -42,6 +52,7 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 	 */
 	public BBSSecureRandomSpi() {
 		M = null;
+		reseed = 0;
 	}
 
 	/*
@@ -101,6 +112,12 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 		if (M == null) {
 			initialize();
 		}
+
+		if (reseed + bytes.length > RESEED) {
+			setState(Scalar64.encode(System.nanoTime()));
+			reseed = 0;
+		}
+		reseed += bytes.length;
 
 		X = X.modPow(TWO, M);	// X(n) = X(n-1)**2 mod M.
 		int bitLength = X.bitLength();
