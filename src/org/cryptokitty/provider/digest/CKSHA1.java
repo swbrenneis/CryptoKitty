@@ -143,7 +143,8 @@ public class CKSHA1 implements Digest {
 			d.write(Scalar32.encode((int)h5[N]));
 		}
 		catch (IOException e) {
-			// Nope
+			// Nope.
+			throw new RuntimeException(e);
 		}
 
 		return d.toByteArray();

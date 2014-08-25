@@ -172,7 +172,8 @@ public class CKSHA256 implements Digest{
 			d.write(Scalar32.encode((int)h8[N]));
 		}
 		catch (IOException e) {
-			// Nope
+			// Nope.
+			throw new RuntimeException(e);
 		}
 
 		return d.toByteArray();

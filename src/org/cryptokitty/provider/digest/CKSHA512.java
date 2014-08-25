@@ -185,7 +185,8 @@ public class CKSHA512 implements Digest {
 			d.write(Scalar64.encode(h8[N]));
 		}
 		catch (IOException e) {
-			// Nope
+			// Nope.
+			throw new RuntimeException(e);
 		}
 
 		return d.toByteArray();

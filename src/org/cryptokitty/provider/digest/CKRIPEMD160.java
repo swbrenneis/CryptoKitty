@@ -3,17 +3,25 @@
  */
 package org.cryptokitty.provider.digest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 /**
  * @author stevebrenneis
  *
  */
 public class CKRIPEMD160 implements Digest {
 
+	/*
+	 * Message accumulator.
+	 */
+	private ByteArrayOutputStream accumulator;
+
 	/**
 	 * 
 	 */
 	public CKRIPEMD160() {
-		// TODO Auto-generated constructor stub
+		accumulator = new ByteArrayOutputStream();
 	}
 
 	/* (non-Javadoc)
@@ -21,8 +29,7 @@ public class CKRIPEMD160 implements Digest {
 	 */
 	@Override
 	public byte[] digest() {
-		// TODO Auto-generated method stub
-		return null;
+		return digest(accumulator.toByteArray());
 	}
 
 	/* (non-Javadoc)
@@ -35,13 +42,33 @@ public class CKRIPEMD160 implements Digest {
 	}
 
 	/*
+	 * Non-linear functions.
+	 */
+	private int f(int j, int x, int y, int z) {
+		if (j <= 15) {
+			return x ^ y ^ z;
+		}
+		else if (j <= 31) {
+			return (x & y ) | ((~x) & z);
+		}
+		else if (j <= 47) {
+			return (x | (~y)) ^ z;
+		}
+		else if (j <= 63) {
+			return (x & z) | (y & (~z));
+		}
+		else {
+			return x ^ (y | (~z));
+		}
+	}
+
+	/*
 	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
 	 */
 	@Override
 	public int getDigestLength() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 20;
 	}
 
 	/* (non-Javadoc)
@@ -49,8 +76,7 @@ public class CKRIPEMD160 implements Digest {
 	 */
 	@Override
 	public void update(byte message) {
-		// TODO Auto-generated method stub
-
+		accumulator.write(message);
 	}
 
 	/* (non-Javadoc)
@@ -58,8 +84,13 @@ public class CKRIPEMD160 implements Digest {
 	 */
 	@Override
 	public void update(byte[] message) {
-		// TODO Auto-generated method stub
-
+		try {
+			accumulator.write(message);
+		}
+		catch (IOException e) {
+			// Nope.
+			throw new RuntimeException(e);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -67,8 +98,7 @@ public class CKRIPEMD160 implements Digest {
 	 */
 	@Override
 	public void update(byte[] message, int offset, int length) {
-		// TODO Auto-generated method stub
-
+		accumulator.write(message, offset, length);
 	}
 
 }
