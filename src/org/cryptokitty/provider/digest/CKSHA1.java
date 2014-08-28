@@ -14,7 +14,7 @@ import org.cryptokitty.data.Scalar64;
  * @author Steve Brenneis
  *
  */
-public class CKSHA1 implements Digest {
+public class CKSHA1 extends Digest {
 
 	/*
 	 * Initial hash state.
@@ -30,16 +30,10 @@ public class CKSHA1 implements Digest {
 	 */
 	private static final int[] K =
 				{ 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 };
-	/*
-	 * Message accumulator.
-	 */
-	private ByteArrayOutputStream accumulator;
-
 	/**
 	 * 
 	 */
 	public CKSHA1() {
-		accumulator = new ByteArrayOutputStream();
 	}
 
 	/*
@@ -50,19 +44,32 @@ public class CKSHA1 implements Digest {
 		return r;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest()
+	/*
+	 * Round function.
 	 */
-	@Override
-	public byte[] digest() {
-		return digest(accumulator.toByteArray());
+	private int f(int x, int y, int z, int t){
+
+		if (t <= 19) {
+			return Ch(x, y, z);
+		}
+		else if (t <= 39) {
+			return Parity(x, y, z);
+		}
+		else if (t <= 59) {
+			return Maj(x, y, z);
+		}
+		else {
+			return Parity(x, y, z);
+		}
+
 	}
 
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest(byte[])
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#finalize(byte[])
 	 */
 	@Override
-	public byte[] digest(byte[] message) {
+	protected byte[] finalize(byte[] message) {
 
 		// Pad the message to an even multiple of 512 bits.
 		byte[] context = pad(message);
@@ -152,26 +159,6 @@ public class CKSHA1 implements Digest {
 	}
 
 	/*
-	 * Round function.
-	 */
-	private int f(int x, int y, int z, int t){
-
-		if (t <= 19) {
-			return Ch(x, y, z);
-		}
-		else if (t <= 39) {
-			return Parity(x, y, z);
-		}
-		else if (t <= 59) {
-			return Maj(x, y, z);
-		}
-		else {
-			return Parity(x, y, z);
-		}
-
-	}
-
-	/*
 	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
 	 */
@@ -224,35 +211,6 @@ public class CKSHA1 implements Digest {
 			result = (result << 1) | carry;
 		}
 		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte)
-	 */
-	@Override
-	public void update(byte message) {
-		accumulator.write(message);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[])
-	 */
-	@Override
-	public void update(byte[] message) {
-		try {
-			accumulator.write(message);
-		}
-		catch (IOException e) {
-			// Nope
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[], int, int)
-	 */
-	@Override
-	public void update(byte[] message, int offset, int length) {
-		accumulator.write(message, offset, length);
 	}
 
 	/*

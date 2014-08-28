@@ -30,11 +30,11 @@ public class CKSHA384 extends CKSHA512 {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.CKSHA512#digest(byte[])
+	 * @see org.cryptokitty.provider.digest.CKSHA512#finalize(byte[])
 	 */
 	@Override
-	public byte[] digest(byte[] message) {
-		byte[] m = super.digest(message);
+	protected byte[] finalize(byte[] message) {
+		byte[] m = super.finalize(message);
 		return Arrays.copyOf(m, 48);
 	}
 

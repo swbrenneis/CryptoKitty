@@ -15,7 +15,7 @@ import org.cryptokitty.data.Scalar64;
  *
  * SHA-256 message digest implementation.
  */
-public class CKSHA256 implements Digest{
+public class CKSHA256 extends Digest{
 
 	/*
 	 * Round constants.
@@ -29,11 +29,6 @@ public class CKSHA256 implements Digest{
 			0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
 			0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
 			0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2 };
-
-	/*
-	 * Message byte accumulator.
-	 */
-	private ByteArrayOutputStream accumulator;
 
 	/*
 	 * Hash constants.
@@ -52,7 +47,6 @@ public class CKSHA256 implements Digest{
 	 */
 	public CKSHA256() {
 
-		accumulator = new ByteArrayOutputStream();
 		H1 = 0x6a09e667;
 		H2 = 0xbb67ae85;
 		H3 = 0x3c6ef372;
@@ -73,19 +67,10 @@ public class CKSHA256 implements Digest{
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest()
+	 * @see org.cryptokitty.provider.digest.Digest#finalize(byte[])
 	 */
 	@Override
-	public byte[] digest() {
-		return digest(accumulator.toByteArray());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest(byte[])
-	 */
-	@Override
-	public byte[] digest(byte[] in) {
+	protected byte[] finalize(byte[] in) {
 
 		// Pad the message to an even multiple of 512 bits.
 		byte[] context = pad(in);
@@ -253,38 +238,6 @@ public class CKSHA256 implements Digest{
 	 */
 	private int sigma1(int x) {
 		return ror(x, 17) ^ ror(x, 19) ^ ((x >> 10) & 0x3FFFFF);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte)
-	 */
-	@Override
-	public void update(byte in) {
-		accumulator.write(in);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[])
-	 */
-	@Override
-	public void update(byte[] in) {
-		try {
-			accumulator.write(in);
-		}
-		catch (IOException e) {
-			// Meh.
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[], int, int)
-	 */
-	@Override
-	public void update(byte[] in, int offset, int length) {
-		accumulator.write(in, offset, length);
 	}
 
 	/*
