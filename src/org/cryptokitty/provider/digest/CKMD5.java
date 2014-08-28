@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @author Steve Brenneis
  *
  */
-public class CKMD5 implements Digest {
+public class CKMD5 extends Digest {
 
 	/*
 	 * Sin function constants. Indexed at 1.
@@ -35,16 +35,10 @@ public class CKMD5 implements Digest {
 			0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
 			0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391 };
 
-	/*
-	 * Message accumulator.
-	 */
-	private ByteArrayOutputStream accumulator;
-
 	/**
 	 * 
 	 */
 	public CKMD5() {
-		accumulator = new ByteArrayOutputStream();
 	}
 
 	/*
@@ -70,19 +64,12 @@ public class CKMD5 implements Digest {
 		return answer;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest()
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#finalize(byte[])
 	 */
 	@Override
-	public byte[] digest() {
-		return digest(accumulator.toByteArray());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest(byte[])
-	 */
-	@Override
-	public byte[] digest(byte[] message) {
+	protected byte[] finalize(byte[] message) {
 
 		// Pad the message to an even multiple of 512 bits.
 		byte[] context = pad(message);
@@ -325,35 +312,6 @@ public class CKMD5 implements Digest {
 			result = (result << 1) | carry;
 		}
 		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte)
-	 */
-	@Override
-	public void update(byte message) {
-		accumulator.write(message);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[])
-	 */
-	@Override
-	public void update(byte[] message) {
-		try {
-			accumulator.write(message);
-		}
-		catch (IOException e) {
-			// Meh.
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[], int, int)
-	 */
-	@Override
-	public void update(byte[] message, int offset, int length) {
-		accumulator.write(message, offset, length);
 	}
 
 }

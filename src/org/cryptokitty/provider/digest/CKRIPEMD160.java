@@ -11,7 +11,7 @@ import java.util.Arrays;
  * @author Steve Brenneis
  *
  */
-public class CKRIPEMD160 implements Digest {
+public class CKRIPEMD160 extends Digest {
 
 	/*
 	 * Added constants.
@@ -30,6 +30,7 @@ public class CKRIPEMD160 implements Digest {
 			10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12, 1,
 			9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2, 4,
 			0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13 };
+
 	private static final int[] rPrime =
 		{ 5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12, 6,
 			11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2, 15,
@@ -47,6 +48,7 @@ public class CKRIPEMD160 implements Digest {
 			7, 5, 11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6,
 			5,12, 9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 
 			8, 5, 6 };
+
 	private static final int[] sPrime = 
 		{ 8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6, 9,
 			13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11, 9, 
@@ -54,16 +56,24 @@ public class CKRIPEMD160 implements Digest {
 			5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8, 8, 5,
 			12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11 };
 
-	/*
-	 * Message accumulator.
-	 */
-	private ByteArrayOutputStream accumulator;
+	public class Int {
+		private int value;
+		public Int(int value) {
+			this.value = value;
+		}
+		public int getValue() {
+			return value;
+		}
+		public Int setValue(int value) {
+			this.value = value;
+			return this;
+		}
+	}
 
 	/**
 	 * 
 	 */
 	public CKRIPEMD160() {
-		accumulator = new ByteArrayOutputStream();
 	}
 
 	/*
@@ -89,30 +99,25 @@ public class CKRIPEMD160 implements Digest {
 		return answer;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest()
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#finalize(byte[])
 	 */
 	@Override
-	public byte[] digest() {
-		return digest(accumulator.toByteArray());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#digest(byte[])
-	 */
-	@Override
-	public byte[] digest(byte[] message) {
+	protected byte[] finalize(byte[] message) {
 
 		// Pad the message to an even multiple of 512 bits.
 		byte[] context = pad(message);
-		// Process each 512 bit chunk.
-		int N = context.length / 4;
-		int[] M = new int[N];
-		for (int i = 0; i < N; i++) {
-			int j = i * 4;
-			M[i] = byteswap(Arrays.copyOfRange(context, j, j+4));
+		// Number of 16 word chunks
+		int t = (context.length / 4) / 16;
+		int[][] X = new int[t][16];
+		int n = 0;
+		for (int i = 0; i < t; ++i) {
+			for (int j = 0; j < 16; ++j) {
+				X[i][j]  = byteswap(Arrays.copyOfRange(context, n, n + 4));
+				n += 4;
+			}
 		}
-
 		 // Initial state.
 		int h0 = 0x67452301;
 		int h1 = 0xEFCDAB89;
@@ -120,12 +125,7 @@ public class CKRIPEMD160 implements Digest {
 		int h3 = 0x10325476;
 		int h4 = 0xC3D2E1F0;
 
-		for (int i = 0; i < N / 16; ++i) {
-
-			int[] X = new int[16];
-			for (int j = 0; j < 16; ++j) {
-				X[j] = M[i*16+j];
-			}
+		for (int i = 0; i < t; ++i) {
 
 			int A = h0;
 			int B = h1;
@@ -139,31 +139,32 @@ public class CKRIPEMD160 implements Digest {
 			int DPrime = h3;
 			int EPrime = h4;
 
-			for (int j = 0; j < 80; ++j) {
+			int j = 0;
+			for (j = 0; j < 80; ++j) {
 
-				int T = rol((A + f(j, B, C, D) + X[r[j]] + K[j/16] + E), s[j]);
+				int T = rol((A + f(j, B, C, D) + X[i][r[j]] + K[j/16]) , s[j]) + E;
 				A = E;
 				E = D;
 				D = rol(C, 10);
-				C = B;
+				C = B;	
 				B = T;
 
-				T = rol((APrime + f(79-j, BPrime, CPrime, DPrime)
-							+ X[rPrime[j]] + KPrime[j/16] + EPrime), sPrime[j]);
-				APrime = EPrime;
-				EPrime = DPrime;
-				DPrime = rol(CPrime, 10);
-				CPrime = BPrime;
-				BPrime = T;
-				
+				T = rol((APrime + f(79-j, BPrime, CPrime, DPrime) + X[i][rPrime[j]] + KPrime[j/16]), sPrime[j]) + EPrime;
+	            APrime = EPrime;
+	            EPrime = DPrime;
+	            DPrime = rol(CPrime, 10);
+	            CPrime = BPrime;
+	            BPrime = T;
+
 			}
 
-			int T = h1 + C + DPrime;
+			/* combine results */
+			DPrime += C + h1;
 			h1 = h2 + D + EPrime;
 			h2 = h3 + E + APrime;
 			h3 = h4 + A + BPrime;
 			h4 = h0 + B + CPrime;
-			h0 = T;
+			h0 = DPrime;
 
 		}
 
@@ -252,36 +253,6 @@ public class CKRIPEMD160 implements Digest {
 			result = (result << 1) | carry;
 		}
 		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte)
-	 */
-	@Override
-	public void update(byte message) {
-		accumulator.write(message);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[])
-	 */
-	@Override
-	public void update(byte[] message) {
-		try {
-			accumulator.write(message);
-		}
-		catch (IOException e) {
-			// Nope.
-			throw new RuntimeException(e);
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryptokitty.provider.digest.Digest#update(byte[], int, int)
-	 */
-	@Override
-	public void update(byte[] message, int offset, int length) {
-		accumulator.write(message, offset, length);
 	}
 
 }
