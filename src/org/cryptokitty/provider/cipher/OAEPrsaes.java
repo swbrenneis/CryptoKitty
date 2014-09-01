@@ -10,7 +10,6 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.DecryptionException;
 import org.cryptokitty.provider.EncodingException;
 import org.cryptokitty.provider.IllegalMessageSizeException;
 import org.cryptokitty.provider.ProviderException;

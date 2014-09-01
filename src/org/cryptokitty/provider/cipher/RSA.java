@@ -10,12 +10,11 @@ import java.util.Arrays;
 
 import org.cryptokitty.data.Scalar32;
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.DecryptionException;
 import org.cryptokitty.provider.IllegalMessageSizeException;
 import org.cryptokitty.provider.ProviderException;
-import org.cryptokitty.provider.SignatureException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.provider.signature.SignatureException;
 
 /**
  * @author Steve Brenneis

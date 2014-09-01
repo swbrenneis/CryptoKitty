@@ -47,6 +47,12 @@ public class CryptoKittyProvider extends Provider {
 
 		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.RSAKeyPairGenerator");
 
+		put("MessageDigest.MD5", "org.cryptokitty.provider.MD5Spi");
+		put("MessageDigest.SHA-1", "org.cryptokitty.provider.SHA1Spi");
+		put("MessageDigest.SHA-256", "org.cryptokitty.provider.SHA256Spi");
+		put("MessageDigest.SHA-384", "org.cryptokitty.provider.SHA384Spi");
+		put("MessageDigest.SHA-512", "org.cryptokitty.provider.SHA512Spi");
+
 	}
 
 }

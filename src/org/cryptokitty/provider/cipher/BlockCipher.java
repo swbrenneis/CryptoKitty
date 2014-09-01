@@ -3,7 +3,6 @@
  */
 package org.cryptokitty.provider.cipher;
 
-import org.cryptokitty.provider.DecryptionException;
 import org.cryptokitty.provider.ProviderException;
 
 /**

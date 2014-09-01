@@ -4,6 +4,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
+import org.cryptokitty.provider.cipher.BlockCipher;
+import org.cryptokitty.provider.cipher.DecryptionException;
+
 /**
  * @author Steve Brenneis
  *

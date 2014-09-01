@@ -121,7 +121,7 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 
 		X = X.modPow(TWO, M);	// X(n) = X(n-1)**2 mod M.
 		int bitLength = X.bitLength();
-		int byteCount = bytes.length;
+		int byteCount = bytes.length - 1;
 
 		while (byteCount >= 0) {
 			// Count bits to make a byte.
@@ -147,7 +147,7 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 					bitLength = X.bitLength();
 				}
 			}
-			bytes[--byteCount] = thisByte;
+			bytes[byteCount--] = thisByte;
 		}
 
 	}

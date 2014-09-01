@@ -4,7 +4,6 @@
 package org.cryptokitty.data;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 /**
  * @author Steve Brenneis

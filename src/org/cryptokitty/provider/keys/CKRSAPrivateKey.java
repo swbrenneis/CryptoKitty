@@ -37,7 +37,7 @@ public class CKRSAPrivateKey implements RSAPrivateKey {
 	@Override
 	public String getAlgorithm() {
 		// TODO Auto-generated method stub
-		return null;
+		return "RSA";
 	}
 
 	/* (non-Javadoc)
