@@ -6,6 +6,8 @@ package org.cryptokitty.provider;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.cryptokitty.provider.cipher.DecryptionException;
+
 /**
  * @author Steve Brenneis
  *

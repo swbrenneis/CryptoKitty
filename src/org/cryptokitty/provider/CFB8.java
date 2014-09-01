@@ -7,6 +7,9 @@ import java.util.Arrays;
 
 import javax.crypto.IllegalBlockSizeException;
 
+import org.cryptokitty.provider.cipher.BlockCipher;
+import org.cryptokitty.provider.cipher.DecryptionException;
+
 /**
  * @author Steve Brenneis
  *
