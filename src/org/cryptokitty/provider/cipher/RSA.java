@@ -66,6 +66,12 @@ public abstract class RSA {
 			(byte)0xb9, 0x31, (byte)0xbd, 0x47, 0x41, 0x7a, (byte)0x81,
 			(byte)0xa5, 0x38, 0x32, 0x7a, (byte)0xf9, 0x27, (byte)0xda, 0x3e };
 	 */
+
+	/*
+	 * BigInteger byte mask.
+	 */
+	private static final BigInteger MASK = BigInteger.valueOf(0xff);
+	
 	/*
 	 * Mask generation function. See RFC 3447, Appendix B.2.1 for details
 	 */
@@ -213,17 +219,15 @@ public abstract class RSA {
 		if (x.compareTo(BigInteger.valueOf(256).pow(xLen)) > 0) {
 			throw new BadParameterException("Integer too large");
 		}
-	
-		byte[] xBytes = x.toByteArray();
-		if (xBytes.length < xLen) {
-			// Fill MSB with zeros.
-			byte[] r = new byte[xLen];
-			Arrays.fill(r, (byte)0);
-			System.arraycopy(xBytes, 0, r, xLen-xBytes.length, xBytes.length);
-			return r;
+
+		BigInteger work = new BigInteger(x.toString());
+		byte[] xBytes = new byte[xLen];
+		Arrays.fill(xBytes, (byte)0x00);
+		int index = xLen - 1;
+		while (index >= 0) {
+			xBytes[index--] = work.and(MASK).byteValue();
+			work = work.shiftRight(8);
 		}
-		// xLen will not be < result.length because of the size
-		// check above.
 		return xBytes;
 
 	}

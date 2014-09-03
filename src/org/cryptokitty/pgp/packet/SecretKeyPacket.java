@@ -26,8 +26,8 @@ import org.cryptokitty.data.MPI;
 import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.pgp.keys.KeyAlgorithms;
 import org.cryptokitty.pgp.keys.String2Key;
-import org.cryptokitty.provider.S2KParameterSpec;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.keys.S2KParameterSpec;
 
 /**
  * @author Steve Brenneis

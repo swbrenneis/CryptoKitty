@@ -10,6 +10,7 @@ import java.util.Arrays;
 import org.cryptokitty.provider.BadParameterException;
 import org.cryptokitty.provider.IllegalMessageSizeException;
 import org.cryptokitty.provider.ProviderException;
+import org.cryptokitty.provider.random.BBSSecureRandom;
 
 /**
  * @author Steve Brenneis
@@ -18,11 +19,16 @@ import org.cryptokitty.provider.ProviderException;
  */
 public class PKCS1rsaes extends RSA {
 
-	/**
-	 * 
+	/*
+	 * Random seed.
 	 */
-	public PKCS1rsaes() {
-		// Nothing to do here.
+	private byte[] seed;
+
+	/**
+	 * @param seed - Random bytes for encryption padding. May be null.
+	 */
+	public PKCS1rsaes(byte[] seed) {
+		this.seed = seed;
 	}
 
 	/**
@@ -91,7 +97,15 @@ public class PKCS1rsaes extends RSA {
 			if (EM[0] != 0x00 || EM[1] != 0x02) {
 				throw new DecryptionException();
 			}
-			int found = Arrays.binarySearch(EM, 2, EM.length, (byte)0x00);
+			// No easy way to do this.
+			int found = -1;
+			int index = 2;
+			while (found < 0 && index < EM.length) {
+				if (EM[index] == 0x00) {
+					found = index;
+				}
+				index++;
+			}
 			if (found < 0) {
 				throw new DecryptionException();
 			}
@@ -137,11 +151,24 @@ public class PKCS1rsaes extends RSA {
 		// a. Generate an octet string PS of length k - mLen - 3 consisting
 		//    of pseudo-randomly generated nonzero octets.  The length of PS
 		//    will be at least eight octets.
-		SecureRandom rnd = new SecureRandom();
-		byte[] PS = new byte[k - mLen - 3];
-		PS[0] = 0;
-		while (Arrays.binarySearch(PS, (byte)0x00) >= 0) {
+		byte[] PS;
+		if (seed == null) {
+			SecureRandom rnd = new BBSSecureRandom();
+			PS = new byte[k - mLen - 3];
 			rnd.nextBytes(PS);
+			for (int i = 0; i < PS.length; ++i) {
+				if (PS[i] == 0x00) {
+					while (PS[i] == 0x00) {
+						PS[i] = (byte)rnd.nextInt(0xff);
+					}
+				}
+			}
+		}
+		else {
+			if (seed.length != (k - mLen - 3)) {
+				throw new BadParameterException("Invalid seed length");
+			}
+			PS = seed;
 		}
 
 		// b. Concatenate PS, the message M, and other padding to form an

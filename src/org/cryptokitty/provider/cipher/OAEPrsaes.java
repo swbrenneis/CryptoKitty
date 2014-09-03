@@ -192,7 +192,14 @@ public class OAEPrsaes extends RSA {
 			if (!Arrays.equals(lHash, lHashPrime)) {
 				throw new DecryptionException();				
 			}
-			int found = Arrays.binarySearch(DB, hLen, DB.length, (byte)0x01);
+			int found = -1;
+			int index = hLen;
+			while (found < 0 && index < DB.length) {
+				if (DB[index] == 0x01) {
+					found = index;
+				}
+				index++;
+			}
 			if (found < 0) {
 				throw new DecryptionException();				
 			}
