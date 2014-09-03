@@ -22,6 +22,7 @@ import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 
@@ -103,7 +104,7 @@ public class RSACipher extends CipherSpi {
 			}
 			catch (ProviderException e) {
 				// Message size is the only exception we'll get
-				throw new IllegalBlockSizeException("Message size too long");
+				throw new IllegalBlockSizeException(e.getMessage());
 			}
 		}
 		else {
@@ -204,8 +205,8 @@ public class RSACipher extends CipherSpi {
 			throws InvalidKeyException {
 
 		this.opmode = opmode;
-		// No parameter spec, PKCS1 encoding.
-		rsa = new PKCS1rsaes();
+		// No parameter spec, PKCS1 encoding without seed.
+		rsa = new PKCS1rsaes(null);
 		setKey(key);
 
 	}
@@ -230,16 +231,20 @@ public class RSACipher extends CipherSpi {
 			}
 			try {
 				rsa = new OAEPrsaes(oaep.getDigestAlgorithm(), pSource);
-				setKey(key);
 			}
 			catch (UnsupportedAlgorithmException e) {
 				throw new InvalidAlgorithmParameterException("Invalid hash algorithm: "
 															+ oaep.getDigestAlgorithm());
 			}
 		}
-		else {
-			throw new InvalidAlgorithmParameterException("OAEP parameter spec expected");
+		else if (param instanceof IvParameterSpec) {
+			rsa = new PKCS1rsaes(((IvParameterSpec)param).getIV());
 		}
+		else {
+			throw new InvalidAlgorithmParameterException("OAEP or IV parameter spec expected");
+		}
+
+		setKey(key);
 
 	}
 
@@ -273,7 +278,7 @@ public class RSACipher extends CipherSpi {
 		try {
 			switch (padding) {
 			case "PKCS1Padding":
-				rsa = new PKCS1rsaes();
+				rsa = new PKCS1rsaes(null);
 				break;
 			case "OAEPWithSHA-1AndMGF1Padding":
 				rsa = new OAEPrsaes("SHA-1", new byte[0]);

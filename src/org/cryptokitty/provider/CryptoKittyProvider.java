@@ -23,13 +23,13 @@ public class CryptoKittyProvider extends Provider {
 	public CryptoKittyProvider() {
 		super("CryptoKitty", 0.1, INFO);
 
-		put("Cipher.CAST5", "org.cryptokitty.provider.CAST5Cipher");
+		put("Cipher.CAST5", "org.cryptokitty.provider.cipher.CAST5Cipher");
 		put("Cipher.CAST5 SupportedModes", "CFB|CFB8");
 		put("Cipher.CAST5 SupportedPaddings", "NOPADDING");
 
-		put("KeyGenerator.S2K", "org.cryptokitty.provider.S2KKeyGenerator");
+		put("KeyGenerator.S2K", "org.cryptokitty.provider.keys.S2KKeyGenerator");
 
-		put("Cipher.RSA", "org.cryptokitty.provider.RSACipher");
+		put("Cipher.RSA", "org.cryptokitty.provider.cipher.RSACipher");
 		put("Cipher.RSA SupportedModes", "ECB");
 		// Support all RSA v2.1 SHA hash algorithms. Does not support MD2 or MD5 hashes.
 		put("Cipher.RSA SupportedPaddings", "PKCS1Padding|OAEPWithSHA-1AndMGF1Padding|"
@@ -39,19 +39,19 @@ public class CryptoKittyProvider extends Provider {
 		// Support all RSA v2.1 PSS SHA hash algorithms. Does not support MD2 or MD5 hashes.
 		// The hash algorithm will be passed in with the algorithm parameters along with
 		// the selection of the EMSA encoding (PSS or PKCS1).
-		put("Signature.SHA1withRSA", "org.cryptokitty.provider.SHA1RSASignature");
-		put("Signature.SHA256withRSA", "org.cryptokitty.provider.SHA256RSASignature");
-		put("Signature.SHA384withRSA", "org.cryptokitty.provider.SHA384RSASignature");
-		put("Signature.SHA512withRSA", "org.cryptokitty.provider.SHA512RSASignature");
-		put("Signature.SHA256withRSAPKCS1", "org.cryptokitty.provider.SHA256PKCSRSASignature");
+		put("Signature.SHA1withRSA", "org.cryptokitty.provider.signature.SHA1RSASignature");
+		put("Signature.SHA256withRSA", "org.cryptokitty.provider.signature.SHA256RSASignature");
+		put("Signature.SHA384withRSA", "org.cryptokitty.provider.signature.SHA384RSASignature");
+		put("Signature.SHA512withRSA", "org.cryptokitty.provider.signature.SHA512RSASignature");
+		put("Signature.SHA256withRSAPKCS1", "org.cryptokitty.provider.signature.SHA256PKCSRSASignature");
 
-		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.RSAKeyPairGenerator");
+		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.keys.RSAKeyPairGenerator");
 
-		put("MessageDigest.MD5", "org.cryptokitty.provider.MD5Spi");
-		put("MessageDigest.SHA-1", "org.cryptokitty.provider.SHA1Spi");
-		put("MessageDigest.SHA-256", "org.cryptokitty.provider.SHA256Spi");
-		put("MessageDigest.SHA-384", "org.cryptokitty.provider.SHA384Spi");
-		put("MessageDigest.SHA-512", "org.cryptokitty.provider.SHA512Spi");
+		put("MessageDigest.MD5", "org.cryptokitty.provider.digest.MD5Spi");
+		put("MessageDigest.SHA-1", "org.cryptokitty.provider.digest.SHA1Spi");
+		put("MessageDigest.SHA-256", "org.cryptokitty.provider.digest.SHA256Spi");
+		put("MessageDigest.SHA-384", "org.cryptokitty.provider.digest.SHA384Spi");
+		put("MessageDigest.SHA-512", "org.cryptokitty.provider.digest.SHA512Spi");
 
 	}
 
