@@ -53,7 +53,13 @@ public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
 		// Hopefully, SecureRandom is a CryptoKitty implementation.
 		// TODO Check?
 		this.keysize = keysize;
-		this.random = random;
+		if (random == null) {
+			random = new BBSSecureRandom();
+		}
+		else {
+			this.random = random;
+		}
+
 	}
 
 	/* (non-Javadoc)
