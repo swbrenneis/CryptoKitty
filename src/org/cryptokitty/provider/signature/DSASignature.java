@@ -14,12 +14,12 @@ import java.security.SignatureSpi;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.DSAPublicKey;
 
+import org.cryptokitty.provider.EncodingException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.random.BBSSecureRandom;
 import org.cryptokitty.provider.x509.der.DERInteger;
 import org.cryptokitty.provider.x509.der.DERSequence;
 import org.cryptokitty.provider.x509.der.DERType;
-import org.cryptokitty.provider.x509.der.EncodingException;
 
 /**
  * @author stevebrenneis
