@@ -6,6 +6,8 @@ package org.cryptokitty.provider.x509.der;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import org.cryptokitty.provider.EncodingException;
+
 /**
  * @author Steve Brenneis
  *

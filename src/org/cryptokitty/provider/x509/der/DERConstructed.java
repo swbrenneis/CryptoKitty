@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.cryptokitty.provider.EncodingException;
+
 /**
  * @author Steve Brenneis
  *
@@ -76,7 +78,7 @@ public abstract class DERConstructed implements DERType {
 		int index = 0;
 		while (index < encoded.length) {
 			DERType object = DERTags.getDERType(DERTags.getTag(encoded));
-			index += object.decode(Arrays.copyOf(encoded, encoded.length - index));
+			index += object.decode(Arrays.copyOfRange(encoded, index, encoded.length));
 			objects.add(object);
 		}
 
