@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 
+import org.cryptokitty.provider.BadParameterException;
 import org.cryptokitty.provider.random.BBSSecureRandom;
 
 /**
@@ -77,21 +78,29 @@ public class DSAKeyPairGenerator extends KeyPairGeneratorSpi {
 	public KeyPair generateKeyPair() {
 
 		// Generate parameters
-		BigInteger q = BigInteger.probablePrime(N, random);
-		BigInteger p = BigInteger.probablePrime(L, random);
+		// In general, seedlen (third parameter), should equal N, but
+		// should never be less than 160.
+		DSAParameterGenerator gen = null;
+		try {
+			gen = new DSAParameterGenerator(L, N, N);
+			gen.generateParameters(1);
+		}
+		catch (BadParameterException e) {
+			// Shouldn't happen
+			throw new RuntimeException(e);
+		}
+		BigInteger q = gen.getQ();
+		BigInteger p = gen.getP();
 		BigInteger pp = p.subtract(BigInteger.ONE);
-		// p-1 must be a multiple of q
-		while (!q.divide(pp).equals(BigInteger.ZERO)) {
-			p = BigInteger.probablePrime(L, random);
-			pp = p.subtract(BigInteger.ONE);
+		// p-1 must be a multiple of q. The prime generator should have
+		// taken care of this, but just in case.
+		while (!pp.mod(q).equals(BigInteger.ZERO)) {
+			gen.generateParameters(1);
+			q = gen.getQ();
+			p = gen.getP();
 		}
-		// g = h**(p-1/q) mod p
-		BigInteger h = new BigInteger(8, random);
-		BigInteger g = h.modPow(pp.divide(q), p);
-		while (g.equals(BigInteger.ONE)) {
-			h = new BigInteger(8, random);
-			g = h.modPow(pp.divide(q), p);
-		}
+
+		BigInteger g = gen.getG();
 
 		// 0 < x < p-1
 		BigInteger x = new BigInteger(L-1, random);
