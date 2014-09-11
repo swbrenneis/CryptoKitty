@@ -3,6 +3,8 @@
  */
 package org.cryptokitty.provider.x509.der;
 
+import org.cryptokitty.provider.EncodingException;
+
 /**
  * @author Steve Brenneis
  *
