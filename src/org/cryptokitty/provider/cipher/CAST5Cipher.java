@@ -22,10 +22,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 
-import org.cryptokitty.provider.BlockMode;
-import org.cryptokitty.provider.CFB;
-import org.cryptokitty.provider.CFB8;
 import org.cryptokitty.provider.ProviderException;
+import org.cryptokitty.provider.modes.BlockMode;
+import org.cryptokitty.provider.modes.CFB;
+import org.cryptokitty.provider.modes.CFB8;
 
 /**
  * @author Steve Brenneis
