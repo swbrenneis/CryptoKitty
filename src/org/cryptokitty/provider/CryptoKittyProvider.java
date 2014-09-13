@@ -48,6 +48,7 @@ public class CryptoKittyProvider extends Provider {
 		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.keys.RSAKeyPairGenerator");
 
 		put("Signature.SHA1withDSA", "org.cryptokitty.provider.signature.SHA1DSASignature");
+		put("Signature.SHA224withDSA", "org.cryptokitty.provider.signature.SHA224DSASignature");
 		put("Signature.SHA256withDSA", "org.cryptokitty.provider.signature.SHA256DSASignature");
 
 		put("KeyPairGenerator.DSA", "org.cryptokitty.provider.keys.DSAKeyPairGenerator");
