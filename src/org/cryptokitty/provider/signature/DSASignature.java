@@ -38,6 +38,13 @@ public class DSASignature extends SignatureSpi {
 	private DSA dsa;
 
 	/*
+	 * Allowable key sizes.
+	 */
+	private boolean keysize1024;
+	private boolean keysize2048;
+	private boolean keysize3072;
+
+	/*
 	 * The private key.
 	 */
 	private DSAPrivateKey privateKey;
@@ -61,6 +68,24 @@ public class DSASignature extends SignatureSpi {
 			throw new RuntimeException(e);
 		}
 
+		switch(algorithm ) {
+		case "SHA-1":
+			keysize1024 = true;
+			keysize2048 = false;
+			keysize3072 = false;
+			break;
+		case "SHA-224":
+			keysize1024 = false;
+			keysize2048 = true;
+			keysize3072 = false;
+			break;
+		case "SHA-256":
+			keysize1024 = false;
+			keysize2048 = true;
+			keysize3072 = true;
+			break;
+		}
+
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +96,28 @@ public class DSASignature extends SignatureSpi {
 			throws InvalidKeyException {
 
 		if (publicKey instanceof DSAPublicKey) {
+
 			this.publicKey = (DSAPublicKey)publicKey;
+			switch(this.publicKey.getParams().getP().bitLength()) {
+			case 1024:
+				if (!keysize1024) {
+					throw new InvalidKeyException("Invalid key size");
+				}
+				break;
+			case 2048:
+				if (!keysize2048) {
+					throw new InvalidKeyException("Invalid key size");
+				}
+				break;
+			case 3072:
+				if (!keysize3072) {
+					throw new InvalidKeyException("Invalid key size");
+				}
+				break;
+			default:
+				throw new InvalidKeyException("Invalid key size");
+			}
+
 		}
 		else {
 			throw new InvalidKeyException("Not a DSA public key");
@@ -87,7 +133,28 @@ public class DSASignature extends SignatureSpi {
 			throws InvalidKeyException {
 
 		if (privateKey instanceof DSAPrivateKey) {
+
 			this.privateKey = (DSAPrivateKey)privateKey;
+			switch(this.privateKey.getParams().getP().bitLength()) {
+			case 1024:
+				if (!keysize1024) {
+					throw new InvalidKeyException("Invalid key size");
+				}
+				break;
+			case 2048:
+				if (!keysize2048) {
+					throw new InvalidKeyException("Invalid key size");
+				}
+				break;
+			case 3072:
+				if (!keysize3072) {
+					throw new InvalidKeyException("Invalid key size");
+				}
+				break;
+			default:
+				throw new InvalidKeyException("Invalid key size");
+			}
+
 		}
 		else {
 			throw new InvalidKeyException("Not a DSA private key");
