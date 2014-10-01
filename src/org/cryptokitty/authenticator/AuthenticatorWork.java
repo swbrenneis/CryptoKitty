@@ -11,6 +11,11 @@ package org.cryptokitty.authenticator;
 public class AuthenticatorWork {
 
 	/*
+	 * The hash algorithm.
+	 */
+	public String algorithm;
+
+	/*
 	 * The iteration count.
 	 */
 	public long iterations;
