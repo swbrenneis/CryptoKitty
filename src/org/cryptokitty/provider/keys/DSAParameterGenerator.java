@@ -24,13 +24,13 @@ public class DSAParameterGenerator {
 	/*
 	 * BigInteger constants.
 	 */
-	private static final BigInteger MINUS_ONE = BigInteger.valueOf(-1L);
+	// private static final BigInteger MINUS_ONE = BigInteger.valueOf(-1L);
 	private static final BigInteger TWO = BigInteger.valueOf(2L);
-	private static final BigInteger THREE = BigInteger.valueOf(3L);
-	private static final BigInteger FOUR = BigInteger.valueOf(4L);
-	private static final BigInteger FIVE = BigInteger.valueOf(5L);
-	private static final BigInteger SEVEN = BigInteger.valueOf(7L);
-	private static final BigInteger EIGHT = BigInteger.valueOf(8L);
+	// private static final BigInteger THREE = BigInteger.valueOf(3L);
+	// private static final BigInteger FOUR = BigInteger.valueOf(4L);
+	// private static final BigInteger FIVE = BigInteger.valueOf(5L);
+	// private static final BigInteger SEVEN = BigInteger.valueOf(7L);
+	// private static final BigInteger EIGHT = BigInteger.valueOf(8L);
 
 	/*
 	 * Generated counter. Will be 4L.
