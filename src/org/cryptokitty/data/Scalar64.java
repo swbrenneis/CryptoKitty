@@ -14,6 +14,9 @@ import java.math.BigInteger;
  */
 public class Scalar64 {
 
+	static final int LITTLEENDIAN = 1;
+	static final int BIGENDIAN = 2;
+
 	/*
 	 * Convenience methods.
 	 */
