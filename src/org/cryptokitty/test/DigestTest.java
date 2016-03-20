@@ -31,8 +31,10 @@ public class DigestTest {
 	 */
 	public static void main(String[] args) {
 
-		byte[] abcMessage = 
-			{ 0x61, 0x62, 0x63 };	// "abc"
+		byte[] abcMessage = "abc".getBytes();
+		
+		byte[] paddingMessage =
+			"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".getBytes();
 
 		byte[] emptyAnswerSHA256 = 
 			{ (byte)0xe3, (byte)0xb0, (byte)0xc4, 0x42, (byte)0x98, (byte)0xfc, 0x1c, 0x14,
@@ -45,6 +47,18 @@ public class DigestTest {
 				0x41, 0x41, 0x40, (byte)0xde, 0x5d, (byte)0xae, 0x22, 0x23,
 				(byte)0xb0, 0x03, 0x61, (byte)0xa3, (byte)0x96, 0x17, 0x7a, (byte)0x9c,
 				(byte)0xb4, 0x10, (byte)0xff, 0x61, (byte)0xf2, 0x00, 0x15, (byte)0xad };
+
+		byte[] paddingAnswerSHA256 =
+			{ 0x24, (byte)0x8d, 0x6a, 0x61, (byte)0xd2, 0x06, 0x38, (byte)0xb8, (byte)0xe5,
+				(byte)0xc0, 0x26, (byte)0x93, 0x0c, 0x3e, 0x60, 0x39, (byte)0xa3, 0x3c,
+				(byte)0xe4, 0x59, 0x64, (byte)0xff, 0x21, 0x67, (byte)0xf6, (byte)0xec,
+				(byte)0xed, (byte)0xd4, 0x19, (byte)0xdb, 0x06, (byte)0xc1 };
+
+		byte[] millionAnswerSHA256 =
+            { (byte)0xcd, (byte)0xc7, 0x6e, 0x5c, (byte)0x99, 0x14, (byte)0xfb, (byte)0x92,
+				(byte)0x81, (byte)0xa1, (byte)0xc7, (byte)0xe2, (byte)0x84, (byte)0xd7,
+				0x3e, 0x67, (byte)0xf1, (byte)0x80, (byte)0x9a, 0x48, (byte)0xa4, (byte)0x97,
+				0x20, 0x0e, 0x04, 0x6d, 0x39, (byte)0xcc, (byte)0xc7, 0x11, 0x2c, (byte)0xd0 };
 
 		byte[] emptyAnswerSHA512 =
 			{ (byte)0xcf, (byte)0x83, (byte)0xe1, 0x35, 0x7e, (byte)0xef, (byte)0xb8,
@@ -136,6 +150,25 @@ public class DigestTest {
 		}
 		else {
 			System.out.println("SHA256 'abc' test failed!");
+		}
+
+		digestSHA256 = sha256.digest(paddingMessage);
+		if (Arrays.equals(digestSHA256, paddingAnswerSHA256)) {
+			System.out.println("SHA256 padding test passed!");
+		}
+		else {
+			System.out.println("SHA256 padding test failed!");
+		}
+
+		for (int n = 0; n < 1000000; ++n) {
+			sha256.update((byte)'a');
+		}
+		digestSHA256 = sha256.digest();
+		if (Arrays.equals(digestSHA256, millionAnswerSHA256)) {
+			System.out.println("SHA256 million test passed!");
+		}
+		else {
+			System.out.println("SHA256 million test failed!");
 		}
 
 		CKSHA512 sha512 = new CKSHA512();
