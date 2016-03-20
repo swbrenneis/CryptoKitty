@@ -6,6 +6,7 @@ package org.cryptokitty.provider.digest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.math.BigInteger;
 
 import org.cryptokitty.data.Scalar32;
 import org.cryptokitty.data.Scalar64;
@@ -186,6 +187,7 @@ public class CKSHA256 extends Digest{
 	 */
 	private byte[] pad(byte[] in) {
 
+		/*
 		int bitsize = in.length * 8;
 		int padbits = 448 - (bitsize % 512);
 		byte[] padding = new byte[padbits / 8];
@@ -196,7 +198,38 @@ public class CKSHA256 extends Digest{
 		System.arraycopy(padding, 0, context, in.length, padding.length);
 		System.arraycopy(Scalar64.encode(bitsize), 0, context,
 											in.length + padding.length, 8);
-		return context;
+		*/
+		
+
+	    // Message size in bits - l
+	    long l = in.length * 8;
+
+	    /*
+	     * Pad the message such that k + 1 + l is congruent to
+	     * 448 mod 512, where k + 1 is the padding length and l is the
+	     * message length. The message is always padded with a byte
+	     * value of 0x80, which is a single bit added to the end of
+	     * the message.
+	     */
+	    ByteArrayOutputStream work = new ByteArrayOutputStream();
+	    work.write(in, 0, in.length);
+	    work.write((byte)0x80);
+	    // 512 bits = 64 bytes. The padded message includes the 64 bit
+	    // big endian representation of the message length in bits, so
+	    // in order to make the message modulo 512, we add bytes until
+	    // the whole message, including the length encoding is an even
+	    // multiple of 64,
+	    while ((work.size() + 8)  % 64 != 0) {
+	        work.write(0); //pad with zeroes.
+	    }
+	    // Append the 64 bit encoded bit length
+	    BigInteger l64 = new BigInteger(new Long(l).toString());
+	    byte[] lBytes = l64.toByteArray();
+	    byte[] eBytes = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	    System.arraycopy(lBytes, 0, eBytes, 8 - lBytes.length, lBytes.length);
+	    work.write(eBytes, 0, eBytes.length);
+
+	    return work.toByteArray();
 
 	}
 
