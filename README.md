@@ -15,3 +15,11 @@ with pertinent vectors from FIPS and other sources.
 CryptoKitty development began in 2015 and is ongoing.
 
 CryptoKitty is licensed under GPL v3.
+
+WARNING - WARNING - WARNING
+
+This is ALPHA code. It has been tested using brief proof-of-function methods, but it has NOT
+been rigorously tested against known attacks, nor has it been vetted by any academic institution
+or government agency.
+
+USE AT YOUR OWN RISK.
