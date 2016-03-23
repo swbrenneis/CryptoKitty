@@ -91,7 +91,7 @@ public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
 		while (!eFound) {
 			e = BigInteger.probablePrime(64, random);
 			// 3 < e <= n-1
-			if (e.compareTo(THREE) > 0 & e.compareTo(nn) <= 0) {
+			if (e.compareTo(THREE) > 0 && e.compareTo(nn) <= 0) {
 				eFound = e.gcd(phi).equals(BigInteger.ONE);
 
 			}
