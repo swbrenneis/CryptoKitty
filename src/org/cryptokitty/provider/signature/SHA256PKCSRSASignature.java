@@ -4,6 +4,7 @@
 package org.cryptokitty.provider.signature;
 
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.cipher.PKCS1rsassa;
 
 
 /**
