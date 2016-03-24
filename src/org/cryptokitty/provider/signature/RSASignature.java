@@ -89,16 +89,16 @@ public class RSASignature extends SignatureSpi {
 			crt.dQ = ((RSAPrivateCrtKey) privateKey).getPrimeExponentQ();
 			crt.qInv = ((RSAPrivateCrtKey) privateKey).getCrtCoefficient();
 			BigInteger n = crt.p.multiply(crt.q);
-			this.privateKey.bitsize = n.bitLength();
 			this.privateKey = crt;
+			this.privateKey.bitsize = n.bitLength();
 			// k = privateKey.bitsize / 8;
 		}
 		else if (privateKey instanceof RSAPrivateKey) {
 			RSA.ModulusPrivateKey mod = rsa.new ModulusPrivateKey();
 			mod.n = ((RSAPrivateKey) privateKey).getModulus();
 			mod.d = ((RSAPrivateKey) privateKey).getPrivateExponent();
-			this.privateKey.bitsize = mod.n.bitLength();
 			this.privateKey = mod;
+			this.privateKey.bitsize = mod.n.bitLength();
 			// k = privateKey.bitsize / 8;
 		}
 		else {
