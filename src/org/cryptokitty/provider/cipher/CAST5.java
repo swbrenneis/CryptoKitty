@@ -24,7 +24,7 @@ import org.cryptokitty.data.Scalar32;
  * used in the CAST5Cipher class and it may not be subclassed.
  * 
  */
- final class CAST5 implements BlockCipher {
+final class CAST5 implements BlockCipher {
 
 	/*
 	 * Substitution boxes.

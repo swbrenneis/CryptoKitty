@@ -15,6 +15,9 @@ import java.io.InputStream;
  */
 public class Scalar32 {
 
+	static final int LITTLEENDIAN = 1;
+	static final int BIGENDIAN = 2;
+
 	/*
 	 * Convenience methods.
 	 */
