@@ -43,10 +43,14 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 	private BigInteger M;
 
 	/* 
-	 * The state.
+	 * The current state.
 	 */
-	private BigInteger X;
+	private BigInteger Xn;
 
+	/**
+	 * The previous state
+	 */
+	private BigInteger Xn1;
 	/**
 	 * 
 	 */
@@ -88,9 +92,9 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 
 		CMWCRandom rnd = new CMWCRandom();
 		rnd.setSeed(new BigInteger(seed).longValue());
-		X = new BigInteger(64, 100, rnd);
-		while (X.gcd(M).compareTo(BigInteger.ONE) != 0) {
-			X = new BigInteger(64, 100, rnd);
+		Xn1 = new BigInteger(64, 100, rnd);
+		while (Xn1.gcd(M).compareTo(BigInteger.ONE) != 0) {
+			Xn1 = new BigInteger(64, 100, rnd);
 		}
 
 	}
@@ -119,8 +123,9 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 		}
 		reseed += bytes.length;
 
-		X = X.modPow(TWO, M);	// X(n) = X(n-1)**2 mod M.
-		int bitLength = X.bitLength();
+		Xn = Xn1.modPow(TWO, M);	// X(n) = X(n-1)**2 mod M.
+		Xn1 = Xn;
+		int bitLength = Xn.bitLength();
 		int byteCount = bytes.length - 1;
 
 		while (byteCount >= 0) {
@@ -131,20 +136,21 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 				// Parity test.
 				int parity = 0;
 				for (int l = 0; l < bitLength; ++l) {
-					if (X.testBit(l)) {
+					if (Xn.testBit(l)) {
 						++parity;
 					}
 				}
 				// Gosling is a boob.
 				// If parity is even, set the bit
 				thisByte = (byte)(thisByte | (byte)(parity % 2 == 0 ? 1 : 0));
-				X.shiftRight(1);
+				Xn.shiftRight(1);
 				bitLength--;
 				if (bitLength == 0) {
 					// We ran out of bits. Need another random.
-					X = X.modPow(TWO, M);
+					Xn = Xn1.modPow(TWO, M);
+					Xn1 = Xn;
 					// This is an unsigned operation. Not really important.
-					bitLength = X.bitLength();
+					bitLength = Xn.bitLength();
 				}
 			}
 			bytes[byteCount--] = thisByte;
