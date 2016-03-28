@@ -28,6 +28,7 @@ import org.cryptokitty.provider.digest.CKMD5;
 import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateCrtKey;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPrivateModKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
 /**
@@ -218,7 +219,7 @@ public class RSATest {
 			BigInteger e = new BigInteger(1, E1);
 			CKRSAPublicKey pkcsPublicKey1 = new CKRSAPublicKey(n, e);
 			BigInteger d = new BigInteger(1, D1);
-			CKRSAPrivateKey pkcsPrivateKey1 = new CKRSAPrivateKey(n, d);
+			CKRSAPrivateModKey pkcsPrivateModKey1 = new CKRSAPrivateModKey(n, d);
 			BigInteger p = new BigInteger(1, P1);
 			BigInteger q = new BigInteger(1, Q1);
 			CKRSAPrivateCrtKey pkcsPrivateCrtKey1 = new CKRSAPrivateCrtKey(p, q, d, e);
@@ -234,7 +235,7 @@ public class RSATest {
 			}
 
 			rsad = Cipher.getInstance("RSA", "CryptoKitty");
-			rsad.init(Cipher.DECRYPT_MODE, pkcsPrivateKey1);
+			rsad.init(Cipher.DECRYPT_MODE, pkcsPrivateModKey1);
 			plaintext = rsad.doFinal(ciphertext);
 			if (Arrays.equals(pkcsMessage1, plaintext)) {
 				System.out.println("RSA PKCS test 3 passed!");
