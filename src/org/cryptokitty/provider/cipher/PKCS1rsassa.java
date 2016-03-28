@@ -13,6 +13,8 @@ import org.cryptokitty.provider.EncodingException;
 import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPublicKey;
 import org.cryptokitty.provider.signature.SignatureException;
 
 /**
@@ -81,7 +83,7 @@ public class PKCS1rsassa extends RSA {
 	 * @see org.cryptokitty.provider.RSA#decrypt(org.cryptokitty.provider.RSA.PrivateKey, byte[])
 	 */
 	@Override
-	public byte[] decrypt(PrivateKey K, byte[] C) {
+	public byte[] decrypt(CKRSAPrivateKey K, byte[] C) {
 		// Operation not supported. Fail silently.
 		return null;
 	}
@@ -91,7 +93,7 @@ public class PKCS1rsassa extends RSA {
 	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
 	 */
 	@Override
-	public byte[] encrypt(PublicKey K, byte[] M)
+	public byte[] encrypt(CKRSAPublicKey K, byte[] M)
 		throws ProviderException {
 		throw new ProviderException("Operation not supported");
 	}
@@ -105,7 +107,7 @@ public class PKCS1rsassa extends RSA {
 	 * @return The signature as an octet string.
 	 * @throws BadParameterException 
 	 */
-	public byte[] sign(PrivateKey K, byte[] M)
+	public byte[] sign(CKRSAPrivateKey K, byte[] M)
 			throws ProviderException {
 
 		// 1. EMSA-PKCS1-v1_5 encoding: Apply the EMSA-PKCS1-v1_5 encoding
@@ -117,7 +119,7 @@ public class PKCS1rsassa extends RSA {
 		// "intended encoded message length too short," output "RSA modulus
 		// too short" and stop.
 
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		byte[] EM = null;
 		try {
 			EM = emsaPKCS1Encode(M, k);
@@ -143,16 +145,7 @@ public class PKCS1rsassa extends RSA {
 		// integer signature representative s:
 		//
 		//    s = RSASP1 (K, m).
-		BigInteger s;
-		if (K instanceof ModulusPrivateKey) {
-			s = rsasp1((ModulusPrivateKey)K, os2ip(EM));
-		}
-		else if (K instanceof CRTPrivateKey) {
-			s = rsasp1((CRTPrivateKey)K, os2ip(EM));
-		}
-		else {
-			throw new BadParameterException("Invalid private key");
-		}
+		BigInteger s = K.rsasp1(os2ip(EM));
 
 		// Convert the signature representative s to a signature S of
 		// length k octets:
@@ -244,12 +237,12 @@ public class PKCS1rsassa extends RSA {
 	 * 
 	 * @return True if the signature is valid, otherwise false.
 	 */
-	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
 
 		// Length checking.
 		// If the length of the signature S is not k octets,
 		// output "invalid signature" and stop.
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		if (S.length != k) {
 			return false;
 		}

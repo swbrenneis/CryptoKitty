@@ -103,6 +103,7 @@ public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
 		// Create the public key.
 		PublicKey pub = new CKRSAPublicKey(n, e);
 		// Create the private key.
+		// TODO Option to generate modulus key.
 		// PrivateKey prv = new CKRSAPrivateKey(n, d);
 		PrivateKey prv = new CKRSAPrivateCrtKey(p, q, d, e);
 
