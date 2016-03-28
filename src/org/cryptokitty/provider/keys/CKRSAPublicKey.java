@@ -40,6 +40,13 @@ public class CKRSAPublicKey implements RSAPublicKey {
 		return "RSA";
 	}
 
+	/*
+	 * Return the key size.
+	 */
+	public int getBitsize() {
+		return n.bitLength();
+	}
+
 	/* (non-Javadoc)
 	 * @see java.security.Key#getFormat()
 	 */

@@ -16,6 +16,8 @@ import org.cryptokitty.provider.EncodingException;
 import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
 /**
  * @author Steve Brenneis
@@ -63,7 +65,7 @@ public class PSSrsassa extends RSA {
 	 * @see org.cryptokitty.provider.RSA#decrypt(org.cryptokitty.provider.RSA.PrivateKey, byte[])
 	 */
 	@Override
-	public byte[] decrypt(PrivateKey K, byte[] C) {
+	public byte[] decrypt(CKRSAPrivateKey K, byte[] C) {
 		// Operation not supported. Fail silently.
 		return null;
 	}
@@ -142,7 +144,7 @@ public class PSSrsassa extends RSA {
 		System.arraycopy(salt, 0, DB, PS.length + 1, salt.length);
 
 		// 9.  Let dbMask = MGF(H, emLen - hLen - 1).
-		MGF1 dbmgf = new MGF1(hashAlgorithm);
+		CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
 		byte[] dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
 
 		// 10. Let maskedDB = DB \xor dbMask.
@@ -178,7 +180,7 @@ public class PSSrsassa extends RSA {
 	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
 	 */
 	@Override
-	public byte[] encrypt(PublicKey K, byte[] M) throws ProviderException {
+	public byte[] encrypt(CKRSAPublicKey K, byte[] M) throws ProviderException {
 		throw new ProviderException("Illegal operation");
 	}
 
@@ -190,7 +192,7 @@ public class PSSrsassa extends RSA {
 	 * 
 	 * @return Signature octet string.
 	 */
-	public byte[] sign(PrivateKey K, byte[] M)
+	public byte[] sign(CKRSAPrivateKey K, byte[] M)
 			throws ProviderException {
 
 		// 1. EMSA-PSS encoding: Apply the EMSA-PSS encoding operation to
@@ -209,7 +211,7 @@ public class PSSrsassa extends RSA {
 		//
 		// The encoding operation won't output "message too long" since the
 		// message would have to be ~= 2 exabytes long.
-		byte[] EM = emsaPSSEncode(M, K.bitsize - 1);
+		byte[] EM = emsaPSSEncode(M, K.getBitsize() - 1);
 
 		// RSA signature
 		//
@@ -224,22 +226,13 @@ public class PSSrsassa extends RSA {
 		//    integer signature representative s:
 		//
 		//       s = RSASP1 (K, m).
-		BigInteger s;
-		if (K instanceof ModulusPrivateKey) {
-			s = rsasp1((ModulusPrivateKey)K, m);
-		}
-		if (K instanceof CRTPrivateKey) {
-			s = rsasp1((CRTPrivateKey)K, m);
-		}
-		else {
-			throw new BadParameterException("Invalid private key");
-		}
+		BigInteger s = K.rsasp1(m);
 
 		// c. Convert the signature representative s to a signature S of
 		//    length k octets (see Section 4.1):
 		//
 		//      S = I2OSP (s, k).
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		return i2osp(s, k);
 
 	}
@@ -305,7 +298,7 @@ public class PSSrsassa extends RSA {
 		}
 
 		// 7.  Let dbMask = MGF(H, emLen - hLen - 1).
-		MGF1 dbmgf = new MGF1(hashAlgorithm);
+		CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
 		byte[] dbMask;
 		try {
 			dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
@@ -379,10 +372,10 @@ public class PSSrsassa extends RSA {
 	 * @return True if the signature is valid, otherwise false.
 	 * 
 	 */
-	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
 
 		// Length check.
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		if (S.length != k) {
 			// Fail silently
 			return false;
@@ -412,10 +405,10 @@ public class PSSrsassa extends RSA {
 			// Note that emLen will be one less than k if modBits - 1 is
 			// divisible by 8 and equal to k otherwise.  If I2OSP outputs
 			// "integer too large," output "invalid signature" and stop.
-			int emLen = (int)Math.ceil((double)(K.bitsize - 1) / 8);
+			int emLen = (int)Math.ceil((double)(K.getBitsize() - 1) / 8);
 			byte[] EM = i2osp(m, emLen);
 
-			return emsaPSSVerify(M, EM, K.bitsize - 1);
+			return emsaPSSVerify(M, EM, K.getBitsize() - 1);
 
 		}
 		catch (ProviderException e) {

@@ -4,76 +4,48 @@
 package org.cryptokitty.provider.keys;
 
 import java.math.BigInteger;
-import java.security.interfaces.RSAPrivateKey;
+
+import org.cryptokitty.provider.IllegalMessageSizeException;
+import org.cryptokitty.provider.cipher.DecryptionException;
 
 /**
  * @author Steve Brenneis
  *
- */
-@SuppressWarnings("serial")
-public class CKRSAPrivateKey implements RSAPrivateKey {
+ * The inheritance tree of the RSA key and cipher classes is such
+ * a mess because Java doesn't provide a sensible differentiation
+ * between RSA modulus private key and RSA Chinese Remainder Theorem
+ * private keys.
+*/
+public abstract class CKRSAPrivateKey {
 
 	/*
-	 * Private exponent.
+	 * Key size.
 	 */
-	private BigInteger d;
-
-	/*
-	 * Modulus.
-	 */
-	private BigInteger n;
+	protected int bitsize;
 
 	/**
-	 * 
+	 * Default constructor
 	 */
-	public CKRSAPrivateKey(BigInteger n, BigInteger d) {
-		this.n = n;
-		this.d = d;
+	protected CKRSAPrivateKey() {
 	}
 
-	/* (non-Javadoc)
-	 * @see java.security.Key#getAlgorithm()
+	/*
+	 * Return the size of the key.
 	 */
-	@Override
-	public String getAlgorithm() {
-		// TODO Auto-generated method stub
-		return "RSA";
+	public int getBitsize() {
+		return bitsize;
 	}
+	
+	/*
+	 * Signature primitive.
+	 */
+	public abstract BigInteger rsasp1(BigInteger m)
+			throws IllegalMessageSizeException;
 
-	/* (non-Javadoc)
-	 * @see java.security.Key#getFormat()
+	/*
+	 * Decryption primitive.
 	 */
-	@Override
-	public String getFormat() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.Key#getEncoded()
-	 */
-	@Override
-	public byte[] getEncoded() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.interfaces.RSAKey#getModulus()
-	 */
-	@Override
-	public BigInteger getModulus() {
-		// TODO Auto-generated method stub
-		return n;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.interfaces.RSAPrivateKey#getPrivateExponent()
-	 */
-	@Override
-	public BigInteger getPrivateExponent() {
-		// TODO Auto-generated method stub
-		return d;
-	}
+	public abstract BigInteger rsadp(BigInteger c)
+			throws DecryptionException;
 
 }

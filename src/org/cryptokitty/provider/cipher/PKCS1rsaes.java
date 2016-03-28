@@ -10,6 +10,8 @@ import java.util.Arrays;
 import org.cryptokitty.provider.BadParameterException;
 import org.cryptokitty.provider.IllegalMessageSizeException;
 import org.cryptokitty.provider.ProviderException;
+import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPublicKey;
 import org.cryptokitty.provider.random.BBSSecureRandom;
 
 /**
@@ -42,12 +44,12 @@ public class PKCS1rsaes extends RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	@Override
-	public byte[] decrypt(PrivateKey K, byte[] C)
+	public byte[] decrypt(CKRSAPrivateKey K, byte[] C)
 			throws DecryptionException {
 
 		// 1. Length checking: If the length of the ciphertext C is not k octets
 		//    (or if k < 11), output "decryption error" and stop.
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		if (C.length != k || k < 11) {
 			throw new DecryptionException();
 		}
@@ -64,16 +66,7 @@ public class PKCS1rsaes extends RSA {
 		//
 		//       m = RSADP ((n, d), c).
 		try {
-			BigInteger m = null;
-			if (K instanceof ModulusPrivateKey) {
-				m = rsadp((ModulusPrivateKey)K, os2ip(C));
-			}
-			else if (K instanceof CRTPrivateKey) {
-				m = rsadp((CRTPrivateKey)K, os2ip(C));
-			}
-			else {
-				throw new DecryptionException();
-			}
+			BigInteger m = K.rsadp(os2ip(C));
 
 			// If RSADP outputs "ciphertext representative out of range"
 			// (meaning that c >= n), output "decryption error" and stop.
@@ -136,12 +129,12 @@ public class PKCS1rsaes extends RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	@Override
-	public byte[] encrypt(PublicKey K, byte[] M)
+	public byte[] encrypt(CKRSAPublicKey K, byte[] M)
 			throws IllegalMessageSizeException, BadParameterException {
 
 		// 1. Length checking: If mLen > k - 11, output "message too long" and
 		//    stop.
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		int mLen = M.length;
 		if (mLen > k - 11) {
 			throw new BadParameterException("Message too long");
@@ -204,7 +197,7 @@ public class PKCS1rsaes extends RSA {
 	 * @see org.cryptokitty.provider.RSA#sign(org.cryptokitty.provider.RSA.PrivateKey, byte[])
 	 */
 	@Override
-	public byte[] sign(PrivateKey K, byte[] M)
+	public byte[] sign(CKRSAPrivateKey K, byte[] M)
 			throws ProviderException {
 		throw new ProviderException("Illegal operation");
 	}
@@ -214,7 +207,7 @@ public class PKCS1rsaes extends RSA {
 	 * @see org.cryptokitty.provider.RSA#verify(org.cryptokitty.provider.RSA.PublicKey, byte[], byte[])
 	 */
 	@Override
-	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
 		// Unsupported operation. Fail silently.
 		return false;
 	}

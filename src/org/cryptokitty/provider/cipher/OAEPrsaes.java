@@ -15,6 +15,8 @@ import org.cryptokitty.provider.IllegalMessageSizeException;
 import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPublicKey;
 import org.cryptokitty.provider.random.BBSSecureRandom;
 
 /**
@@ -71,7 +73,7 @@ public class OAEPrsaes extends RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	@Override
-	public byte[] decrypt(PrivateKey K, byte[] C)
+	public byte[] decrypt(CKRSAPrivateKey K, byte[] C)
 			throws DecryptionException {
 
 		// Length checking.
@@ -84,7 +86,7 @@ public class OAEPrsaes extends RSA {
 
 		// b. If the length of the ciphertext C is not k octets, output
 		//    "decryption error" and stop.
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		if (C.length != k) {
 			throw new DecryptionException();
 		}
@@ -103,18 +105,7 @@ public class OAEPrsaes extends RSA {
 		}
 
 		try {
-			BigInteger c = null;
-			if (K instanceof ModulusPrivateKey) {
-				// Do decryption primitive
-				c = rsadp((ModulusPrivateKey)K, os2ip(C));
-			}
-			else if (K instanceof CRTPrivateKey) {
-				c = rsadp((CRTPrivateKey)K, os2ip(C));
-			}
-			else {
-				throw new DecryptionException();
-			}
-
+			BigInteger c = K.rsadp(os2ip(C));
 			// Do decoding.
 			return emeOAEPDecode(k, i2osp(c, k));
 		}
@@ -163,14 +154,14 @@ public class OAEPrsaes extends RSA {
 
 		try {
 			// c. Let seedMask = MGF(maskedDB, hLen).
-			MGF1 mdmgf = new MGF1(hashAlgorithm);
+			CKRSAmgf1 mdmgf = new CKRSAmgf1(hashAlgorithm);
 			byte[] seedMask = mdmgf.generateMask(maskedDB, hLen);
 
 			// d. Let seed = maskedSeed \xor seedMask.
 			byte[] seed = xor(maskedSeed, seedMask);
 
 			// e. Let dbMask = MGF(seed, k - hLen - 1).
-			MGF1 dbmgf = new MGF1(hashAlgorithm);
+			CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
 			byte[] dbMask = dbmgf.generateMask(seed, k - hLen - 1);
 
 			// f. Let DB = maskedDB \xor dbMask.
@@ -268,14 +259,14 @@ public class OAEPrsaes extends RSA {
 		rnd.nextBytes(seed);
 
 		// e. Let dbMask = MGF(seed, k - hLen - 1).
-		MGF1 dmgf = new MGF1(hashAlgorithm);
+		CKRSAmgf1 dmgf = new CKRSAmgf1(hashAlgorithm);
 		byte[] dbMask = dmgf.generateMask(seed, k - hLen - 1);
 
 		// f. Let maskedDB = DB \xor dbMask.
 		byte[] maskedDB = xor(DB.toByteArray(), dbMask);
 
 		// g. Let seedMask = MGF(maskedDB, hLen).
-		MGF1 smgf = new MGF1(hashAlgorithm);
+		CKRSAmgf1 smgf = new CKRSAmgf1(hashAlgorithm);
 		byte[] seedMask = smgf.generateMask(maskedDB, hLen);
 
 		// h. Let maskedSeed = seed \xor seedMask.
@@ -314,7 +305,7 @@ public class OAEPrsaes extends RSA {
 	 * @throws BadParameterException if M is too long
 	 */
 	@Override
-	public byte[] encrypt(PublicKey K, byte[] M)
+	public byte[] encrypt(CKRSAPublicKey K, byte[] M)
 			throws ProviderException {
 
 		// Length checking.
@@ -326,7 +317,7 @@ public class OAEPrsaes extends RSA {
 		// technically infeasible.
 
 		int hLen = Digest.getInstance(hashAlgorithm).getDigestLength();
-		int k = K.bitsize / 8;
+		int k = K.getBitsize() / 8;
 		int mLen = M.length;
 		if (mLen > k - (2 * hLen) - 2) {
 			throw new IllegalMessageSizeException("Message too long");
@@ -349,7 +340,7 @@ public class OAEPrsaes extends RSA {
 	 * @see org.cryptokitty.provider.RSA#sign(org.cryptokitty.provider.RSA.PrivateKey, byte[])
 	 */
 	@Override
-	public byte[] sign(PrivateKey K, byte[] M)
+	public byte[] sign(CKRSAPrivateKey K, byte[] M)
 			throws ProviderException {
 		throw new ProviderException("Illegal operation");
 	}
@@ -359,7 +350,7 @@ public class OAEPrsaes extends RSA {
 	 * @see org.cryptokitty.provider.RSA#verify(org.cryptokitty.provider.RSA.PublicKey, byte[], byte[])
 	 */
 	@Override
-	public boolean verify(PublicKey K, byte[] M, byte[] S) {
+	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
 		// Unsupported operation. Fail silently.
 		return false;
 	}

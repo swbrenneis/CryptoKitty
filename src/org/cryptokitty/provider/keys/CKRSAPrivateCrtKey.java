@@ -6,12 +6,16 @@ package org.cryptokitty.provider.keys;
 import java.math.BigInteger;
 import java.security.interfaces.RSAPrivateCrtKey;
 
+import org.cryptokitty.provider.BadParameterException;
+import org.cryptokitty.provider.IllegalMessageSizeException;
+import org.cryptokitty.provider.cipher.DecryptionException;
+
 /**
  * @author Steve Brenneis
  *
  */
 @SuppressWarnings("serial")
-public class CKRSAPrivateCrtKey implements RSAPrivateCrtKey {
+public class CKRSAPrivateCrtKey extends CKRSAPrivateKey implements RSAPrivateCrtKey {
 
 	/*
 	 * Private exponent.
@@ -59,7 +63,6 @@ public class CKRSAPrivateCrtKey implements RSAPrivateCrtKey {
 	public CKRSAPrivateCrtKey(BigInteger p, BigInteger q, BigInteger d, BigInteger e) {
 		this.p = p;
 		this.q = q;
-		n = p.multiply(q);
 		BigInteger pp = p.subtract(BigInteger.ONE);
 		BigInteger qq = q.subtract(BigInteger.ONE);
 		dP = e.modInverse(pp);
@@ -67,6 +70,9 @@ public class CKRSAPrivateCrtKey implements RSAPrivateCrtKey {
 		qInv = q.modInverse(p);
 		this.d = d;
 		this.e = e;
+		
+		n = p.multiply(q);
+		bitsize = n.bitLength();
 	}
 
 	/* (non-Javadoc)
@@ -166,6 +172,80 @@ public class CKRSAPrivateCrtKey implements RSAPrivateCrtKey {
 	public BigInteger getCrtCoefficient() {
 		// TODO Auto-generated method stub
 		return qInv;
+	}
+	
+	/**
+	 * RSA decryption primitive, CRT method
+	 * 
+	 * @param K - Private key of the form (q, p, dP, dQ, qInv).
+	 * @param c - Ciphertext representative.
+	 * 
+	 * @return The plaintext representative
+	 * 
+	 * @throws BadParameterException if ciphertext representative is out of range
+	 */
+	public BigInteger rsadp(BigInteger c)
+		throws DecryptionException {
+
+		// We have to compute the modulus for the range check
+		BigInteger n = p.multiply(q);
+
+		//   1. If the ciphertext representative c is not between 0 and n - 1,
+		//      output "ciphertext representative out of range" and stop.
+		if (c.compareTo(BigInteger.ZERO) < 1 
+				|| c.compareTo(n.subtract(BigInteger.ONE)) > 0) {
+			throw new DecryptionException();
+		}
+
+		// i.    Let m_1 = c^dP mod p and m_2 = c^dQ mod q.
+		BigInteger m_1 = c.modPow(dP, p);
+		BigInteger m_2 = c.modPow(dQ, q);
+
+		// iii.  Let h = (m_1 - m_2) * qInv mod p.
+		BigInteger h = m_1.subtract(m_2).multiply(qInv).mod(p);
+
+		// iv.   Let m = m_2 + q * h.
+		BigInteger m = q.multiply(h).add(m_2);
+
+		return m;
+
+	}
+
+	/**
+	 * Signature generation primitive. CRT method.
+	 * 
+	 * @param K - Private key of the form (q, p, dP, dQ, qInv).
+	 * @param m - Message representative.
+	 * 
+	 * @return The signature representative
+	 * 
+	 * @throws BadParameterException if message representative is out of range
+	 */
+	public BigInteger rsasp1(BigInteger m)
+			throws IllegalMessageSizeException {
+
+		// We have to compute the modulus for the range check
+		BigInteger n = p.multiply(q);
+
+		//   1. If the message representative c is not between 0 and n - 1,
+		//      output "message representative out of range" and stop.
+		if (m.compareTo(BigInteger.ZERO) < 0 
+				|| m.compareTo(n.subtract(BigInteger.ONE)) > 0) {
+			throw new IllegalMessageSizeException("Message representative out of range");
+		}
+
+		// i.    Let s_1 = m^dP mod p and s_2 = m^dQ mod q.
+		BigInteger s_1 = m.modPow(dP, p);
+		BigInteger s_2 = m.modPow(dQ, q);
+
+		// iii.  Let h = (s_1 - s_2) * qInv mod p.
+		BigInteger h = s_1.subtract(s_2).multiply(qInv).mod(p);
+
+		// iv.   Let s = s_2 + q * h.
+		BigInteger s = q.multiply(h).add(s_2);
+
+		return s;
+
 	}
 
 }

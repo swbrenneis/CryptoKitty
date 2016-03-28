@@ -4,20 +4,18 @@
 package org.cryptokitty.provider.signature;
 
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureSpi;
-import java.security.interfaces.RSAPrivateCrtKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 
 import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.cipher.RSA;
+import org.cryptokitty.provider.keys.CKRSAPrivateKey;
+import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
 /**
  * @author Steve Brenneis
@@ -33,12 +31,12 @@ public class RSASignature extends SignatureSpi {
 	/*
 	 * The private key.
 	 */
-	private RSA.PrivateKey privateKey;
+	private CKRSAPrivateKey privateKey;
 
 	/*
 	 * The private key.
 	 */
-	private RSA.PublicKey publicKey;
+	private CKRSAPublicKey publicKey;
 
 	/*
 	 * The signature implementation.
@@ -61,11 +59,8 @@ public class RSASignature extends SignatureSpi {
 	protected void engineInitVerify(PublicKey publicKey)
 			throws InvalidKeyException {
 
-		if (publicKey instanceof RSAPublicKey) {
-			this.publicKey = rsa.new PublicKey();
-			this.publicKey.n = ((RSAPublicKey) publicKey).getModulus();
-			this.publicKey.e = ((RSAPublicKey) publicKey).getPublicExponent();
-			this.publicKey.bitsize = this.publicKey.n.bitLength();
+		if (publicKey instanceof CKRSAPublicKey) {
+			this.publicKey = (CKRSAPublicKey)publicKey;
 			// k = publicKey.bitsize / 8;
 		}
 		else {
@@ -81,24 +76,8 @@ public class RSASignature extends SignatureSpi {
 	protected void engineInitSign(PrivateKey privateKey)
 			throws InvalidKeyException {
 
-		if (privateKey instanceof RSAPrivateCrtKey) {
-			RSA.CRTPrivateKey crt = rsa.new CRTPrivateKey();
-			crt.p = ((RSAPrivateCrtKey) privateKey).getPrimeP();
-			crt.q = ((RSAPrivateCrtKey) privateKey).getPrimeQ();
-			crt.dP = ((RSAPrivateCrtKey) privateKey).getPrimeExponentP();
-			crt.dQ = ((RSAPrivateCrtKey) privateKey).getPrimeExponentQ();
-			crt.qInv = ((RSAPrivateCrtKey) privateKey).getCrtCoefficient();
-			BigInteger n = crt.p.multiply(crt.q);
-			this.privateKey = crt;
-			this.privateKey.bitsize = n.bitLength();
-			// k = privateKey.bitsize / 8;
-		}
-		else if (privateKey instanceof RSAPrivateKey) {
-			RSA.ModulusPrivateKey mod = rsa.new ModulusPrivateKey();
-			mod.n = ((RSAPrivateKey) privateKey).getModulus();
-			mod.d = ((RSAPrivateKey) privateKey).getPrivateExponent();
-			this.privateKey = mod;
-			this.privateKey.bitsize = mod.n.bitLength();
+		if (privateKey instanceof CKRSAPrivateKey) {
+			this.privateKey = (CKRSAPrivateKey)privateKey;
 			// k = privateKey.bitsize / 8;
 		}
 		else {
