@@ -102,7 +102,7 @@ public class PSSrsassa extends RSA {
 		if (salt.length > 0) {
 			try {
 				SecureRandom rnd =
-						SecureRandom.getInstance("CMWC", "CryptoKitty");
+						SecureRandom.getInstance("BBS", "CryptoKitty");
 				rnd.nextBytes(salt);
 			}
 			catch (NoSuchAlgorithmException e) {
