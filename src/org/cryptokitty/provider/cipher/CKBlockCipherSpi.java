@@ -28,7 +28,7 @@ public class CKBlockCipherSpi extends CipherSpi {
 	/**
 	 * The cipher stream.
 	 */
-	protected ByteArrayOutputStream stream;
+	protected ByteArrayOutputStream text;
 	
 	/**
 	 * Operation mode. Cipher.ENCRYPT or Cipher.DECRYPT.
@@ -51,6 +51,11 @@ public class CKBlockCipherSpi extends CipherSpi {
 	protected AlgorithmParameters params;
 
 	/**
+	 * Algorithm parameters.
+	 */
+	protected AlgorithmParameterSpec spec;
+
+	/**
 	 * Secure RNG.
 	 */
 	protected SecureRandom random;
@@ -61,7 +66,7 @@ public class CKBlockCipherSpi extends CipherSpi {
 	public CKBlockCipherSpi() {
 
 		opmode = -1;
-		stream = new ByteArrayOutputStream();
+		text = new ByteArrayOutputStream();
 
 	}
 
@@ -72,21 +77,24 @@ public class CKBlockCipherSpi extends CipherSpi {
 	protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen)
 			throws IllegalBlockSizeException, BadPaddingException {
 		
-		stream.write(input, inputLen, inputLen);
+		text.write(input, inputLen, inputLen);
 		
 		byte[] result = null;
 		switch (opmode) {
 			case Cipher.DECRYPT_MODE:
-				result = cipher.decrypt(stream.toByteArray());
+				result = cipher.decrypt(text.toByteArray());
 			case Cipher.ENCRYPT_MODE:
-				result = cipher.encrypt(stream.toByteArray());
+				result = cipher.encrypt(text.toByteArray());
 		}
 		
 		try {
-			engineInit(opmode, key, null);
-		} catch (InvalidKeyException e) {
+			engineInit(opmode, key, params, random);
+		}
+		catch (InvalidKeyException e) {
 			// Don't care
-			e.printStackTrace();
+		}
+		catch (InvalidAlgorithmParameterException e) {
+			// Don't care
 		}
 		return result;
 
@@ -162,7 +170,8 @@ public class CKBlockCipherSpi extends CipherSpi {
 		this.key = key;
 		this.random = random;
 		cipher.setKey(key.getEncoded());
-		stream.reset();
+		cipher.reset();
+		text.reset();
 
 	}
 
@@ -172,7 +181,9 @@ public class CKBlockCipherSpi extends CipherSpi {
 	@Override
 	protected void engineInit(int opmode, Key key, AlgorithmParameterSpec params, SecureRandom random)
 			throws InvalidKeyException, InvalidAlgorithmParameterException {
-		// TODO Auto-generated method stub
+		
+		spec = params;
+		engineInit(opmode, key, random);
 
 	}
 

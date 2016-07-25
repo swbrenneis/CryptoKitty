@@ -4,14 +4,13 @@
 package org.cryptokitty.provider.signature;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.DSAPublicKey;
 import java.util.Arrays;
-
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -22,7 +21,7 @@ public class DSA {
 	/*
 	 * The message digest.
 	 */
-	private Digest digest;
+	private MessageDigest digest;
 
 	/*
 	 * RNG for calculating k
@@ -30,12 +29,12 @@ public class DSA {
 	private SecureRandom random;
 
 	/**
-	 * @throws UnsupportedAlgorithmException 
+	 * @throws NoSuchAlgorithmException 
 	 * 
 	 */
 	public DSA(String algorithm, SecureRandom random)
-			throws UnsupportedAlgorithmException {
-		digest = Digest.getInstance(algorithm);
+			throws NoSuchAlgorithmException {
+		digest = MessageDigest.getInstance(algorithm);
 		this.random = random;
 	}
 

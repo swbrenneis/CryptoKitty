@@ -4,8 +4,10 @@
 package org.cryptokitty.provider.cipher;
 
 import java.security.InvalidKeyException;
-import java.security.Key;
 import java.util.Arrays;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 
 import org.cryptokitty.data.Scalar32;
 
@@ -342,17 +344,7 @@ final class CAST5 implements BlockCipher {
 	/**
 	 * 
 	 */
-	public CAST5(Key key)
-			throws InvalidKeyException {
-
-		int bitsize = key.getEncoded().length * 8;
-		if (bitsize < 40 || bitsize > 128 || (bitsize % 8) != 0) {
-			throw new InvalidKeyException("Illegal key size");
-		}
-		rounds = bitsize <= 80 ? 12 : 16;
-		// Pad keys less than 128 bits with zeros.
-		this.key = Arrays.copyOf(key.getEncoded(), 16);
-
+	public CAST5() {
 	}
 
 	/*
@@ -780,7 +772,8 @@ final class CAST5 implements BlockCipher {
 	 * @see org.cryptokitty.provider.BlockCipher#decrypt(byte[])
 	 */
 	@Override
-	public byte[] decrypt(byte[] ciphertext) {
+	public byte[] decrypt(byte[] ciphertext)
+			throws IllegalBlockSizeException, BadPaddingException {
 		// TODO Block size checks?
 		c = ciphertext;
 		doDecryption();
@@ -792,7 +785,8 @@ final class CAST5 implements BlockCipher {
 	 * @see org.cryptokitty.provider.BlockCipher#encrypt(byte[])
 	 */
 	@Override
-	public byte[] encrypt(byte[] plaintext) {
+	public byte[] encrypt(byte[] plaintext)
+			throws IllegalBlockSizeException, BadPaddingException {
 		// TODO Block size checks?
 		m = plaintext;
 		doEncryption();
@@ -806,6 +800,28 @@ final class CAST5 implements BlockCipher {
 	@Override
 	public int getBlockSize() {
 		return 8;
+	}
+
+	@Override
+	public void reset() {
+		// Nothing to do
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.BlockCipher#setKey()
+	 */
+	@Override
+	public void setKey(byte[] key) throws InvalidKeyException {
+
+		int bitsize = key.length * 8;
+		if (bitsize < 40 || bitsize > 128 || (bitsize % 8) != 0) {
+			throw new InvalidKeyException("Illegal CAST5 key size");
+		}
+		rounds = bitsize <= 80 ? 12 : 16;
+		// Pad keys less than 128 bits with zeros.
+		this.key = Arrays.copyOf(key, 16);
+
 	}
 
 }

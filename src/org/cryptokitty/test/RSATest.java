@@ -27,7 +27,6 @@ import org.cryptokitty.provider.CryptoKittyProvider;
 import org.cryptokitty.provider.digest.CKMD5;
 import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateCrtKey;
-import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPrivateModKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 

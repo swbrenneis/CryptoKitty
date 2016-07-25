@@ -7,13 +7,15 @@ package org.cryptokitty.provider.digest;
  * @author Steve Brenneis
  *
  */
-public class RIPEMD160Spi extends DigestSpi {
+public class RIPEMD160Spi extends CKMessageDigestSpi {
 
 	/**
 	 * 
 	 */
 	public RIPEMD160Spi() {
-		super(new CKRIPEMD160());
+
+		digest = new CKRIPEMD160();
+
 	}
 
 }
