@@ -4,12 +4,15 @@
 package org.cryptokitty.provider.cipher;
 
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.IllegalMessageSizeException;
-import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 import org.cryptokitty.provider.random.BBSSecureRandom;
@@ -19,7 +22,7 @@ import org.cryptokitty.provider.random.BBSSecureRandom;
  *
  * This class implements the RSA PKCS1 v1.5 encryption scheme
  */
-public class PKCS1rsaes extends RSA {
+public class PKCS1rsaes extends RSACipher {
 
 	/*
 	 * Random seed.
@@ -27,10 +30,9 @@ public class PKCS1rsaes extends RSA {
 	private byte[] seed;
 
 	/**
-	 * @param seed - Random bytes for encryption padding. May be null.
+	 *
 	 */
-	public PKCS1rsaes(byte[] seed) {
-		this.seed = seed;
+	public PKCS1rsaes() {
 	}
 
 	/**
@@ -45,13 +47,13 @@ public class PKCS1rsaes extends RSA {
 	 */
 	@Override
 	public byte[] decrypt(CKRSAPrivateKey K, byte[] C)
-			throws DecryptionException {
+								throws IllegalBlockSizeException, BadPaddingException {
 
 		// 1. Length checking: If the length of the ciphertext C is not k octets
 		//    (or if k < 11), output "decryption error" and stop.
 		int k = K.getBitsize() / 8;
 		if (C.length != k || k < 11) {
-			throw new DecryptionException();
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 
 		// RSA decryption.
@@ -65,56 +67,48 @@ public class PKCS1rsaes extends RSA {
 		//    produce an integer message representative m:
 		//
 		//       m = RSADP ((n, d), c).
-		try {
-			BigInteger m = K.rsadp(os2ip(C));
+		BigInteger m = K.rsadp(os2ip(C));
 
-			// If RSADP outputs "ciphertext representative out of range"
-			// (meaning that c >= n), output "decryption error" and stop.
-			//
-			// c. Convert the message representative m to an encoded message EM
-			//    of length k octets (see Section 4.1):
-			//
-			//       EM = I2OSP (m, k).
-			byte[] EM = i2osp(m, k);
+		// If RSADP outputs "ciphertext representative out of range"
+		// (meaning that c >= n), output "decryption error" and stop.
+		//
+		// c. Convert the message representative m to an encoded message EM
+		//    of length k octets (see Section 4.1):
+		//
+		//       EM = I2OSP (m, k).
+		byte[] EM = i2osp(m, k);
 
-			// 3. EME-PKCS1-v1_5 decoding: Separate the encoded message EM into an
-			//    octet string PS consisting of nonzero octets and a message M as
-			//
-			//      EM = 0x00 || 0x02 || PS || 0x00 || M.
-			//
-			// If the first octet of EM does not have hexadecimal value 0x00, if
-			// the second octet of EM does not have hexadecimal value 0x02, if
-			// there is no octet with hexadecimal value 0x00 to separate PS from
-			// M, or if the length of PS is less than 8 octets, output
-			// "decryption error" and stop.
-			if (EM[0] != 0x00 || EM[1] != 0x02) {
-				throw new DecryptionException();
-			}
-			// No easy way to do this.
-			int found = -1;
-			int index = 2;
-			while (found < 0 && index < EM.length) {
-				if (EM[index] == 0x00) {
-					found = index;
-				}
-				index++;
-			}
-			if (found < 0) {
-				throw new DecryptionException();
-			}
-			byte[] PS = Arrays.copyOfRange(EM, 2, found);
-			if (PS.length < 8) {
-				throw new DecryptionException();
-			}
-
-			return Arrays.copyOfRange(EM, found + 1, EM.length);
-
+		// 3. EME-PKCS1-v1_5 decoding: Separate the encoded message EM into an
+		//    octet string PS consisting of nonzero octets and a message M as
+		//
+		//      EM = 0x00 || 0x02 || PS || 0x00 || M.
+		//
+		// If the first octet of EM does not have hexadecimal value 0x00, if
+		// the second octet of EM does not have hexadecimal value 0x02, if
+		// there is no octet with hexadecimal value 0x00 to separate PS from
+		// M, or if the length of PS is less than 8 octets, output
+		// "decryption error" and stop.
+		if (EM[0] != 0x00 || EM[1] != 0x02) {
+			throw new BadPaddingException("Bad padding");
 		}
-		catch (BadParameterException e) {
-			// Catching for debug only.
-			// Fail silently.
-			throw new DecryptionException();
+		// No easy way to do this.
+		int found = -1;
+		int index = 2;
+		while (found < 0 && index < EM.length) {
+			if (EM[index] == 0x00) {
+				found = index;
+			}
+			index++;
 		}
+		if (found < 0) {
+			throw new BadPaddingException("BadPadding");
+		}
+		byte[] PS = Arrays.copyOfRange(EM, 2, found);
+		if (PS.length < 8) {
+			throw new IllegalBlockSizeException("Illegal block size");
+		}
+
+		return Arrays.copyOfRange(EM, found + 1, EM.length);
 
 	}
 
@@ -130,14 +124,14 @@ public class PKCS1rsaes extends RSA {
 	 */
 	@Override
 	public byte[] encrypt(CKRSAPublicKey K, byte[] M)
-			throws IllegalMessageSizeException, BadParameterException {
+				throws IllegalBlockSizeException, BadPaddingException {
 
 		// 1. Length checking: If mLen > k - 11, output "message too long" and
 		//    stop.
 		int k = K.getBitsize() / 8;
 		int mLen = M.length;
 		if (mLen > k - 11) {
-			throw new BadParameterException("Message too long");
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 
 		// EME-PKCS1_v1_5 encoding.
@@ -159,7 +153,7 @@ public class PKCS1rsaes extends RSA {
 		}
 		else {
 			if (seed.length != (k - mLen - 3)) {
-				throw new BadParameterException("Invalid seed length");
+				throw new IllegalBlockSizeException("Illegal block size");
 			}
 			PS = seed;
 		}
@@ -192,24 +186,19 @@ public class PKCS1rsaes extends RSA {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#sign(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	/**
+	 * @param seed - Random bytes for encryption padding. May be null.
 	 */
-	@Override
-	public byte[] sign(CKRSAPrivateKey K, byte[] M)
-			throws ProviderException {
-		throw new ProviderException("Illegal operation");
+	public void setSeed(byte[] seed) {
+
+		this.seed = seed;
+
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#verify(org.cryptokitty.provider.RSA.PublicKey, byte[], byte[])
-	 */
 	@Override
-	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
-		// Unsupported operation. Fail silently.
-		return false;
+	public void setHashAlgorithm(String hashAlgorithm) throws NoSuchAlgorithmException, NoSuchProviderException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

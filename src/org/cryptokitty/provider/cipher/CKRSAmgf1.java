@@ -2,28 +2,31 @@ package org.cryptokitty.provider.cipher;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
+
 import org.cryptokitty.data.Scalar32;
-import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.Digest;
 
 public final class CKRSAmgf1 {
 
 	/*
 	 * Hash function.
 	 */
-	private Digest hash;
+	private MessageDigest hash;
 
 	/*
 	 * Sole constructor.
 	 */
 	public CKRSAmgf1(String hashAlgorithm) {
+
 		try {
-			this.hash = Digest.getInstance(hashAlgorithm);
+			this.hash = MessageDigest.getInstance(hashAlgorithm, "CK");
 		}
-		catch (UnsupportedAlgorithmException e) {
+		catch (NoSuchAlgorithmException | NoSuchProviderException e) {
 			// Won't happen. The algorithm is verified in RSA constructor
 			// and in the subsequent calling methods.
 			throw new RuntimeException("Unsupported hash algorithm");
@@ -34,11 +37,11 @@ public final class CKRSAmgf1 {
 	 * Generate the mask.
 	 */
 	public byte[] generateMask(byte[] mgfSeed, int maskLen)
-			throws BadParameterException {
+									throws BadPaddingException {
 
 		int hLen = hash.getDigestLength();
 		if (maskLen > 0x100000000L * hLen) {
-			throw new BadParameterException("Mask length out of bounds");
+			throw new BadPaddingException("Bad padding");
 		}
 
 		ByteArrayOutputStream T = new ByteArrayOutputStream();

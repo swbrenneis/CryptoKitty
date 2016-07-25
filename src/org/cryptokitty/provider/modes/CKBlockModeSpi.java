@@ -13,6 +13,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -172,6 +173,7 @@ public class CKBlockModeSpi extends CipherSpi {
 			throws InvalidKeyException, InvalidAlgorithmParameterException {
 		
 		spec = params;
+		mode.setParams(params);
 		engineInit(opmode, key, random);
 
 	}
@@ -224,6 +226,19 @@ public class CKBlockModeSpi extends CipherSpi {
 			throws ShortBufferException {
 
 		return 0;
+
+	}
+
+	/* (non-Javadoc)
+	 * @see javax.crypto.CipherSpi#engineUpdate(byte[], int, int)
+	 */
+	@Override
+	protected void engineUpdateAAD(byte[] src, int offset, int len) {
+		
+		if (mode instanceof AEADBlockMode) {
+			((AEADBlockMode)mode).setAuthenticationData(Arrays.copyOfRange(src, offset, offset + len));
+		}
+		// Otherwise do nothing. Silly programmer.
 
 	}
 

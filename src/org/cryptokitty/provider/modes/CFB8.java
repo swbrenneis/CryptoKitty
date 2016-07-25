@@ -3,14 +3,15 @@ package org.cryptokitty.provider.modes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
-import org.cryptokitty.provider.IllegalMessageSizeException;
-import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.cipher.BlockCipher;
-import org.cryptokitty.provider.cipher.DecryptionException;
 
 /**
  * @author Steve Brenneis
@@ -57,21 +58,8 @@ public class CFB8 implements BlockMode {
 
 	/**
 	 * 
-	 * @param cipher - The block cipher.
-	 * @param segmentSize - Segment size in bytes.
-	 * @param iv - Initialization vector.
 	 */
-	public CFB8(BlockCipher cipher, int segmentSize, byte[] iv)
-			throws ProviderException, IllegalBlockSizeException {
-		this.cipher = cipher;
-		this.iv = iv;
-		shiftRegister = Arrays.copyOf(iv, iv.length);
-		this.segmentSize = segmentSize;
-		int blockSize = cipher.getBlockSize();
-		if (segmentSize > blockSize || blockSize % segmentSize != 0) {
-			throw new IllegalBlockSizeException("Illegal segment or block size");
-		}
-		cipherBlock = cipher.encrypt(shiftRegister);
+	public CFB8() {
 	}
 
 	/*
@@ -80,8 +68,9 @@ public class CFB8 implements BlockMode {
 	 */
 	@Override
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws DecryptionException {
-		// TODO Auto-generated method stub
+			throws IllegalBlockSizeException, BadPaddingException, IOException {
+
+		cipherBlock = cipher.encrypt(shiftRegister);
 
 	}
 
@@ -91,38 +80,87 @@ public class CFB8 implements BlockMode {
 	 */
 	@Override
 	public void encrypt(InputStream cleartext, OutputStream ciphertext)
-			throws ProviderException {
+			throws IllegalBlockSizeException, BadPaddingException, IOException {
 
-		try {
-			byte[] cipherSeg = new byte[segmentSize];
-			byte[] clearSeg = new byte[segmentSize];
-			int read = cleartext.read(clearSeg);
-			while (read == segmentSize) {
-				for (int n = 0; n < segmentSize; n++) {
-					cipherSeg[n] = (byte)(clearSeg[n] ^ cipherBlock[n]);
-				}
-				ciphertext.write(cipherSeg);
-				shiftIn(cipherSeg);
-				cipherBlock = cipher.encrypt(shiftRegister);
-				read = cleartext.read(cipherSeg);
+		byte[] cipherSeg = new byte[segmentSize];
+		byte[] clearSeg = new byte[segmentSize];
+		int read = cleartext.read(clearSeg);
+		while (read == segmentSize) {
+			for (int n = 0; n < segmentSize; n++) {
+				cipherSeg[n] = (byte)(clearSeg[n] ^ cipherBlock[n]);
 			}
-			if (read > 0) {
-				throw new IllegalMessageSizeException("Illegal segment");
-			}
+			ciphertext.write(cipherSeg);
+			shiftIn(cipherSeg);
+			cipherBlock = cipher.encrypt(shiftRegister);
+			read = cleartext.read(cipherSeg);
 		}
-		catch (IOException e) {
-			throw new ProviderException("Invlaid stream operation");
+		if (read > 0) {
+			throw new IllegalBlockSizeException("Illegal segment");
 		}
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.BlockMode#reset()
+	/* (non-Javadoc)
+	 * @see org.cryptokitty.provider.modes.BlockMode#getBlockSize()
+	 */
+	@Override
+	public int getBlockSize() {
+
+		return cipher.getBlockSize();
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.cryptokitty.provider.modes.BlockMode#getIV()
+	 */
+	@Override
+	public byte[] getIV() {
+		
+		return iv;
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.cryptokitty.provider.modes.BlockMode#reset()
 	 */
 	@Override
 	public void reset() {
+		
 		shiftRegister = Arrays.copyOf(iv, iv.length);
+		cipher.reset();
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.cryptokitty.provider.modes.BlockMode#setBlockCipher()
+	 */
+	@Override
+	public void setBlockCipher(BlockCipher cipher) {
+
+		this.cipher = cipher;
+		segmentSize = cipher.getBlockSize();
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.cryptokitty.provider.modes.BlockMode#setIV()
+	 */
+	@Override
+	public void setIV(byte[] iv) {
+		
+		this.iv = iv;
+		shiftRegister = Arrays.copyOf(iv, iv.length);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.cryptokitty.provider.modes.BlockMode#setKey()
+	 */
+	@Override
+	public void setKey(byte[] key) throws InvalidKeyException {
+
+		cipher.setKey(key);
+
 	}
 
 	/*
@@ -132,6 +170,12 @@ public class CFB8 implements BlockMode {
 		System.arraycopy(shiftRegister, 0, shiftRegister, segmentSize,
 									shiftRegister.length - segmentSize);
 		System.arraycopy(segment, 0, shiftRegister, 0, segmentSize);
+	}
+
+	@Override
+	public void setParams(AlgorithmParameterSpec params) throws InvalidAlgorithmParameterException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

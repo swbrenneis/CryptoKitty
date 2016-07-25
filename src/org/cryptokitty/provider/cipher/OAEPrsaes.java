@@ -6,15 +6,17 @@ package org.cryptokitty.provider.cipher;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.EncodingException;
-import org.cryptokitty.provider.IllegalMessageSizeException;
-import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 import org.cryptokitty.provider.random.BBSSecureRandom;
@@ -24,7 +26,7 @@ import org.cryptokitty.provider.random.BBSSecureRandom;
  *
  * This class implements the RSA-OAEP encryption scheme.
  */
-public class OAEPrsaes extends RSA {
+public class OAEPrsaes extends RSACipher {
 
 	/*
 	 * P Source (L label).
@@ -32,32 +34,19 @@ public class OAEPrsaes extends RSA {
 	private byte[] pSource;
 
 	/**
-	 * @param hashAlgorithm
-	 * @throws UnsupportedAlgorithmException
+	 * Message digest.
 	 */
-	public OAEPrsaes(String hashAlgorithm, byte[] pSource)
-			throws UnsupportedAlgorithmException {
+	private MessageDigest digest;
 
-		this.hashAlgorithm = hashAlgorithm;
-		switch(hashAlgorithm) {
-		case "SHA-1":
-			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
-			break;
-		case "SHA-256":
-			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
-			break;
-		case "SHA-384":
-			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
-			break;
-		case "SHA-512":
-			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
-			break;
-		default:
-			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
-		}
+	/**
+	 * Digest length.
+	 */
+	private int digestLength;
 
-		this.pSource = pSource;
-
+	/**
+	 * 
+	 */
+	public OAEPrsaes() {
 	}
 
 	/**
@@ -74,7 +63,7 @@ public class OAEPrsaes extends RSA {
 	 */
 	@Override
 	public byte[] decrypt(CKRSAPrivateKey K, byte[] C)
-			throws DecryptionException {
+				throws IllegalBlockSizeException, BadPaddingException {
 
 		// Length checking.
 
@@ -88,32 +77,19 @@ public class OAEPrsaes extends RSA {
 		//    "decryption error" and stop.
 		int k = K.getBitsize() / 8;
 		if (C.length != k) {
-			throw new DecryptionException();
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 
 		// c. If k < 2hLen + 2, output "decryption error" and stop.
 		int hLen = 0;
-		try {
-			hLen = Digest.getInstance(hashAlgorithm).getDigestLength();
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Not happening. Algorithm was verified in the constructor.
-			throw new DecryptionException();
-		}
+		hLen = digestLength;
 		if (k < (2 * hLen) + 2) {
-			throw new DecryptionException();
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 
-		try {
-			BigInteger c = K.rsadp(os2ip(C));
-			// Do decoding.
-			return emeOAEPDecode(k, i2osp(c, k));
-		}
-		catch (BadParameterException e) {
-			// Catching for debug purposes only.
-			// Fail silently.
-			throw new DecryptionException();
-		}
+		BigInteger c = K.rsadp(os2ip(C));
+		// Do decoding.
+		return emeOAEPDecode(k, i2osp(c, k));
 
 	}
 
@@ -123,21 +99,15 @@ public class OAEPrsaes extends RSA {
 	 * @param k - Private key size in bytes;
 	 * @param EM - Encoded message octet string
 	 * 
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException 
 	 */
 	private byte[] emeOAEPDecode(int k, byte[] EM)
-			throws DecryptionException {
+								throws BadPaddingException, IllegalBlockSizeException {
 		
-		Digest hash = null;
-		try {
-			hash = Digest.getInstance(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen. Hash algorithm was verified in the constructor.
-			throw new DecryptionException();
-		}
 		// a. If the label L (pSource) is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
-		byte[] lHash = hash.digest(pSource);
+		byte[] lHash = digest.digest(pSource);
 
 		int hLen = lHash.length;
 
@@ -152,63 +122,55 @@ public class OAEPrsaes extends RSA {
 		System.arraycopy(EM, 1, maskedSeed, 0, hLen);
 		System.arraycopy(EM, hLen + 1, maskedDB, 0, maskedDB.length);
 
-		try {
-			// c. Let seedMask = MGF(maskedDB, hLen).
-			CKRSAmgf1 mdmgf = new CKRSAmgf1(hashAlgorithm);
-			byte[] seedMask = mdmgf.generateMask(maskedDB, hLen);
+		// c. Let seedMask = MGF(maskedDB, hLen).
+		CKRSAmgf1 mdmgf = new CKRSAmgf1(hashAlgorithm);
+		byte[] seedMask = mdmgf.generateMask(maskedDB, hLen);
 
-			// d. Let seed = maskedSeed \xor seedMask.
-			byte[] seed = xor(maskedSeed, seedMask);
+		// d. Let seed = maskedSeed \xor seedMask.
+		byte[] seed = xor(maskedSeed, seedMask);
 
-			// e. Let dbMask = MGF(seed, k - hLen - 1).
-			CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
-			byte[] dbMask = dbmgf.generateMask(seed, k - hLen - 1);
+		// e. Let dbMask = MGF(seed, k - hLen - 1).
+		CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
+		byte[] dbMask = dbmgf.generateMask(seed, k - hLen - 1);
 
-			// f. Let DB = maskedDB \xor dbMask.
-			byte[] DB = xor(maskedDB, dbMask);
+		// f. Let DB = maskedDB \xor dbMask.
+		byte[] DB = xor(maskedDB, dbMask);
 
-			// g. Separate DB into an octet string lHash' of length hLen, a
-			//    (possibly empty) padding string PS consisting of octets with
-			//    hexadecimal value 0x00, and a message M as
-			//
-			//      DB = lHash' || PS || 0x01 || M.
-			//
-			// If there is no octet with hexadecimal value 0x01 to separate PS
-			// from M, if lHash does not equal lHash', or if Y is nonzero,
-			// output "decryption error" and stop.
-			if (Y != 0) {
-				throw new DecryptionException();
-			}
-			byte[] lHashPrime = Arrays.copyOf(DB, hLen);
-			if (!Arrays.equals(lHash, lHashPrime)) {
-				throw new DecryptionException();				
-			}
-			int found = -1;
-			int index = hLen;
-			while (found < 0 && index < DB.length) {
-				if (DB[index] == 0x01) {
-					found = index;
-				}
-				index++;
-			}
-			if (found < 0) {
-				throw new DecryptionException();				
-			}
-			byte[] PS = Arrays.copyOfRange(DB, hLen, found);
-			for (byte p : PS) {
-				if (p != 0) {
-					throw new DecryptionException();				
-				}
-			}
-
-			return Arrays.copyOfRange(DB, found + 1, DB.length);
-
+		// g. Separate DB into an octet string lHash' of length hLen, a
+		//    (possibly empty) padding string PS consisting of octets with
+		//    hexadecimal value 0x00, and a message M as
+		//
+		//      DB = lHash' || PS || 0x01 || M.
+		//
+		// If there is no octet with hexadecimal value 0x01 to separate PS
+		// from M, if lHash does not equal lHash', or if Y is nonzero,
+		// output "decryption error" and stop.
+		if (Y != 0) {
+			throw new BadPaddingException("Bad padding");
 		}
-		catch (ProviderException e) {
-			// Caught for debug only.
-			// Fail silently.
-			throw new DecryptionException();
+		byte[] lHashPrime = Arrays.copyOf(DB, hLen);
+		if (!Arrays.equals(lHash, lHashPrime)) {
+			throw new BadPaddingException("Bad padding");
 		}
+		int found = -1;
+		int index = hLen;
+		while (found < 0 && index < DB.length) {
+			if (DB[index] == 0x01) {
+				found = index;
+			}
+			index++;
+		}
+		if (found < 0) {
+			throw new BadPaddingException("Bad padding");
+		}
+		byte[] PS = Arrays.copyOfRange(DB, hLen, found);
+		for (byte p : PS) {
+			if (p != 0) {
+				throw new BadPaddingException("Bad padding");				
+			}
+		}
+
+		return Arrays.copyOfRange(DB, found + 1, DB.length);
 
 	}
 
@@ -218,20 +180,19 @@ public class OAEPrsaes extends RSA {
 	 * @param k - Public key size in bytes.
 	 * @param M - Plaintext octet string.
 	 * 
-	 * @throws EncodingException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException 
 	 */
 	private byte[] emeOAEPEncode(int k, byte[] M)
-			throws ProviderException {
-
-		Digest hash = Digest.getInstance(hashAlgorithm);
+							throws BadPaddingException, IllegalBlockSizeException {
 
 		// a. If the label L is not provided, let L be the empty string. Let
         //    lHash = Hash(L), an octet string of length hLen
-		byte[] lHash = hash.digest(pSource);
+		byte[] lHash = digest.digest(pSource);
 
 		// b. Generate an octet string PS consisting of k - mLen - 2hLen - 2
         // zero octets.  The length of PS may be zero.
-		int hLen = hash.getDigestLength();
+		int hLen = digestLength;
 		int mLen = M.length;
 		byte[] PS = new byte[k - mLen - (2 * hLen) - 2];
 		Arrays.fill(PS, (byte)0);
@@ -302,11 +263,10 @@ public class OAEPrsaes extends RSA {
 	 * 
 	 * @returns Ciphertext octet string.
 	 * 
-	 * @throws BadParameterException if M is too long
 	 */
 	@Override
 	public byte[] encrypt(CKRSAPublicKey K, byte[] M)
-			throws ProviderException {
+						throws IllegalBlockSizeException, BadPaddingException {
 
 		// Length checking.
 
@@ -316,11 +276,11 @@ public class OAEPrsaes extends RSA {
 		// that is 2^31 - 1 bytes long. The test would be pointless and
 		// technically infeasible.
 
-		int hLen = Digest.getInstance(hashAlgorithm).getDigestLength();
+		int hLen = digestLength;
 		int k = K.getBitsize() / 8;
 		int mLen = M.length;
 		if (mLen > k - (2 * hLen) - 2) {
-			throw new IllegalMessageSizeException("Message too long");
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 		// We're supposed to check L to make sure it's not larger than
 		// the hash limitation, which is ginormous for SHA-1 and above
@@ -335,24 +295,46 @@ public class OAEPrsaes extends RSA {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#sign(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	/**
+	 * 
+	 * Set the hash algorithm
+	 *
+	 * @param pSource
+	 * @throws UnsupportedAlgorithmException
+	 * @throws NoSuchProviderException 
+	 * @throws NoSuchAlgorithmException 
 	 */
-	@Override
-	public byte[] sign(CKRSAPrivateKey K, byte[] M)
-			throws ProviderException {
-		throw new ProviderException("Illegal operation");
+	public void setHashAlgorithm(String hashAlgorithm)
+							throws NoSuchAlgorithmException, NoSuchProviderException {
+
+		this.hashAlgorithm = hashAlgorithm;
+		digest = MessageDigest.getInstance(hashAlgorithm, "CK");
+		digestLength = digest.getDigestLength();
+
+		switch(hashAlgorithm) {
+			case "SHA-1":
+				maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
+				break;
+			case "SHA-256":
+				maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
+				break;
+			case "SHA-384":
+				maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
+				break;
+			case "SHA-512":
+				maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
+				break;
+		}
+
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#verify(org.cryptokitty.provider.RSA.PublicKey, byte[], byte[])
+	/**
+	 * Set the Label
 	 */
-	@Override
-	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
-		// Unsupported operation. Fail silently.
-		return false;
+	public void setPSource(byte[] pSource) {
+
+		this.pSource = pSource;
+
 	}
 
 }

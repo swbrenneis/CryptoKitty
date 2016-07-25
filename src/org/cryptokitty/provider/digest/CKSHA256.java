@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.math.BigInteger;
 
 import org.cryptokitty.data.Scalar32;
-import org.cryptokitty.data.Scalar64;
 
 /**
  * @author Steve Brenneis

@@ -3,370 +3,176 @@
  */
 package org.cryptokitty.provider.cipher;
 
-import java.io.ByteArrayOutputStream;
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.Key;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.AlgorithmParameterSpec;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.CipherSpi;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.OAEPParameterSpec;
-import javax.crypto.spec.PSource;
 
-import org.cryptokitty.provider.ProviderException;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.BadParameterException;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
 /**
  * @author Steve Brenneis
  *
- * CipherSpi for the RSA Cipher class.
+ * Implementation of the RSA cipher. See RFC 3447 for details.
+ * 
+ * Some of the variable names and method names are a bit opaque.
+ * This is to more easily relate them to the RFC. Comments are
+ * provided so the function won't be a mystery.
+ * 
+ * The inheritance tree of the RSA key and cipher classes is such
+ * a mess because Java doesn't provide a sensible differentiation
+ * between RSA modulus private key and RSA Chinese Remainder Theorem
+ * private keys.
  */
-public class RSACipher extends CipherSpi {
+public abstract class RSACipher {
+
 
 	/*
-	 * Input octet string accumulator.
+	 * BigInteger byte mask.
 	 */
-	private ByteArrayOutputStream accumulator;
+	private static final BigInteger MASK = BigInteger.valueOf(0xff);
 	
 	/*
-	 * Key size in bytes.
+	 * Hash algorithm.
 	 */
-	private int k;
+	protected String hashAlgorithm;
 
 	/*
-	 * Operation mode. One of Cipher.ENCRYPT or Cipher.DECRYPT.
+	 * The maximum size of an input octet string for the associated
+	 * hash function. This is here purely for extensibility and isn't
+	 * currently practical. Java cannot create a string or array longer
+	 * than 2^64 - 1 bytes;
 	 */
-	int opmode;
-
-	/*
-	 * The private key.
-	 */
-	private CKRSAPrivateKey privateKey;
-
-	/*
-	 * The private key.
-	 */
-	private CKRSAPublicKey publicKey;
-
-	/*
-	 * The cipher implementation.
-	 */
-	private RSA rsa;
+	protected BigInteger maxHash;
 
 	/**
-	 * 
+	 * Default constructor. The class must be subclassed.
 	 */
-	public RSACipher() {
-		opmode = -1;
-		rsa = null;
-		publicKey = null;
-		privateKey = null;
-		accumulator = new ByteArrayOutputStream();
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineDoFinal(byte[], int, int)
-	 */
-	@Override
-	protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen)
-			throws IllegalBlockSizeException, BadPaddingException {
-
-		if (rsa == null) {
-			throw new IllegalStateException("Cipher not initialized");
-		}
-		
-		accumulator.write(input, inputOffset, inputLen);
-
-		if (opmode == Cipher.DECRYPT_MODE) {
-			try {
-				return rsa.decrypt(privateKey, accumulator.toByteArray());
-			}
-			catch (DecryptionException e) {
-				return null;
-			}
-		}
-		else if (opmode == Cipher.ENCRYPT_MODE) {
-			try {
-				return rsa.encrypt(publicKey, accumulator.toByteArray());
-			}
-			catch (ProviderException e) {
-				// Message size is the only exception we'll get
-				throw new IllegalBlockSizeException(e.getMessage());
-			}
-		}
-		else {
-			throw new IllegalStateException("Cipher not initialized");
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineDoFinal(byte[], int, int, byte[], int)
-	 */
-	@Override
-	protected int engineDoFinal(byte[] input, int inputOffset, int inputLen,
-			byte[] output, int outputOffset) throws ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException {
-
-		if (rsa == null) {
-			throw new IllegalStateException("Cipher not initialized");
-		}
-		
-		accumulator.write(input, inputOffset, inputLen);
-
-		if (opmode == Cipher.DECRYPT_MODE) {
-			try {
-				byte[] m = rsa.decrypt(privateKey, accumulator.toByteArray());
-				if (output.length - outputOffset > m.length) {
-					throw new ShortBufferException("Output buffer too small");
-				}
-				System.arraycopy(m, 0, output, outputOffset, m.length);
-				return m.length;
-			}
-			catch (DecryptionException e) {
-				return 0;
-			}
-		}
-		else if (opmode == Cipher.ENCRYPT_MODE) {
-			try {
-				byte[] c = rsa.encrypt(publicKey, accumulator.toByteArray());
-				if (output.length - outputOffset > c.length) {
-					throw new ShortBufferException("Output buffer too small");
-				}
-				System.arraycopy(c, 0, output, outputOffset, c.length);
-				return c.length;
-			}
-			catch (ProviderException e) {
-				// Message size is the only exception we'll get
-				throw new IllegalBlockSizeException("Message size too long");
-			}
-		}
-		else {
-			throw new IllegalStateException("Cipher not initialized");
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineGetBlockSize()
-	 */
-	@Override
-	protected int engineGetBlockSize() {
-		// RSA isn't a block cipher, but Java doesn't care.
-		return 0;
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineGetIV()
-	 */
-	@Override
-	protected byte[] engineGetIV() {
-		// RSA is not a block cipher and doesn't use an initialization vector.
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineGetOutputSize(int)
-	 */
-	@Override
-	protected int engineGetOutputSize(int inputLen) {
-		// RSA doesn't use block chaining. This is an irrelevant question.
-		// The answer is always k.
-		return k;
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineGetParameters()
-	 */
-	@Override
-	protected AlgorithmParameters engineGetParameters() {
-		// AlgorthmParameters are not used.
-		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.SecureRandom)
-	 */
-	@Override
-	protected void engineInit(int opmode, Key key, SecureRandom random)
-			throws InvalidKeyException {
-
-		this.opmode = opmode;
-		// No parameter spec, PKCS1 encoding without seed.
-		rsa = new PKCS1rsaes(null);
-		setKey(key);
-
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.spec.AlgorithmParameterSpec, java.security.SecureRandom)
-	 */
-	@Override
-	protected void engineInit(int opmode, Key key, AlgorithmParameterSpec param,
-			SecureRandom random) throws InvalidKeyException,
-			InvalidAlgorithmParameterException {
-
-		this.opmode = opmode;
-		if (param instanceof OAEPParameterSpec) {
-			OAEPParameterSpec oaep = (OAEPParameterSpec)param;
-			byte[] pSource;
-			if (oaep.getPSource() instanceof PSource.PSpecified) {
-				pSource = ((PSource.PSpecified)oaep.getPSource()).getValue();
-			}
-			else {
-				pSource = new byte[0];
-			}
-			try {
-				rsa = new OAEPrsaes(oaep.getDigestAlgorithm(), pSource);
-			}
-			catch (UnsupportedAlgorithmException e) {
-				throw new InvalidAlgorithmParameterException("Invalid hash algorithm: "
-															+ oaep.getDigestAlgorithm());
-			}
-		}
-		else if (param instanceof IvParameterSpec) {
-			rsa = new PKCS1rsaes(((IvParameterSpec)param).getIV());
-		}
-		else {
-			throw new InvalidAlgorithmParameterException("OAEP or IV parameter spec expected");
-		}
-
-		setKey(key);
-
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineInit(int, java.security.Key, java.security.AlgorithmParameters, java.security.SecureRandom)
-	 */
-	@Override
-	protected void engineInit(int opmode, Key key, AlgorithmParameters params,
-			SecureRandom random) throws InvalidKeyException,
-			InvalidAlgorithmParameterException {
-
-		engineInit(opmode, key, null);
-
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineSetMode(java.lang.String)
-	 */
-	@Override
-	protected void engineSetMode(String mode) throws NoSuchAlgorithmException {
-		// RSA is not a block cipher and doesn't use block chaining.
-		// Mode is ignored.
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineSetPadding(java.lang.String)
-	 */
-	@Override
-	protected void engineSetPadding(String padding) throws NoSuchPaddingException {
-
-		try {
-			switch (padding) {
-			case "PKCS1Padding":
-				rsa = new PKCS1rsaes(null);
-				break;
-			case "OAEPWithSHA-1AndMGF1Padding":
-				rsa = new OAEPrsaes("SHA-1", new byte[0]);
-				break;
-			case "OAEPWithSHA-256AndMGF1Padding":
-				rsa = new OAEPrsaes("SHA-256", new byte[0]);
-				break;
-			case "OAEPWithSHA-384AndMGF1Padding":
-				rsa = new OAEPrsaes("SHA-384", new byte[0]);
-				break;
-			case "OAEPWithSHA-512AndMGF1Padding":
-				rsa = new OAEPrsaes("SHA-512", new byte[0]);
-				break;
-			default:
-				rsa = null;
-				throw new NoSuchPaddingException("Invalid padding: " + padding);
-			}
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Shouldn't happen, but...
-			rsa = null;
-			throw new NoSuchPaddingException("Invalid hash algorithm");
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineUpdate(byte[], int, int)
-	 */
-	@Override
-	protected byte[] engineUpdate(byte[] input, int inputOffset, int inputLen) {
-		// RSA is not a block cipher. This does exactly the same thing as engineDoFinal.
-		// It is important to note that there are no exceptions thrown from this method,
-		// so it should be avoided.
-		try {
-			return engineDoFinal(input, inputOffset, inputLen);
-		}
-		catch (IllegalBlockSizeException e) {
-			return null;
-		}
-		catch (BadPaddingException e) {
-			return null;
-		}
-	
-	}
-
-	/* (non-Javadoc)
-	 * @see javax.crypto.CipherSpi#engineUpdate(byte[], int, int, byte[], int)
-	 */
-	@Override
-	protected int engineUpdate(byte[] input, int inputOffset, int inputLen,
-			byte[] output, int outputOffset) throws ShortBufferException {
-		// RSA is not a block cipher. This does exactly the same thing as engineDoFinal.
-		// It is important to note that the only exception thrown from this method is
-		// the short block exception, so it should be avoided.
-		try {
-			return engineDoFinal(input, inputOffset, inputLen, output, outputOffset);
-		}
-		catch (IllegalBlockSizeException e) {
-			return 0;
-		}
-		catch (BadPaddingException e) {
-			return 0;
-		}
+	protected RSACipher() {
 	}
 
 	/*
-	 * Set up the appropriate key. Assumes that opmode has been set.
+	 * General decryption method.
 	 */
-	private void setKey(Key key) throws InvalidKeyException {
+	public abstract byte[] decrypt(CKRSAPrivateKey K, byte[] C)
+				throws IllegalBlockSizeException, BadPaddingException;
 
-		switch (opmode) {
-		case Cipher.ENCRYPT_MODE:
-			if (key instanceof CKRSAPublicKey) {
-				publicKey = (CKRSAPublicKey)key;
-			}
-			else {
-				throw new InvalidKeyException("Not a valid RSA public key");
-			}
-			break;
-		case Cipher.DECRYPT_MODE:
-			if (key instanceof CKRSAPrivateKey) {
-				privateKey = (CKRSAPrivateKey)key;
-			}
-			else {
-				throw new InvalidKeyException("Not a valid RSA private key");
-			}
-			break;
+	/*
+	 * General encryption method.
+	 */
+	public abstract byte[] encrypt(CKRSAPublicKey K, byte[] C)
+				throws IllegalBlockSizeException, BadPaddingException;
+
+	/*
+	 * Convert an integer representation to an octet string.
+	 */
+	protected byte[] i2osp(BigInteger x, int xLen)
+							throws IllegalBlockSizeException {
+		
+		if (x.compareTo(BigInteger.valueOf(256).pow(xLen)) > 0) {
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 
+		BigInteger work = new BigInteger(x.toString());
+		byte[] xBytes = new byte[xLen];
+		Arrays.fill(xBytes, (byte)0x00);
+		int index = xLen - 1;
+		while (index >= 0) {
+			xBytes[index--] = work.and(MASK).byteValue();
+			work = work.shiftRight(8);
+		}
+		return xBytes;
+
+	}
+
+	/*
+	 * Convert an octet string to an integer. Just using the constructor gives
+	 * unreliable results, so we'll do it the hard way.
+	 */
+	protected BigInteger os2ip(byte[] X) {
+		BigInteger bi = BigInteger.valueOf(X[0] & 0xff);
+		for (int i = 1; i < X.length; ++i) {
+			bi = bi.shiftLeft(8).or(BigInteger.valueOf((X[i] & 0xff)));
+		}
+		return bi;
+	}
+
+	/**
+	 * RSA encryption primitive
+	 * 
+	 * @param m - Message representative.
+	 * @param publicKey - The public key
+	 * 
+	 * @throws BadParameterException 
+	 */
+	protected BigInteger rsaep(CKRSAPublicKey K, BigInteger m)
+								throws IllegalBlockSizeException {
+
+		// 1. If the message representative m is not between 0 and n - 1, output
+		//  "message representative out of range" and stop.
+		if (m.compareTo(BigInteger.ZERO) < 1 
+				|| m.compareTo(K.getModulus().subtract(BigInteger.ONE)) > 0) {
+			throw new IllegalBlockSizeException("Illegal block size");
+		}
+
+		// 2. Let c = m^e mod n.
+		BigInteger c = m.modPow(K.getPublicExponent(), K.getModulus());
+
+		return c;
+
+	}
+
+	/**
+	 * Signature verification primitive.
+	 * 
+	 * @param K - Public key.
+	 * @param s - Signature representative.
+	 * 
+	 * @return The message representative
+	 * 
+	 * @throws BadParameterException if message representative is out of range
+	 */
+	protected BigInteger rsavp1(CKRSAPublicKey K, BigInteger s)
+											throws SignatureException {
+
+		// 1. If the signature representative m is not between 0 and n - 1, output
+		//  "signature representative out of range" and stop.
+		if (s.compareTo(BigInteger.ZERO) < 1 
+				|| s.compareTo(K.getModulus().subtract(BigInteger.ONE)) > 0) {
+			throw new SignatureException("Invalid signature");
+		}
+
+		// 2. Let m = s^e mod n.
+		BigInteger m = s.modPow(K.getPublicExponent(), K.getModulus());
+
+		return m;
+
+	}
+
+	public abstract void setHashAlgorithm(String hashAlgorithm)
+						throws NoSuchAlgorithmException, NoSuchProviderException;
+
+	/*
+	 * Byte array bitwise exclusive or.
+	 */
+	protected byte[] xor(byte[] a, byte[] b)
+							throws IllegalBlockSizeException {
+
+		if (a.length != b.length) {
+			throw new IllegalBlockSizeException("Illegal block size");
+		}
+
+		byte[] result = new byte[a.length];
+		for (int i = 0; i < a.length; ++i) {
+			result[i] = (byte)((a[i] ^ b[i]) & 0xff);
+		}
+		return result;
 	}
 
 }

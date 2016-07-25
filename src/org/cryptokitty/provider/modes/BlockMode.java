@@ -3,11 +3,17 @@
  */
 package org.cryptokitty.provider.modes;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.spec.AlgorithmParameterSpec;
 
-import org.cryptokitty.provider.ProviderException;
-import org.cryptokitty.provider.cipher.DecryptionException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
+import org.cryptokitty.provider.cipher.BlockCipher;
 
 /**
  * @author Steve Brenneis
@@ -16,21 +22,52 @@ import org.cryptokitty.provider.cipher.DecryptionException;
  */
 public interface BlockMode {
 
-	/*
+	/**
 	 * Decrypt a series of bits.
 	 */
 	public void decrypt(InputStream ciphertext, OutputStream plaintext)
-			throws DecryptionException;
+			throws IllegalBlockSizeException, BadPaddingException, IOException;
 
 	/*
 	 * Encrypt a series of bits.
 	 */
 	public void encrypt(InputStream plaintext, OutputStream ciphertext)
-			throws ProviderException;
+			throws IllegalBlockSizeException, BadPaddingException, IOException;
 
-	/*
+	/**
+	 * Get the block size of the underlying cipher.
+	 * @return
+	 */
+	public int getBlockSize();
+
+	/**
+	 * Get the initialization vector.
+	 */
+	byte[] getIV();
+
+	/**
 	 * Reset the mode.
 	 */
 	public void reset();
 
+	/**
+	 * Set the block cipher.
+	 */
+	public void setBlockCipher(BlockCipher cipher);
+
+	/**
+	 * Set the initialization vector.
+	 */
+	public void setIV(byte[] iv);
+	
+	/**
+	 * Set the encryption/decryption key.
+	 */
+	void setKey(byte[] key) throws InvalidKeyException;
+
+	/**
+	 * Set the algorithm parameters
+	 */
+	void setParams(AlgorithmParameterSpec params) throws InvalidAlgorithmParameterException;
+	
 }
