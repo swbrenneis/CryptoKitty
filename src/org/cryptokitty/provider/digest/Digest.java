@@ -52,8 +52,16 @@ public abstract class Digest {
 	 */
 	protected abstract byte[] finalize(byte[] message);
 
-	/*
+	/**
+	 * 
+	 * @return
+	 */
+	public abstract int getBlockSize();
+
+	/**
 	 * Get the length of the hash in bytes.
+	 * 
+	 * @return
 	 */
 	public abstract int getDigestLength();
 

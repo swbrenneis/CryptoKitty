@@ -253,12 +253,24 @@ public class CKMD5 extends Digest {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#getBlockSize()
+	 */
+	@Override
+	public int getBlockSize() {
+
+		return 64;
+
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
 	 */
 	@Override
 	public int getDigestLength() {
-		// TODO Auto-generated method stub
+
 		return 16;
+
 	}
 
 	/*

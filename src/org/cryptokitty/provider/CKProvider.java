@@ -42,9 +42,11 @@ public class CKProvider extends Provider {
 		put("Cipher.CAST5//NoPadding", "org.cryptokitty.provider.cipher.CAST5Spi");
 		put("Cipher.AES/CFB/NoPadding", "org.cryptokitty.provider.cipher.AESCFBSpi");
 		put("Cipher.AES/GCM/NoPadding", "org.cryptokitty.provider.cipher.AESGCMSpi");
-		put("Cipher.RSA/ECB/OAEPWithSHA-1AndMGF1Padding", "org.cryptokitty.provider.cipher.RSASHA1Spi");
+		put("Cipher.RSA/ECB/OAEPWithSHA-1AndMGF1Padding",
+										"org.cryptokitty.provider.cipher.OAEPSHA1Spi");
 		put("Cipher.RSA/ECB/OAEPWithSHA-256AndMGF1Padding",
-												"org.cryptokitty.provider.cipher.RSASHA256Spi");
+										"org.cryptokitty.provider.cipher.OAEPSHA256Spi");
+		put("KeyPairGenerator.RSA", "org.cryptokitty.provider.keys.RSAKeyPairGeneratorSpi");
 
 	}
 

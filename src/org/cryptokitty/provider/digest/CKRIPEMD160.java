@@ -209,11 +209,24 @@ public class CKRIPEMD160 extends Digest {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#getBlockSize()
+	 */
+	@Override
+	public int getBlockSize() {
+
+		return 64;
+
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
 	 */
 	@Override
 	public int getDigestLength() {
+
 		return 20;
+
 	}
 
 	/*
