@@ -4,8 +4,6 @@
 package org.cryptokitty.provider.keys;
 
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 
 import org.cryptokitty.provider.random.FortunaSecureRandom;
 
