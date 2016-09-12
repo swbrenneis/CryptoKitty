@@ -3,11 +3,12 @@
  */
 package org.cryptokitty.provider.mac;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.util.Arrays;
 
 import org.cryptokitty.provider.BadParameterException;
+import org.cryptokitty.provider.IllegalStateException;
 import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.provider.random.FortunaSecureRandom;
 
 /**
  * @author stevebrenneis
@@ -18,17 +19,32 @@ public class HMAC {
 	/**
 	 * Digest block size.
 	 */
-	private long B;
+	private int B;
 	
 	/**
 	 * Digest length
 	 */
-	private long L;
+	private int L;
+
+	/**
+	 * Input mask pad.
+	 */
+	private byte[] ipad;
+
+	/**
+	 * Output mask pad.
+	 */
+	private byte[] opad;
 
 	/**
 	 * HMAC key.
 	 */
 	private byte[] K;
+
+	/**
+	 * Text to be validated.
+	 */
+	private byte[] text;
 
 	/**
 	 * Message digest.
@@ -44,6 +60,25 @@ public class HMAC {
 		this.digest = digest;
 		B = digest.getBlockSize();
 		L = digest.getDigestLength();
+		ipad = new byte[B];
+		Arrays.fill(ipad, (byte)0x36);
+		opad = new byte[B];
+		Arrays.fill(opad, (byte)0x5c);
+
+	}
+
+	/**
+	 * Quick and dirty array append.
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	private byte[] Append(byte[] a, byte[] b) {
+
+		byte[] res = new byte[a.length + b.length];
+		System.arraycopy(a, 0, res, 0, a.length);
+		System.arraycopy(b, 0, res, a.length, b.length);
+		return res;
 
 	}
 
@@ -51,11 +86,12 @@ public class HMAC {
 	 * 
 	 * @param hmac
 	 * @return
+	 * @throws IllegalStateException 
+	 * @throws BadParameterException 
 	 */
-	boolean authenticate(byte[] hmac) {
+	public boolean authenticate(byte[] hmac) throws BadParameterException, IllegalStateException {
 
-		return false;
-	    //return getHMAC() == hmac;
+		return Arrays.equals(getHMAC(), hmac);
 
 	}
 
@@ -65,24 +101,56 @@ public class HMAC {
 	 */
 	public byte[] generateKey(int bitsize) throws BadParameterException {
 
-	    if (bitsize / 8 < L) {
-	        throw new BadParameterException("Invalid key size");
-	    }
+		if (bitsize / 8 < L) {
+			throw new BadParameterException("Invalid key size");
+		}
 
-	    // TODO Implement Fortuna
-	    //FortunaSecureRandom secure;
-	    SecureRandom secure;
-		try {
-			secure = SecureRandom.getInstanceStrong();
-		    K = new byte[bitsize / 8];
-		    secure.nextBytes(K);
-		    return K;
+		FortunaSecureRandom secure = new FortunaSecureRandom();
+		K = new byte[bitsize / 8];
+		secure.nextBytes(K);
+		return K;
+
+	}
+
+	/**
+	 * Generate the HMAC.
+	 *
+	 * H(K XOR opad, H(K XOR ipad, text))
+	 * 
+	 * @return
+	 * @throws IllegalStateException 
+	 * @throws BadParameterException 
+	 */
+	public byte[] getHMAC() throws IllegalStateException, BadParameterException {
+
+		if (K.length == 0) {
+			throw new IllegalStateException("Key not set");
 		}
-		catch (NoSuchAlgorithmException e) {
-			// Sure hope not.
+
+		// Pad or truncate the key until it is B bytes.
+		byte[] k;
+		if (K.length > B) {
+			k = digest.digest(K);
 		}
-		
-		return null;
+		else {
+			k = K;
+		}
+		byte[] pad = new byte[B - k.length];
+		k = Append(k, pad);
+		byte[] tmp = new byte[pad.length + k.length];
+		System.arraycopy(k, 0, tmp, 0, k.length);
+		System.arraycopy(pad, 0, tmp, k.length, pad.length);
+		k = tmp;
+		digest.reset();
+
+		// First mask.
+		byte[] i = Xor(k, ipad);
+		i = Append(i, text);
+		byte[] h1 = digest.digest(i);
+		digest.reset();
+		byte[] o = Xor(k, opad);
+		o = Append(o, h1);
+		return digest.digest(o);
 
 	}
 
@@ -97,38 +165,52 @@ public class HMAC {
 	}
 
 	/**
-	 * Generate the HMAC.
-	 *
-	 * H(K XOR opad, H(K XOR ipad, text))
-	 *
-	 *
-	coder::ByteArray HMAC::getHMAC() {
+	 * 
+	 * Quick and dirty array xor.
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 * @throws BadParameterException 
+	 */
+	private byte[] Xor(byte[] a, byte[] b) throws BadParameterException {
 
-	    if (K.getLength() == 0) {
-	        throw IllegalStateException("Key not set");
-	    }
+		if (a.length != b.length) {
+			throw new BadParameterException("Array lengths for xor must be the same");
+		}
 
-	    // Pad or truncate the key until it is B bytes.
-	    coder::ByteArray k;
-	    if (K.getLength() > B) {
-	        k = hash->digest(K);
-	    }
-	    else {
-	        k = K;
-	    }
-	    coder::ByteArray pad(B - k.getLength());
-	    k.append(pad);
-	    hash->reset();
+		byte[] res = new byte[a.length];
+		for (int i = 0; i < a.length; ++i) {
+			res[i] = (byte)(a[i] ^ b[i]);
+		}
+		
+		return res;
 
-	    // First mask.
-	    coder::ByteArray i(k ^ ipad);
-	    i.append(text);
-	    coder::ByteArray h1(hash->digest(i));
-	    hash->reset();
-	    coder::ByteArray o(k ^ opad);
-	    o.append(h1);}
-    return hash->digest(o);
+	}
 
-}*/
+	/**
+	 * 
+	 * @param k
+	 * @throws BadParameterException 
+	 */
+	public void setKey(byte[] k) throws BadParameterException {
+
+		if (k.length < L) {
+			throw new BadParameterException("Invalid HMAC key");
+		}
+
+		K = k;
+
+	}
+
+	/**
+	 * 
+	 * @param m
+	 */
+	public void setMessage(byte[] m) {
+
+		text = m;
+
+	}
 
 }

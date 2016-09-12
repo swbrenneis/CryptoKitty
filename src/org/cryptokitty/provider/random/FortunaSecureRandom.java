@@ -6,7 +6,6 @@ package org.cryptokitty.provider.random;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -91,7 +90,6 @@ public class FortunaSecureRandom extends SecureRandom {
 	private byte[] readBytes(int count) throws SecureRandomException {
 		
 		try {
-			System.out.println("readBytes invoked with count = " + Integer.toString(count));
 			File file = new File(FORTUNAPATH);
 			file.setReadOnly();
 			InputStream in = new FileInputStream(file);
