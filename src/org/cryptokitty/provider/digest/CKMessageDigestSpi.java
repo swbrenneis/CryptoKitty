@@ -9,18 +9,17 @@ import java.security.MessageDigestSpi;
  * @author Steve Brenneis
  *
  */
-public class DigestSpi extends MessageDigestSpi {
+public class CKMessageDigestSpi extends MessageDigestSpi {
 
 	/*
 	 * The digest
 	 */
-	private Digest digest;
+	protected Digest digest;
 
 	/**
 	 * 
 	 */
-	protected DigestSpi(Digest digest) {
-		this.digest = digest;
+	protected CKMessageDigestSpi() {
 	}
 
 	/* (non-Javadoc)

@@ -1,26 +1,30 @@
-package org.cryptokitty.provider;
 /**
  * 
  */
+package org.cryptokitty.provider;
 
 /**
- * @author Steve Brenneis
+ * @author stevebrenneis
  *
  */
-@SuppressWarnings("serial")
-public class IllegalMessageSizeException extends ProviderException {
+public class SecureRandomException extends Exception {
 
 	/**
 	 * 
 	 */
-	public IllegalMessageSizeException() {
+	private static final long serialVersionUID = 807865525111764140L;
+
+	/**
+	 * 
+	 */
+	public SecureRandomException() {
 		// TODO Auto-generated constructor stub
 	}
 
 	/**
 	 * @param message
 	 */
-	public IllegalMessageSizeException(String message) {
+	public SecureRandomException(String message) {
 		super(message);
 		// TODO Auto-generated constructor stub
 	}
@@ -28,7 +32,7 @@ public class IllegalMessageSizeException extends ProviderException {
 	/**
 	 * @param cause
 	 */
-	public IllegalMessageSizeException(Throwable cause) {
+	public SecureRandomException(Throwable cause) {
 		super(cause);
 		// TODO Auto-generated constructor stub
 	}
@@ -37,7 +41,7 @@ public class IllegalMessageSizeException extends ProviderException {
 	 * @param message
 	 * @param cause
 	 */
-	public IllegalMessageSizeException(String message, Throwable cause) {
+	public SecureRandomException(String message, Throwable cause) {
 		super(message, cause);
 		// TODO Auto-generated constructor stub
 	}
@@ -48,8 +52,8 @@ public class IllegalMessageSizeException extends ProviderException {
 	 * @param enableSuppression
 	 * @param writableStackTrace
 	 */
-	public IllegalMessageSizeException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
+	public SecureRandomException(String message, Throwable cause, boolean enableSuppression,
+			boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 		// TODO Auto-generated constructor stub
 	}

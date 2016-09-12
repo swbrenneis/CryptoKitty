@@ -6,8 +6,6 @@ package org.cryptokitty.provider.digest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
-
 /**
  * @author Steve Brenneis
  *
@@ -54,36 +52,16 @@ public abstract class Digest {
 	 */
 	protected abstract byte[] finalize(byte[] message);
 
-	/*
-	 * Get a digest class from a string.
+	/**
+	 * 
+	 * @return
 	 */
-	public static Digest getInstance(String algorithm)
-			throws UnsupportedAlgorithmException {
+	public abstract int getBlockSize();
 
-		switch (algorithm) {
-		case "MD5":
-			return new CKMD5();
-		case "RIPEMD-160":
-			return new CKRIPEMD160();
-		case "SHA-1":
-			return new CKSHA1();
-		case "SHA-224":
-			return new CKSHA224();
-		case "SHA-256":
-			return new CKSHA256();
-		case "SHA-384":
-			return new CKSHA384();
-		case "SHA-512":
-			return new CKSHA512();
-		default:
-			throw new UnsupportedAlgorithmException("Unsupported digest: "
-															+ algorithm);
-		}
-
-	}
-
-	/*
+	/**
 	 * Get the length of the hash in bytes.
+	 * 
+	 * @return
 	 */
 	public abstract int getDigestLength();
 

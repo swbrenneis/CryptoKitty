@@ -1,35 +1,42 @@
-/**
- * 
- */
 package org.cryptokitty.provider.cipher;
 
-import org.cryptokitty.provider.ProviderException;
+import java.security.InvalidKeyException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 
 /**
- * @author Steve Brenneis
+ * @author stevebrenneis
  *
- * The basic block cipher interface for use in chaining
- * mode classes.
  */
 public interface BlockCipher {
 
-	/*
-	 * Decrypt a block of ciphertext. Only throws decryption exception
-	 * to prevent inadvertent oracles.
+	/**
+	 * Decrypt a series of bits.
 	 */
 	public byte[] decrypt(byte[] ciphertext)
-			throws DecryptionException;
-
-	/*
-	 * Encrypt a block of plaintext.
+			throws IllegalBlockSizeException, BadPaddingException;
+	
+	/**
+	 * Encrypt a series of bits.
 	 */
 	public byte[] encrypt(byte[] plaintext)
-			throws ProviderException;
+			throws IllegalBlockSizeException, BadPaddingException;
 
-	/*
-	 * Get the cipher block size in bytes. Throws an exception if the
-	 * size cannot be determined.
+	/**
+	 * Get the block size of the cipher.
+	 * @return
 	 */
-	public int getBlockSize() throws ProviderException;
+	public int getBlockSize();
+
+	/**
+	 * Reset the cipher state.
+	 */
+	public void reset();
+	
+	/**
+	 * Set the encryption/decryption key.
+	 */
+	void setKey(byte[] key) throws InvalidKeyException;
 
 }

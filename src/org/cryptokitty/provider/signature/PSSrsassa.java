@@ -1,21 +1,23 @@
 /**
  * 
  */
-package org.cryptokitty.provider.cipher;
+package org.cryptokitty.provider.signature;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
+import java.security.SignatureException;
 import java.util.Arrays;
 
-import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.EncodingException;
+import javax.crypto.BadPaddingException;
+
 import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.provider.cipher.CKRSAmgf1;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
@@ -24,50 +26,29 @@ import org.cryptokitty.provider.keys.CKRSAPublicKey;
  *
  * This class implements the RSA PSS signing scheme
  */
-public class PSSrsassa extends RSA {
+public class PSSrsassa extends RSASignature {
 
-	/*
+	/**
 	 * Intended salt length for EMSA-PSS signature encoding
 	 */
 	private int sLen;
 
 	/**
+	 * Message digest.
+	 */
+	private MessageDigest digest;
+
+	/**
+	 * Digest length.
+	 */
+	private int digestLength;
+	
+	/**
 	 * @param hashAlgorithm
 	 * @param sLen
 	 * @throws UnsupportedAlgorithmException
 	 */
-	public PSSrsassa(String hashAlgorithm, int sLen)
-			throws UnsupportedAlgorithmException {
-
-		this.sLen = sLen;
-		this.hashAlgorithm = hashAlgorithm;
-		switch(hashAlgorithm) {
-		case "SHA-1":
-			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
-			break;
-		case "SHA-256":
-			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
-			break;
-		case "SHA-384":
-			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
-			break;
-		case "SHA-512":
-			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
-			break;
-		default:
-			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
-		}
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#decrypt(org.cryptokitty.provider.RSA.PrivateKey, byte[])
-	 */
-	@Override
-	public byte[] decrypt(CKRSAPrivateKey K, byte[] C) {
-		// Operation not supported. Fail silently.
-		return null;
+	public PSSrsassa() {
 	}
 
 	/**
@@ -82,20 +63,19 @@ public class PSSrsassa extends RSA {
 	 * @throws ProviderException
 	 */
 	private byte[] emsaPSSEncode(byte[] M, int emBits)
-			throws ProviderException {
+									throws SignatureException {
 
 		// The check here for message size with respect to the hash input
 		// size (~= 2 exabytes for SHA1) isn't necessary.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Digest hash = Digest.getInstance(hashAlgorithm);
-		byte[] mHash = hash.digest(M);
+		byte[] mHash = digest.digest(M);
 
 		// 3.  If emLen < hLen + sLen + 2, output "encoding error" and stop.
-		int hLen = hash.getDigestLength();
+		int hLen = digestLength;
 		int emLen = (int)Math.ceil((double)emBits / 8);
 		if (emLen < hLen + sLen + 2) {
-			throw new EncodingException("Encoding error");
+			throw new SignatureException("Invalid signature");
 		}
 
 		// 4.  Generate a random octet string salt of length sLen; if sLen = 0,
@@ -103,17 +83,11 @@ public class PSSrsassa extends RSA {
 		byte[] salt = new byte[sLen];
 		if (salt.length > 0) {
 			try {
-				SecureRandom rnd =
-						SecureRandom.getInstance("BBS", "CryptoKitty");
+				SecureRandom rnd = SecureRandom.getInstanceStrong();
 				rnd.nextBytes(salt);
 			}
 			catch (NoSuchAlgorithmException e) {
-				// Shouldn't happen, but...
-				throw new EncodingException(e);
-			}
-			catch (NoSuchProviderException e) {
-				// Shouldn't happen, but...
-				throw new EncodingException(e);
+				throw new SignatureException("Invalid signature");
 			}
 		}
 
@@ -129,7 +103,7 @@ public class PSSrsassa extends RSA {
 
 		// 6.  Let H = Hash(M'), an octet string of length hLen.
 		// hash.reset(); Not needed CK hashes don't retain state.
-		byte[] H = hash.digest(mPrime);
+		byte[] H = digest.digest(mPrime);
 
 		// 7.  Generate an octet string PS consisting of emLen - sLen - hLen - 2
 		//     zero octets.  The length of PS may be 0.
@@ -143,57 +117,50 @@ public class PSSrsassa extends RSA {
 		DB[PS.length] = 0x01;
 		System.arraycopy(salt, 0, DB, PS.length + 1, salt.length);
 
-		// 9.  Let dbMask = MGF(H, emLen - hLen - 1).
-		CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
-		byte[] dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
-
-		// 10. Let maskedDB = DB \xor dbMask.
-		byte[] maskedDB = xor(DB, dbMask);
-
-		// 11. Set the leftmost 8emLen - emBits bits of the leftmost octet in
-		//     maskedDB to zero.
-		byte bitmask = (byte)0xff;
-		for (int i = 0; i < (8 * emLen) - emBits; i++) {
-			bitmask = (byte)((bitmask >>> 1) & 0xff);
-		}
-		maskedDB[0] = (byte)(maskedDB[0] & bitmask);
-
-		// 12. Let EM = maskedDB || H || 0xbc.
-		ByteArrayOutputStream EM = new ByteArrayOutputStream();
 		try {
-			EM.write(maskedDB);
-			EM.write(H);
-			EM.write((byte)0xbc);
-		}
-		catch (IOException e) {
-			// Not happening
-			throw new EncodingException("Illegal array operation");
-		}
+			// 9.  Let dbMask = MGF(H, emLen - hLen - 1).
+			CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
+			byte[] dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
 
-		// 13. Output EM.
-		return EM.toByteArray();
+			// 10. Let maskedDB = DB \xor dbMask.
+			byte[] maskedDB = xor(DB, dbMask);
+
+			// 11. Set the leftmost 8emLen - emBits bits of the leftmost octet in
+			//     maskedDB to zero.
+			byte bitmask = (byte)0xff;
+			for (int i = 0; i < (8 * emLen) - emBits; i++) {
+				bitmask = (byte)((bitmask >>> 1) & 0xff);
+			}
+			maskedDB[0] = (byte)(maskedDB[0] & bitmask);
+
+			// 12. Let EM = maskedDB || H || 0xbc.
+			ByteArrayOutputStream EM = new ByteArrayOutputStream();
+			try {
+				EM.write(maskedDB);
+				EM.write(H);
+				EM.write((byte)0xbc);
+			}
+			catch (IOException e) {
+			// Not happening
+			throw new RuntimeException("Illegal array operation");
+			}
+
+			// 13. Output EM.
+			return EM.toByteArray();
+		}
+		catch (BadPaddingException e) {
+			throw new SignatureException("Invalid signature");
+		}
 
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
+	 * @see org.cryptokitty.provider.RSA#sign()
 	 */
 	@Override
-	public byte[] encrypt(CKRSAPublicKey K, byte[] M) throws ProviderException {
-		throw new ProviderException("Illegal operation");
-	}
-
-	/**
-	 * Sign a message.
-	 * 
-	 * @param K - The private key.
-	 * @param M - Message octet string to be signed
-	 * 
-	 * @return Signature octet string.
-	 */
 	public byte[] sign(CKRSAPrivateKey K, byte[] M)
-			throws ProviderException {
+								throws SignatureException {
 
 		// 1. EMSA-PSS encoding: Apply the EMSA-PSS encoding operation to
 		// the message M to produce an encoded message EM of length
@@ -246,8 +213,9 @@ public class PSSrsassa extends RSA {
 	 *                 representation of EM
 	 *                 
 	 * @return True if the encoding is consistent, otherwise false.
+	 * @throws SignatureException 
 	 */
-	public boolean emsaPSSVerify(byte[] M, byte[] EM, int emBits) {
+	public boolean emsaPSSVerify(byte[] M, byte[] EM, int emBits) throws SignatureException {
 
 		// 1.  If the length of M is greater than the input limitation for the
 		//     hash function (2^61 - 1 octets for SHA-1), output "inconsistent"
@@ -258,18 +226,10 @@ public class PSSrsassa extends RSA {
 		// longer than 2^63 - 1.
 
 		// 2.  Let mHash = Hash(M), an octet string of length hLen.
-		Digest hash = null;
-		try {
-			hash = Digest.getInstance(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen. The has algorithm was verified in the constructor.
-			return false;
-		}
-		byte[] mHash = hash.digest(M);
+		byte[] mHash = digest.digest(M);
 
 		// 3.  If emLen < hLen + sLen + 2, output "inconsistent" and stop.
-		int hLen = hash.getDigestLength();
+		int hLen = digestLength;
 		int emLen = (int)Math.ceil((double)emBits / 8);
 		if (emLen < hLen + sLen + 2) {
 			return false;
@@ -303,20 +263,12 @@ public class PSSrsassa extends RSA {
 		try {
 			dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
 		}
-		catch (BadParameterException e) {
-			// Fail silently
-			return false;
+		catch (BadPaddingException e) {
+			throw new SignatureException("Invalid signature");
 		}
 
 		// 8.  Let DB = maskedDB \xor dbMask.
-		byte[] DB;
-		try {
-			DB = xor(maskedDB, dbMask);
-		}
-		catch (BadParameterException e) {
-			// Fail silently
-			return false;
-		}
+		byte[] DB = xor(maskedDB, dbMask);
 
 		// 9.  Set the leftmost 8emLen - emBits bits of the leftmost octet in DB
 		//     to zero.
@@ -354,25 +306,45 @@ public class PSSrsassa extends RSA {
 
 		// 13. Let H' = Hash(M'), an octet string of length hLen.
 		// hash.reset(); Not needed. CK digests don't retail state.
-		byte[] hPrime = hash.digest(mPrime);
+		byte[] hPrime = digest.digest(mPrime);
 
 		// 14. If H = H', output "consistent." Otherwise, output "inconsistent."
 		return Arrays.equals(H, hPrime);
 
 	}
 
-	/**
-	 * 
-	 * Verify an EMSA-PSS encoded signature.
-	 * 
-	 * @param K - The public key in the form of (n,e).
-	 * @param M - The signed message octet string.
-	 * @param S - The signature octet string.
-	 * 
-	 * @return True if the signature is valid, otherwise false.
-	 * 
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#setHashAlgorithm(String)
 	 */
-	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
+	@Override
+	public void setHashAlgorithm(String hashAlgorithm)
+					throws NoSuchAlgorithmException, NoSuchProviderException {
+
+		this.hashAlgorithm = hashAlgorithm;
+		digest = MessageDigest.getInstance(hashAlgorithm, "CK");
+		digestLength = digest.getDigestLength();
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#setSeedLength(int)
+	 */
+	@Override
+	public void setSeedLength(int seedLen) {
+		
+		sLen = seedLen;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#verify()
+	 */
+	@Override
+	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S)
+									throws SignatureException {
 
 		// Length check.
 		int k = K.getBitsize() / 8;
@@ -393,28 +365,20 @@ public class PSSrsassa extends RSA {
 		//
 		// If RSAVP1 output "signature representative out of range,"
 		// output "invalid signature" and stop.
-		try {
-			BigInteger m = rsavp1(K, os2ip(S));
+		BigInteger m = rsavp1(K, os2ip(S));
 
-			// c. Convert the message representative m to an encoded message EM
-			//    of length emLen = \ceil ((modBits - 1)/8) octets, where modBits
-			//    is the length in bits of the RSA modulus n:
-			//
-			//      EM = I2OSP (m, emLen).
-			//
-			// Note that emLen will be one less than k if modBits - 1 is
-			// divisible by 8 and equal to k otherwise.  If I2OSP outputs
-			// "integer too large," output "invalid signature" and stop.
-			int emLen = (int)Math.ceil((double)(K.getBitsize() - 1) / 8);
-			byte[] EM = i2osp(m, emLen);
-
-			return emsaPSSVerify(M, EM, K.getBitsize() - 1);
-
-		}
-		catch (ProviderException e) {
-			// Fail silently
-			return false;
-		}
+		// c. Convert the message representative m to an encoded message EM
+		//    of length emLen = \ceil ((modBits - 1)/8) octets, where modBits
+		//    is the length in bits of the RSA modulus n:
+		//
+		//      EM = I2OSP (m, emLen).
+		//
+		// Note that emLen will be one less than k if modBits - 1 is
+		// divisible by 8 and equal to k otherwise.  If I2OSP outputs
+		// "integer too large," output "invalid signature" and stop.
+		int emLen = (int)Math.ceil((double)(K.getBitsize() - 1) / 8);
+		byte[] EM = i2osp(m, emLen);
+		return emsaPSSVerify(M, EM, K.getBitsize() - 1);
 
 	}
 

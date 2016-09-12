@@ -10,8 +10,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 
-import org.cryptokitty.provider.random.BBSSecureRandom;
-
 /**
  * @author Steve Brenneis
  *
@@ -19,7 +17,7 @@ import org.cryptokitty.provider.random.BBSSecureRandom;
  * default. The (n, d) version can be specified in the
  * algorithm parameters.
  */
-public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
+public class RSAKeyPairGeneratorSpi extends KeyPairGeneratorSpi {
 
 	/*
 	 * BigInteger constants.
@@ -39,10 +37,9 @@ public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
 	/**
 	 * 
 	 */
-	public RSAKeyPairGenerator() {
+	public RSAKeyPairGeneratorSpi() {
 		// Defaults, keysize = 1024, random = BBS.
 		keysize = 1024;
-		random = new BBSSecureRandom();
 	}
 
 	/* (non-Javadoc)
@@ -53,12 +50,7 @@ public class RSAKeyPairGenerator extends KeyPairGeneratorSpi {
 		// Hopefully, SecureRandom is a CryptoKitty implementation.
 		// TODO Check?
 		this.keysize = keysize;
-		if (random == null) {
-			random = new BBSSecureRandom();
-		}
-		else {
-			this.random = random;
-		}
+		this.random = random;
 
 	}
 

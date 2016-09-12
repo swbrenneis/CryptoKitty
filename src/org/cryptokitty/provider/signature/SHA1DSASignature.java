@@ -7,7 +7,7 @@ package org.cryptokitty.provider.signature;
  * @author Steve Brenneis
  *
  */
-public class SHA1DSASignature extends DSASignature {
+public class SHA1DSASignature extends DSASignatureSpi {
 
 	/**
 	 * @param algorithm

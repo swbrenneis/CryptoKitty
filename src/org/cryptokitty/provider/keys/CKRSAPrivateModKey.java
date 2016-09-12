@@ -4,11 +4,12 @@
 package org.cryptokitty.provider.keys;
 
 import java.math.BigInteger;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 
+import javax.crypto.IllegalBlockSizeException;
+
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.IllegalMessageSizeException;
-import org.cryptokitty.provider.cipher.DecryptionException;
 
 /**
  * @author stevebrenneis
@@ -16,6 +17,11 @@ import org.cryptokitty.provider.cipher.DecryptionException;
  */
 public class CKRSAPrivateModKey extends CKRSAPrivateKey implements
 		RSAPrivateKey {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6915387349637434980L;
 
 	/*
 	 * The modulus.
@@ -86,13 +92,13 @@ public class CKRSAPrivateModKey extends CKRSAPrivateKey implements
 	 * RSA decryption primitive, modulus and exponent
 	 */
 	public BigInteger rsadp(BigInteger c)
-		throws DecryptionException {
+							throws IllegalBlockSizeException {
 
 		//   1. If the ciphertext representative c is not between 0 and n - 1,
 		//      output "ciphertext representative out of range" and stop.
 		if (c.compareTo(BigInteger.ZERO) < 1 
 				|| c.compareTo(n.subtract(BigInteger.ONE)) > 0) {
-			throw new DecryptionException();
+			throw new IllegalBlockSizeException("Illegal block zise");
 		}
 
 		// 2. Let m = c^d mod n.
@@ -113,13 +119,13 @@ public class CKRSAPrivateModKey extends CKRSAPrivateKey implements
 	 * @throws BadParameterException if message representative is out of range
 	 */
 	public BigInteger rsasp1(BigInteger m)
-			throws IllegalMessageSizeException {
+						throws SignatureException {
 
 		//   1. If the message representative c is not between 0 and n - 1,
 		//      output "message representative out of range" and stop.
 		if (m.compareTo(BigInteger.ZERO) < 0 
 				|| m.compareTo(n.subtract(BigInteger.ONE)) > 0) {
-			throw new IllegalMessageSizeException("Message representative out of range");
+			throw new SignatureException("Invalid signature");
 		}
 
 		// Let s = m^d mod n.

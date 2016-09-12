@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.math.BigInteger;
 
 import org.cryptokitty.data.Scalar32;
-import org.cryptokitty.data.Scalar64;
 
 /**
  * @author Steve Brenneis
@@ -168,11 +167,24 @@ public class CKSHA256 extends Digest{
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.digest.Digest#getBlockSize()
+	 */
+	@Override
+	public int getBlockSize() {
+
+		return 64;
+
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.digest.Digest#getDigestLength()
 	 */
 	@Override
 	public int getDigestLength() {
+
 		return 32;
+
 	}
 
 	/*

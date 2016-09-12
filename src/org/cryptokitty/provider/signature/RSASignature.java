@@ -3,178 +3,161 @@
  */
 package org.cryptokitty.provider.signature;
 
-import java.io.ByteArrayOutputStream;
-import java.security.AlgorithmParameters;
-import java.security.InvalidKeyException;
-import java.security.InvalidParameterException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SignatureSpi;
-import java.security.spec.AlgorithmParameterSpec;
+import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.util.Arrays;
 
-import org.cryptokitty.provider.ProviderException;
-import org.cryptokitty.provider.cipher.RSA;
+import org.cryptokitty.provider.BadParameterException;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
 /**
  * @author Steve Brenneis
  *
+ * Implementation of the RSA cipher. See RFC 3447 for details.
+ * 
+ * Some of the variable names and method names are a bit opaque.
+ * This is to more easily relate them to the RFC. Comments are
+ * provided so the function won't be a mystery.
+ * 
+ * The inheritance tree of the RSA key and cipher classes is such
+ * a mess because Java doesn't provide a sensible differentiation
+ * between RSA modulus private key and RSA Chinese Remainder Theorem
+ * private keys.
  */
-public class RSASignature extends SignatureSpi {
+public abstract class RSASignature {
+
 
 	/*
-	 * Message buffer.
+	 * BigInteger byte mask.
 	 */
-	private ByteArrayOutputStream buffer;
+	private static final BigInteger MASK = BigInteger.valueOf(0xff);
+	
+	/*
+	 * Hash algorithm.
+	 */
+	protected String hashAlgorithm;
 
 	/*
-	 * The private key.
+	 * The maximum size of an input octet string for the associated
+	 * hash function. This is here purely for extensibility and isn't
+	 * currently practical. Java cannot create a string or array longer
+	 * than 2^64 - 1 bytes;
 	 */
-	private CKRSAPrivateKey privateKey;
-
-	/*
-	 * The private key.
-	 */
-	private CKRSAPublicKey publicKey;
-
-	/*
-	 * The signature implementation.
-	 */
-	private RSA rsa;
+	protected BigInteger maxHash;
 
 	/**
-	 * 
+	 * Default constructor. The class must be subclassed.
 	 */
-	public RSASignature(RSA rsa) {
-		privateKey = null;
-		publicKey = null;
-		this.rsa = rsa;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineInitVerify(java.security.PublicKey)
-	 */
-	@Override
-	protected void engineInitVerify(PublicKey publicKey)
-			throws InvalidKeyException {
-
-		if (publicKey instanceof CKRSAPublicKey) {
-			this.publicKey = (CKRSAPublicKey)publicKey;
-			// k = publicKey.bitsize / 8;
-		}
-		else {
-			throw new InvalidKeyException("Not a valid RSA public key");
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineInitSign(java.security.PrivateKey)
-	 */
-	@Override
-	protected void engineInitSign(PrivateKey privateKey)
-			throws InvalidKeyException {
-
-		if (privateKey instanceof CKRSAPrivateKey) {
-			this.privateKey = (CKRSAPrivateKey)privateKey;
-			// k = privateKey.bitsize / 8;
-		}
-		else {
-			throw new InvalidKeyException("Not a valid RSA private key");
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineUpdate(byte)
-	 */
-	@Override
-	protected void engineUpdate(byte b)
-			throws java.security.SignatureException {
-		buffer.write(b);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineUpdate(byte[], int, int)
-	 */
-	@Override
-	protected void engineUpdate(byte[] b, int off, int len)
-			throws java.security.SignatureException {
-		buffer.write(b, off, len);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineSign()
-	 */
-	@Override
-	protected byte[] engineSign()
-			throws java.security.SignatureException {
-		if (privateKey != null) {
-			try {
-				return rsa.sign(privateKey, buffer.toByteArray());
-			}
-			catch (ProviderException e) {
-				throw new java.security.SignatureException(e);
-			}
-		}
-		else {
-			throw new IllegalStateException("Signature not initialized");
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineVerify(byte[])
-	 */
-	@Override
-	protected boolean engineVerify(byte[] sigBytes)
-			throws java.security.SignatureException {
-		if (publicKey != null) {
-			return rsa.verify(publicKey, buffer.toByteArray(), sigBytes);
-		}
-		else {
-			throw new IllegalStateException("Signature not initialized");
-		}
-	}
-
-	/**
-	 * 
-	 * @see java.security.SignatureSpi#engineSetParameter(java.lang.String, java.lang.Object)
-	 * @deprecated
-	 */
-	@Override
-	protected void engineSetParameter(String param, Object value)
-			throws InvalidParameterException {
-		throw new InvalidParameterException("Method deprecated");
-	}
-
-	/**
-	 * 
-	 * @see java.security.SignatureSpi#engineGetParameter(java.lang.String)
-	 * @deprecated
-	 */
-	@Override
-	protected Object engineGetParameter(String param)
-			throws InvalidParameterException {
-		throw new InvalidParameterException("Method deprecated");
+	protected RSASignature() {
 	}
 
 	/*
-	 * (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineGetParameters()
+	 * Convert an integer representation to an octet string.
 	 */
-	@Override
-	protected AlgorithmParameters engineGetParameters() {
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.security.SignatureSpi#engineSetParameter(java.security.spec.AlgorithmParameterSpec)
-	 */
-	@Override
-	protected void engineSetParameter(AlgorithmParameterSpec params) {
+	protected byte[] i2osp(BigInteger x, int xLen)
+							throws SignatureException {
 		
+		if (x.compareTo(BigInteger.valueOf(256).pow(xLen)) > 0) {
+			throw new SignatureException("Invalid signature");
+		}
+
+		BigInteger work = new BigInteger(x.toString());
+		byte[] xBytes = new byte[xLen];
+		Arrays.fill(xBytes, (byte)0x00);
+		int index = xLen - 1;
+		while (index >= 0) {
+			xBytes[index--] = work.and(MASK).byteValue();
+			work = work.shiftRight(8);
+		}
+		return xBytes;
+
+	}
+
+	/*
+	 * Convert an octet string to an integer. Just using the constructor gives
+	 * unreliable results, so we'll do it the hard way.
+	 */
+	protected BigInteger os2ip(byte[] X) {
+		BigInteger bi = BigInteger.valueOf(X[0] & 0xff);
+		for (int i = 1; i < X.length; ++i) {
+			bi = bi.shiftLeft(8).or(BigInteger.valueOf((X[i] & 0xff)));
+		}
+		return bi;
+	}
+
+	/**
+	 * Signature verification primitive.
+	 * 
+	 * @param K - Public key.
+	 * @param s - Signature representative.
+	 * 
+	 * @return The message representative
+	 * 
+	 * @throws BadParameterException if message representative is out of range
+	 */
+	protected BigInteger rsavp1(CKRSAPublicKey K, BigInteger s)
+											throws SignatureException {
+
+		// 1. If the signature representative m is not between 0 and n - 1, output
+		//  "signature representative out of range" and stop.
+		if (s.compareTo(BigInteger.ZERO) < 1 
+				|| s.compareTo(K.getModulus().subtract(BigInteger.ONE)) > 0) {
+			throw new SignatureException("Invalid signature");
+		}
+
+		// 2. Let m = s^e mod n.
+		BigInteger m = s.modPow(K.getPublicExponent(), K.getModulus());
+
+		return m;
+
+	}
+
+	public abstract void setHashAlgorithm(String hashAlgorithm)
+						throws NoSuchAlgorithmException, NoSuchProviderException;
+
+	public abstract void setSeedLength(int seedLen);
+
+	/**
+	 * Sign a message
+	 * 
+	 * @param K - The private key.
+	 * @param M - Message to be signed.
+	 * 
+	 * @return The signature octet array.
+	 */
+	public abstract byte[] sign(CKRSAPrivateKey K, byte[] M)
+										throws SignatureException;
+
+	/**
+	 * Verify a message
+	 * 
+	 * @param K - The public key.
+	 * @param M - The signed message.
+	 * @param S - The signature to be verified.
+	 * 
+	 * @return The signature octet array.
+	 */
+	public abstract boolean verify(CKRSAPublicKey K, byte[] M, byte[] S)
+										throws SignatureException;
+
+	/*
+	 * Byte array bitwise exclusive or.
+	 */
+	protected byte[] xor(byte[] a, byte[] b)
+							throws SignatureException {
+
+		if (a.length != b.length) {
+			throw new SignatureException("Invalid signature");
+		}
+
+		byte[] result = new byte[a.length];
+		for (int i = 0; i < a.length; ++i) {
+			result[i] = (byte)((a[i] ^ b[i]) & 0xff);
+		}
+		return result;
 	}
 
 }

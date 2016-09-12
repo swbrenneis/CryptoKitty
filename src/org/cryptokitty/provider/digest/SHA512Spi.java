@@ -7,13 +7,15 @@ package org.cryptokitty.provider.digest;
  * @author Steve Brenneis
  *
  */
-public class SHA512Spi extends DigestSpi {
+public class SHA512Spi extends CKMessageDigestSpi {
 
 	/**
 	 * 
 	 */
 	public SHA512Spi() {
-		super(new CKSHA512());
+
+		digest = new CKSHA512();
+
 	}
 
 }

@@ -4,11 +4,12 @@
 package org.cryptokitty.provider.keys;
 
 import java.math.BigInteger;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateCrtKey;
 
+import javax.crypto.IllegalBlockSizeException;
+
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.IllegalMessageSizeException;
-import org.cryptokitty.provider.cipher.DecryptionException;
 
 /**
  * @author Steve Brenneis
@@ -185,7 +186,7 @@ public class CKRSAPrivateCrtKey extends CKRSAPrivateKey implements RSAPrivateCrt
 	 * @throws BadParameterException if ciphertext representative is out of range
 	 */
 	public BigInteger rsadp(BigInteger c)
-		throws DecryptionException {
+						throws IllegalBlockSizeException {
 
 		// We have to compute the modulus for the range check
 		BigInteger n = p.multiply(q);
@@ -194,7 +195,7 @@ public class CKRSAPrivateCrtKey extends CKRSAPrivateKey implements RSAPrivateCrt
 		//      output "ciphertext representative out of range" and stop.
 		if (c.compareTo(BigInteger.ZERO) < 1 
 				|| c.compareTo(n.subtract(BigInteger.ONE)) > 0) {
-			throw new DecryptionException();
+			throw new IllegalBlockSizeException("Illegal block size");
 		}
 
 		// i.    Let m_1 = c^dP mod p and m_2 = c^dQ mod q.
@@ -222,7 +223,7 @@ public class CKRSAPrivateCrtKey extends CKRSAPrivateKey implements RSAPrivateCrt
 	 * @throws BadParameterException if message representative is out of range
 	 */
 	public BigInteger rsasp1(BigInteger m)
-			throws IllegalMessageSizeException {
+						throws SignatureException {
 
 		// We have to compute the modulus for the range check
 		BigInteger n = p.multiply(q);
@@ -231,7 +232,7 @@ public class CKRSAPrivateCrtKey extends CKRSAPrivateKey implements RSAPrivateCrt
 		//      output "message representative out of range" and stop.
 		if (m.compareTo(BigInteger.ZERO) < 0 
 				|| m.compareTo(n.subtract(BigInteger.ONE)) > 0) {
-			throw new IllegalMessageSizeException("Message representative out of range");
+			throw new SignatureException("Invalid signature");
 		}
 
 		// i.    Let s_1 = m^dP mod p and s_2 = m^dQ mod q.

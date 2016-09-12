@@ -1,28 +1,27 @@
 /**
  * 
  */
-package org.cryptokitty.provider.cipher;
+package org.cryptokitty.provider.signature;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 import java.util.Arrays;
 
-import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.EncodingException;
-import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
-import org.cryptokitty.provider.signature.SignatureException;
 
 /**
  * @author Steve Brenneis
  *
  * This class implements the PKCS #1 v1.5 encoded signing.
  */
-public class PKCS1rsassa extends RSA {
+public class PKCS1rsassa extends RSASignature {
 
 	/*
 	 * DER hash algorithm identifiers.
@@ -47,68 +46,26 @@ public class PKCS1rsassa extends RSA {
 	 * The ASN.1 hash algorithm identifier.
 	 */
 	private byte[] algorithmOID;
+	
+	/**
+	 * Message digest
+	 */
+	private MessageDigest digest;
 
 	/**
 	 * 
 	 */
 	public PKCS1rsassa(String hashAlgorithm)
 			throws UnsupportedAlgorithmException {
-
-		this.hashAlgorithm = hashAlgorithm;
-		switch(hashAlgorithm) {
-		case "SHA-1":
-			algorithmOID = SHA1_DER;
-			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
-			break;
-		case "SHA-256":
-			algorithmOID = SHA256_DER;
-			maxHash = BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
-			break;
-		case "SHA-384":
-			algorithmOID = SHA384_DER;
-			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
-			break;
-		case "SHA-512":
-			algorithmOID = SHA512_DER;
-			maxHash = BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
-			break;
-		default:
-			throw new UnsupportedAlgorithmException("Invalid hash algorithm");
-		}
-
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#decrypt(org.cryptokitty.provider.RSA.PrivateKey, byte[])
+	 * @see org.cryptokitty.provider.RSA#sign()
 	 */
 	@Override
-	public byte[] decrypt(CKRSAPrivateKey K, byte[] C) {
-		// Operation not supported. Fail silently.
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.cryptokitty.provider.RSA#encrypt(org.cryptokitty.provider.RSA.PublicKey, byte[])
-	 */
-	@Override
-	public byte[] encrypt(CKRSAPublicKey K, byte[] M)
-		throws ProviderException {
-		throw new ProviderException("Operation not supported");
-	}
-
-	/**
-	 * PKCS 1 v1.5 signing
-	 * 
-	 * @param K - Signer's private key.
-	 * @param M - The message to be signed.
-	 * 
-	 * @return The signature as an octet string.
-	 * @throws BadParameterException 
-	 */
 	public byte[] sign(CKRSAPrivateKey K, byte[] M)
-			throws ProviderException {
+									throws SignatureException {
 
 		// 1. EMSA-PKCS1-v1_5 encoding: Apply the EMSA-PKCS1-v1_5 encoding
 		//    operation (Section 9.2) to the message M to produce an encoded
@@ -120,18 +77,7 @@ public class PKCS1rsassa extends RSA {
 		// too short" and stop.
 
 		int k = K.getBitsize() / 8;
-		byte[] EM = null;
-		try {
-			EM = emsaPKCS1Encode(M, k);
-		}
-		catch (EncodingException e) {
-			if (e.getMessage() == "Intended encoded message length too short") {
-				throw new BadParameterException("RSA modulus too short");
-			}
-			else {
-				throw e;
-			}
-		}
+		byte[] EM = emsaPKCS1Encode(M, k);
 
 		// RSA signature
 		//
@@ -164,20 +110,13 @@ public class PKCS1rsassa extends RSA {
 	 * @return - The encoded message as an octet string
 	 */
 	private byte[] emsaPKCS1Encode(byte[] M, int emLen)
-			throws EncodingException {
+										throws SignatureException {
 
 		// 1. Apply the hash function to the message M to produce a hash value
 		//     H:
 		//
 		//         H = Digest(M).
-		Digest hash = null;
-		try {
-			hash = Digest.getInstance(hashAlgorithm);
-		}
-		catch (UnsupportedAlgorithmException e) {
-			// Won't happen. The hash algorithm was verified in the constructor.
-		}
-		byte[] H = hash.digest(M);
+		byte[] H = digest.digest(M);
 
 		// 2. Encode the algorithm ID for the hash function and the hash value
 		//    into an ASN.1 value of type DigestInfo with the Distinguished
@@ -199,7 +138,7 @@ public class PKCS1rsassa extends RSA {
 		// 3. If emLen < tLen + 11, output "intended encoded message length too
 		//    short" and stop.
 		if (emLen < tLen + 11) {
-			throw new EncodingException("Intended encoded message length too short");
+			throw new SignatureException("Invalid signature");
 		}
 
 		// 4. Generate an octet string PS consisting of emLen - tLen - 3 octets
@@ -228,16 +167,36 @@ public class PKCS1rsassa extends RSA {
 		
 	}
 
-	/**
-	 * PKCS 1 v1.5 verification.
-	 * 
-	 * @param K - Signer's public key.
-	 * @param M - The message whose signature is to be verified.
-	 * @param S - The signature to verify.
-	 * 
-	 * @return True if the signature is valid, otherwise false.
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#setHashAlgorithm(String)
 	 */
-	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S) {
+	@Override
+	public void setHashAlgorithm(String hashAlgorithm) throws NoSuchAlgorithmException, NoSuchProviderException {
+		// TODO Auto-generated method stub
+		
+		this.hashAlgorithm = hashAlgorithm;
+		digest = MessageDigest.getInstance(hashAlgorithm, "CK");
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#setSeedLength(int)
+	 */
+	@Override
+	public void setSeedLength(int seedLen) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.provider.RSA#verify()
+	 */
+	@Override
+	public boolean verify(CKRSAPublicKey K, byte[] M, byte[] S)
+										throws SignatureException {
 
 		// Length checking.
 		// If the length of the signature S is not k octets,
@@ -258,27 +217,13 @@ public class PKCS1rsassa extends RSA {
 		// produce an integer message representative m:
 		//
 		//    m = RSAVP1 ((n, e), s).
-		BigInteger m;
-		try {
-			m = rsavp1(K, os2ip(S));
-		}
-		catch (SignatureException e) {
-			// Fail silently
-			return false;
-		}
+		BigInteger m = rsavp1(K, os2ip(S));
 
 		// Convert the message representative m to an encoded message EM
 		// of length k octets:
 		//
 		//    EM = I2OSP (m, k).
-		byte[] EM;
-		try {
-			EM = i2osp(m, k);
-		}
-		catch (BadParameterException e) {
-			// Fail silently
-			return false;
-		}
+		byte[] EM = i2osp(m, k);
 
 		// Apply the EMSA-PKCS1-v1_5 encoding operation to the message M
 		// to produce a second encoded message EM' of length k octets:
@@ -294,14 +239,7 @@ public class PKCS1rsassa extends RSA {
 		//
 		// This would violate the best practice of voiding the creation of
 		// oracles. We will just fail silently on any exceptions.
-		byte[] emPrime;
-		try {
-			emPrime = emsaPKCS1Encode(M, k);
-		}
-		catch (EncodingException e) {
-			// Fail silently
-			return false;
-		}
+		byte[] emPrime = emsaPKCS1Encode(M, k);
 
 		// Compare the encoded message EM and the second encoded message EM'.
 		// If they are the same, output "valid signature"; otherwise, output

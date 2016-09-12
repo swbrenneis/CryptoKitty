@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
@@ -15,7 +16,6 @@ import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.DSAPublicKey;
 
 import org.cryptokitty.provider.EncodingException;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.random.BBSSecureRandom;
 import org.cryptokitty.provider.x509.der.DERInteger;
 import org.cryptokitty.provider.x509.der.DERSequence;
@@ -25,7 +25,7 @@ import org.cryptokitty.provider.x509.der.DERType;
  * @author stevebrenneis
  *
  */
-public class DSASignature extends SignatureSpi {
+public class DSASignatureSpi extends SignatureSpi {
 
 	/*
 	 * Message accumulator.
@@ -57,13 +57,13 @@ public class DSASignature extends SignatureSpi {
 	/**
 	 * 
 	 */
-	public DSASignature(String algorithm) {
+	public DSASignatureSpi(String algorithm) {
 
 		accumulator = new ByteArrayOutputStream();
 		try {
 			dsa = new DSA(algorithm, new BBSSecureRandom());
 		}
-		catch (UnsupportedAlgorithmException e) {
+		catch (NoSuchAlgorithmException e) {
 			// Shouldn't happen.
 			throw new RuntimeException(e);
 		}

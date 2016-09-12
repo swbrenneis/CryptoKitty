@@ -4,9 +4,9 @@
 package org.cryptokitty.provider.keys;
 
 import java.math.BigInteger;
+import java.security.SignatureException;
 
-import org.cryptokitty.provider.IllegalMessageSizeException;
-import org.cryptokitty.provider.cipher.DecryptionException;
+import javax.crypto.IllegalBlockSizeException;
 
 /**
  * @author Steve Brenneis
@@ -40,12 +40,12 @@ public abstract class CKRSAPrivateKey {
 	 * Signature primitive.
 	 */
 	public abstract BigInteger rsasp1(BigInteger m)
-			throws IllegalMessageSizeException;
+						throws SignatureException;
 
 	/*
 	 * Decryption primitive.
 	 */
 	public abstract BigInteger rsadp(BigInteger c)
-			throws DecryptionException;
+						throws IllegalBlockSizeException;
 
 }
