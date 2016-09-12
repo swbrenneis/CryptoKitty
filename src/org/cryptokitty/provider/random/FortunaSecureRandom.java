@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 
 import org.cryptokitty.provider.SecureRandomException;
 
@@ -14,7 +15,12 @@ import org.cryptokitty.provider.SecureRandomException;
  * @author stevebrenneis
  *
  */
-public class FortunaSecureRandom {
+public class FortunaSecureRandom extends SecureRandom {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1502563938023171603L;
 
 	/**
 	 * Fortuna RNG device
@@ -31,20 +37,24 @@ public class FortunaSecureRandom {
 	/**
 	 * 
 	 * @param bytes
-	 * @throws SecureRandomException 
 	 */
-	public void nextBytes(byte[] bytes) throws SecureRandomException {
+	public void nextBytes(byte[] bytes) {
 
 		int length = bytes.length;
 		int offset = 0;
-		while (length > 0) {
-			byte[] rbytes = readBytes(length);
-			if (rbytes.length == 0) {
-				throw new SecureRandomException("Fortuna device read truncated");
+		try {
+			while (length > 0) {
+				byte[] rbytes = readBytes(length);
+				if (rbytes.length != 0) {
+					System.arraycopy(rbytes, 0, bytes, offset, rbytes.length);
+					length -= rbytes.length;
+					offset += rbytes.length;
+				}
 			}
-			System.arraycopy(rbytes, 0, bytes, offset, rbytes.length);
-			length -= rbytes.length;
-			offset += rbytes.length;
+		}
+		catch (SecureRandomException e) {
+			// No clue what to do with this.
+			System.err.println(e.getMessage());
 		}
 
 	}
@@ -52,9 +62,8 @@ public class FortunaSecureRandom {
 	/**
 	 * 
 	 * @return
-	 * @throws SecureRandomException 
 	 */
-	public int nextInt() throws SecureRandomException {
+	public int nextInt() {
 
 		byte[] bytes = new byte[4];
 		nextBytes(bytes);
@@ -66,9 +75,8 @@ public class FortunaSecureRandom {
 	/**
 	 * 
 	 * @return
-	 * @throws SecureRandomException 
 	 */
-	public long nextLong() throws SecureRandomException {
+	public long nextLong() {
 
 		byte[] bytes = new byte[8];
 		nextBytes(bytes);

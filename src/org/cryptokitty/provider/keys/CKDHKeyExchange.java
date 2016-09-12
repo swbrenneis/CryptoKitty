@@ -7,6 +7,8 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import org.cryptokitty.provider.random.FortunaSecureRandom;
+
 /**
  * @author stevebrenneis
  *
@@ -63,16 +65,7 @@ public class CKDHKeyExchange {
 	 */
 	public BigInteger generatePublicKey() {
 
-		// TODO FortunaSecureRandom rnd;
-		SecureRandom rnd;
-		try {
-			rnd = SecureRandom.getInstanceStrong();
-		}
-		catch (NoSuchAlgorithmException e) {
-			// Hope not
-			return BigInteger.ZERO;
-		}
-
+		FortunaSecureRandom rnd = new FortunaSecureRandom();
 	    if (p == BigInteger.ZERO) {
 	        p = BigInteger.probablePrime(bitsize, rnd);
 	        while (p.bitLength() < bitsize) {
@@ -98,7 +91,7 @@ public class CKDHKeyExchange {
 	 * Return the generator. Will be ZERO if not explicitly set or if
 	 * the public key has not been generated.
 	 */
-	BigInteger getGenerator() {
+	public BigInteger getGenerator() {
 
 	    return g;
 
@@ -108,7 +101,7 @@ public class CKDHKeyExchange {
 	 * Return the modulus. Will be ZERO if not explicitly set or if
 	 * the public key has not been generated.
 	 */
-	BigInteger getModulus() {
+	public BigInteger getModulus() {
 
 	    return p;
 
@@ -118,7 +111,7 @@ public class CKDHKeyExchange {
 	 * Return the D-H public key. Will be ZERO if not explicitly set or if
 	 * the public key has not been generated.
 	 */
-	BigInteger getPublicKey() {
+	public BigInteger getPublicKey() {
 
 	    return publicKey;
 
@@ -127,18 +120,10 @@ public class CKDHKeyExchange {
 	/*
 	 * Generate and return the D-H public key.
 	 */
-	BigInteger getSecret(BigInteger fpk) {
+	public BigInteger getSecret(BigInteger fpk) {
 
 	    if (a == BigInteger.ZERO) {
-	    	SecureRandom rnd;
-	    	try {
-				rnd = SecureRandom.getInstanceStrong();
-			}
-	    	catch (NoSuchAlgorithmException e) {
-				// Hope not
-				return BigInteger.ZERO;
-			}
-	        //FortunaSecureRandom rnd;
+	    	FortunaSecureRandom rnd = new FortunaSecureRandom();
 	        a = BigInteger.probablePrime(bitsize/4, rnd);
 	    }
 
@@ -151,25 +136,25 @@ public class CKDHKeyExchange {
 	 * Return the D-H public key. Will be ZERO if if hasn't been
 	 * generated with the foreign public key.
 	 */
-	BigInteger getSecret() {
+	public BigInteger getSecret() {
 
 	    return s;
 
 	}
 
-	void setBitsize(int b) {
+	public void setBitsize(int b) {
 
 	    bitsize = b;
 
 	}
 
-	void setGenerator(BigInteger gen) {
+	public void setGenerator(BigInteger gen) {
 
 	    g = gen;
 
 	}
 
-	void setModulus(BigInteger mod) {
+	public void setModulus(BigInteger mod) {
 
 	    p = mod;
 
