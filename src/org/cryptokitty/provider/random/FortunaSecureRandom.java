@@ -3,9 +3,12 @@
  */
 package org.cryptokitty.provider.random;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
@@ -88,14 +91,13 @@ public class FortunaSecureRandom extends SecureRandom {
 	private byte[] readBytes(int count) throws SecureRandomException {
 		
 		try {
-			FileReader reader = new FileReader(FORTUNAPATH);
-			char[] cbuf = new char[count];
-			int read = reader.read(cbuf, 0, count);
-			byte[] bytes = new byte[read];
-			for (int n = 0; n < read; ++n) {
-				bytes[n] = (byte)cbuf[n];
-			}
-			reader.close();
+			System.out.println("readBytes invoked with count = " + Integer.toString(count));
+			File file = new File(FORTUNAPATH);
+			file.setReadOnly();
+			InputStream in = new FileInputStream(file);
+			byte[] bytes = new byte[count];
+			in.read(bytes);
+			in.close();
 			return bytes;
 		}
 		catch (FileNotFoundException e) {
