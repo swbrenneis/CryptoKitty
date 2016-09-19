@@ -8,8 +8,8 @@ import java.util.Arrays;
 
 import org.cryptokitty.digest.Digest;
 import org.cryptokitty.exceptions.BadParameterException;
+import org.cryptokitty.exceptions.IllegalStateException;
 import org.cryptokitty.random.FortunaSecureRandom;
-import org.cryptokitty.xprovider.IllegalStateException;
 
 /**
  * @author stevebrenneis
