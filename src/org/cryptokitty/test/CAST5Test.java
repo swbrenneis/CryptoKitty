@@ -16,7 +16,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 
-import org.cryptokitty.provider.CryptoKittyProvider;
+import org.cryptokitty.xprovider.CryptoKittyProvider;
 
 /**
  * @author Steve Brenneis

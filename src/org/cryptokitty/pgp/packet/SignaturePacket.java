@@ -7,11 +7,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cryptokitty.data.DataException;
-import org.cryptokitty.data.KeyID;
-import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar16;
-import org.cryptokitty.data.Time;
+//import org.cryptokitty.data.DataException;
+//import org.cryptokitty.data.KeyID;
+//import org.cryptokitty.data.MPI;
+import org.cryptokitty.codec.Scalar16;
+//import org.cryptokitty.data.Time;
 import org.cryptokitty.pgp.keys.KeyAlgorithms;
 
 /**
@@ -44,17 +44,17 @@ public class SignaturePacket {
 	/*
 	 * Creation time.
 	 */
-	private Time createTime;
+//	private Time createTime;
 
 	/*
 	 * Multiprecision integer for r part of DSA signature.
 	 */
-	private MPI dsaMPIr;
+//	private MPI dsaMPIr;
 
 	/*
 	 * Multiprecision integer for s part of DSA signature.
 	 */
-	private MPI dsaMPIs;
+//	private MPI dsaMPIs;
 
 	/*
 	 * Hash algorithm.
@@ -74,17 +74,17 @@ public class SignaturePacket {
 	/*
 	 * Multiprecision integer for RSA signature.
 	 */
-	private MPI rsaMPI;
+//	private MPI rsaMPI;
 
 	/*
 	 * Signature type.
 	 */
-	private int signatureType;
+//	private int signatureType;
 
 	/*
 	 * Signer ID.
 	 */
-	private KeyID signer;
+//	private KeyID signer;
 
 	/*
 	 * Unhashed subpackets.
@@ -130,7 +130,7 @@ public class SignaturePacket {
 	 */
 	private void readV3Packet(InputStream in)
 			throws InvalidPacketException {
-
+/*
 		try {
 			// This is supposed to be a length byte for the signature algorithm
 			// and creation time. It must always be 5, so...
@@ -170,7 +170,7 @@ public class SignaturePacket {
 		catch (IOException e) {
 			throw new InvalidPacketException(e);
 		}
-
+*/
 	}
 
 	/*
@@ -179,7 +179,7 @@ public class SignaturePacket {
 	 */
 	private void readV4Packet(InputStream in)
 			throws InvalidPacketException {
-
+/*
 		try {
 			signatureType = in.read();
 			pkAlgorithm = in.read();
@@ -203,7 +203,7 @@ public class SignaturePacket {
 		catch (DataException e) {
 			throw new InvalidPacketException(e);
 		}
-
+*/
 	}
 
 }

@@ -6,8 +6,8 @@ package org.cryptokitty.pgp.packet;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cryptokitty.data.DataException;
-import org.cryptokitty.data.KeyID;
+//import org.cryptokitty.data.DataException;
+//import org.cryptokitty.data.KeyID;
 
 /**
  * @author Steve Brenneis
@@ -24,7 +24,7 @@ public class OnePassSignaturePacket {
 	/*
 	 * The signature key ID.
 	 */
-	private KeyID keyID;
+//	private KeyID keyID;
 
 	/*
 	 * Nested one pass signature packets.
@@ -64,12 +64,12 @@ public class OnePassSignaturePacket {
 			type = in.read();
 			hashAlgorithm = in.read();
 			pkAlgorithm = in.read();
-			try {
-				keyID = new KeyID(in);
-			}
-			catch (DataException e) {
-				throw new InvalidPacketException(e);
-			}
+//			try {
+//				keyID = new KeyID(in);
+//			}
+//			catch (DataException e) {
+//				throw new InvalidPacketException(e);
+//			}
 
 			// Mathematicians shouldn't write software specs.
 			int more = in.read();

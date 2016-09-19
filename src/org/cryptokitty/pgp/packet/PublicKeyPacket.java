@@ -6,10 +6,10 @@ package org.cryptokitty.pgp.packet;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cryptokitty.data.DataException;
-import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar16;
-import org.cryptokitty.data.Time;
+//import org.cryptokitty.data.DataException;
+//import org.cryptokitty.data.MPI;
+import org.cryptokitty.codec.Scalar16;
+//import org.cryptokitty.data.Time;
 import org.cryptokitty.pgp.keys.KeyAlgorithms;
 
 /**
@@ -21,42 +21,42 @@ public class PublicKeyPacket {
 	/*
 	 * Creation time.
 	 */
-	protected Time createTime;
+//	protected Time createTime;
 
 	/*
 	 * DSA group generator (g).
 	 */
-	protected MPI dsaGroupGenerator;
+//	protected MPI dsaGroupGenerator;
 
 	/*
 	 * DSA group order (q).
 	 */
-	protected MPI dsaGroupOrder;
+//	protected MPI dsaGroupOrder;
 
 	/*
 	 * DSA prime (p).
 	 */
-	protected MPI dsaPrime;
+//	protected MPI dsaPrime;
 
 	/*
 	 * DSA public key (y).
 	 */
-	protected MPI dsaPublicKey;
+//	protected MPI dsaPublicKey;
 
 	/*
 	 * ElGamal group generator (g).
 	 */
-	protected MPI elgamalGroupGenerator;
+//	protected MPI elgamalGroupGenerator;
 
 	/*
 	 * ElGamal prime (p).
 	 */
-	protected MPI elgamalPrime;
+//	protected MPI elgamalPrime;
 
 	/*
 	 * ElGamal public key (y).
 	 */
-	protected MPI elgamalPublicKey;
+//	protected MPI elgamalPublicKey;
 
 	/*
 	 * Expiration time in days. Zero = no expiration.
@@ -71,12 +71,12 @@ public class PublicKeyPacket {
 	/*
 	 * RSA exponent (e).
 	 */
-	protected MPI rsaExponent;
+//	protected MPI rsaExponent;
 
 	/*
 	 * RSA modulus (n).
 	 */
-	protected MPI rsaModulus;
+//	protected MPI rsaModulus;
 
 	/*
 	 * Packet version. Version 3 packets are deprecated.
@@ -111,66 +111,66 @@ public class PublicKeyPacket {
 
 	/*
 	 * Returns the DSA group generator (g).
-	 */
 	public MPI getDSAGroupGenerator() {
 		return dsaGroupGenerator;
 	}
+	 */
 
 	/*
 	 * Returns the DSA group order (q).
-	 */
 	public MPI getDSAGroupOrder() {
 		return dsaGroupOrder;
 	}
+	 */
 
 	/*
 	 * Returns the DSA prime (p).
-	 */
 	public MPI getDSAPrime() {
 		return dsaPrime;
 	}
+	 */
 
 	/*
 	 * Returns the DSA public key (y).
-	 */
 	public MPI getDSAPublicKey() {
 		return dsaPublicKey;
 	}
+	 */
 
 	/*
 	 * Returns the ElGamal group generator (g).
-	 */
 	public MPI getElGamalGroupGenerator() {
 		return elgamalGroupGenerator;
 	}
+	 */
 
 	/*
 	 * Returns the ElGamal prime (p).
-	 */
 	public MPI getElGamalPrime() {
 		return elgamalPrime;
 	}
+	 */
 
 	/*
 	 * Returns the ElGamal public key (y).
-	 */
 	public MPI getElGamalPublicKey() {
 		return elgamalPublicKey;
 	}
+	 */
 
 	/*
 	 * Returns the RSA exponent.
-	 */
 	public MPI getRSAExponent() {
 		return rsaExponent;
 	}
+	 */
 
 	/*
 	 * Returns the RSA modulus.
-	 */
 	public MPI getRSAModulus() {
 		return rsaModulus;
 	}
+	 */
 
 	/*
 	 * Returns the public key algorithm. DSA and RSA are currently
@@ -186,7 +186,7 @@ public class PublicKeyPacket {
 	protected void readV3Packet(InputStream in)
 			throws InvalidPacketException {
 
-		try {
+/*		try {
 			createTime = new Time(in);
 			expires = new Scalar16(in).getValue();
 			pkAlgorithm = in.read();
@@ -199,7 +199,7 @@ public class PublicKeyPacket {
 		catch (DataException e) {
 			throw new InvalidPacketException(e);
 		}
-
+*/
 	}
 
 	/*
@@ -207,7 +207,7 @@ public class PublicKeyPacket {
 	 */
 	protected void readV4Packet(InputStream in)
 			throws InvalidPacketException {
-
+/*
 		try {
 			createTime = new Time(in);
 			pkAlgorithm = in.read();
@@ -239,7 +239,7 @@ public class PublicKeyPacket {
 		catch (DataException e) {
 			throw new InvalidPacketException(e);
 		}
-
+*/
 	}
 
 }

@@ -8,7 +8,7 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 
-import org.cryptokitty.provider.CryptoKittyProvider;
+import org.cryptokitty.xprovider.CryptoKittyProvider;
 
 /**
  * @author stevebrenneis

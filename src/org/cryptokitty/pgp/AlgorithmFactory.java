@@ -3,14 +3,14 @@
  */
 package org.cryptokitty.pgp;
 
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.CKMD5;
-import org.cryptokitty.provider.digest.CKRIPEMD160;
-import org.cryptokitty.provider.digest.CKSHA224;
-import org.cryptokitty.provider.digest.CKSHA256;
-import org.cryptokitty.provider.digest.CKSHA384;
-import org.cryptokitty.provider.digest.CKSHA512;
-import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.digest.MD5;
+import org.cryptokitty.digest.SHA224;
+import org.cryptokitty.digest.SHA256;
+import org.cryptokitty.digest.SHA384;
+import org.cryptokitty.digest.SHA512;
+import org.cryptokitty.digest.Digest;
+import org.cryptokitty.xprovider.UnsupportedAlgorithmException;
+import org.cryptokitty.xprovider.digest.CKRIPEMD160;
 
 /**
  * @author Steve Brenneis
@@ -27,17 +27,17 @@ public class AlgorithmFactory {
 
 		switch (algorithm) {
 		case PGPConstants.MD5:
-			return new CKMD5();
+			return new MD5();
 		case PGPConstants.RIPEMD160:
 			return new CKRIPEMD160();
 		case PGPConstants.SHA224:
-			return new CKSHA224();
+			return new SHA224();
 		case PGPConstants.SHA256:
-			return new CKSHA256();
+			return new SHA256();
 		case PGPConstants.SHA384:
-			return new CKSHA384();
+			return new SHA384();
 		case PGPConstants.SHA512:
-			return new CKSHA512();
+			return new SHA512();
 		default:
 			throw new UnsupportedAlgorithmException("No such hash algorithm: "
 												+ String.valueOf(algorithm));

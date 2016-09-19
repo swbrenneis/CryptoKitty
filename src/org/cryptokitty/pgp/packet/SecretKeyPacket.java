@@ -21,13 +21,13 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 
-import org.cryptokitty.data.DataException;
-import org.cryptokitty.data.MPI;
-import org.cryptokitty.data.Scalar16;
+//import org.cryptokitty.data.DataException;
+//import org.cryptokitty.data.MPI;
+import org.cryptokitty.codec.Scalar16;
 import org.cryptokitty.pgp.keys.KeyAlgorithms;
 import org.cryptokitty.pgp.keys.String2Key;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.keys.S2KParameterSpec;
+import org.cryptokitty.xprovider.UnsupportedAlgorithmException;
+import org.cryptokitty.xprovider.keys.S2KParameterSpec;
 
 /**
  * @author Steve Brenneis
@@ -90,12 +90,12 @@ public class SecretKeyPacket extends PublicKeyPacket {
 	/*
 	 * DSA secret exponent x.
 	 */
-	protected MPI dsaX;
+//	protected MPI dsaX;
 
 	/*
 	 * ElGamal secret exponent x.
 	 */
-	protected MPI elgamalX;
+//	protected MPI elgamalX;
 
 	/*
 	 * Initial vector for secret key encryption.
@@ -110,22 +110,22 @@ public class SecretKeyPacket extends PublicKeyPacket {
 	/*
 	 * RSA secret key exponent (d).
 	 */
-	protected MPI rsaSecretExponent;
+//	protected MPI rsaSecretExponent;
 
 	/*
 	 * RSA secret key prime (p).
 	 */
-	protected MPI rsaSecretPrimeP;
+//	protected MPI rsaSecretPrimeP;
 
 	/*
 	 * RSA secret key prime (q).
 	 */
-	protected MPI rsaSecretPrimeQ;
+//	protected MPI rsaSecretPrimeQ;
 
 	/*
 	 * RSA secret key multiplicative inverse of p mod q.
 	 */
-	protected MPI rsaU;
+//	protected MPI rsaU;
 
 	/*
 	 * String 2 key specifier.
@@ -247,7 +247,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 	 */
 	private void readV3Secret(InputStream secretIn, Cipher cipher)
 			throws InvalidPacketException {
-
+/*
 		Checksum checksum = new Checksum(s2kUsage);
 
 		try {
@@ -352,7 +352,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 		catch (InvalidAlgorithmParameterException e) {
 			throw new InvalidPacketException(e);
 		}
-
+*/
 	}
 
 	/*
@@ -363,7 +363,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 	 */
 	private void readV4Secret(InputStream secretIn, Cipher cipher)
 			throws InvalidPacketException {
-
+/*
 		Checksum checksum = new Checksum(s2kUsage);
 
 		try {
@@ -418,7 +418,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 		catch (DataException e) {
 			throw new InvalidPacketException(e);
 		}
-
+*/
 	}
 
 	/*

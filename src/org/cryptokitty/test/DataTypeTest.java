@@ -3,14 +3,14 @@
  */
 package org.cryptokitty.test;
 
-import java.io.ByteArrayInputStream;
+//import java.io.ByteArrayInputStream;
 
-import org.cryptokitty.data.DataException;
+/*import org.cryptokitty.data.DataException;
 import org.cryptokitty.data.KeyID;
 import org.cryptokitty.data.MPI;
 import org.cryptokitty.data.Scalar16;
 import org.cryptokitty.data.Time;
-
+*/
 /**
  * @author Steve Brenneis
  *
@@ -30,7 +30,7 @@ public class DataTypeTest {
 	 */
 	public static void main(String[] args) {
 
-		try {
+/*		try {
 
 			long k1 = 4219671234237908012L;
 			KeyID id1 = new KeyID(k1);
@@ -142,7 +142,7 @@ public class DataTypeTest {
 		catch (DataException e) {
 			System.err.println(e);
 		}
-		
+*/		
 	}
 
 }
