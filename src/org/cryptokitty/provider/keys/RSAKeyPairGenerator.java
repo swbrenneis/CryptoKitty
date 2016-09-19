@@ -5,10 +5,11 @@ package org.cryptokitty.provider.keys;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.KeyPairGeneratorSpi;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+
+import org.cryptokitty.provider.random.FortunaSecureRandom;
 
 /**
  * @author Steve Brenneis
@@ -17,7 +18,7 @@ import java.security.SecureRandom;
  * default. The (n, d) version can be specified in the
  * algorithm parameters.
  */
-public class RSAKeyPairGeneratorSpi extends KeyPairGeneratorSpi {
+public class RSAKeyPairGenerator {
 
 	/*
 	 * BigInteger constants.
@@ -37,27 +38,28 @@ public class RSAKeyPairGeneratorSpi extends KeyPairGeneratorSpi {
 	/**
 	 * 
 	 */
-	public RSAKeyPairGeneratorSpi() {
-		// Defaults, keysize = 1024, random = BBS.
+	public RSAKeyPairGenerator() {
+		// Defaults keysize = 1024, random = BBS.
 		keysize = 1024;
+		random = new FortunaSecureRandom();
 	}
 
-	/* (non-Javadoc)
-	 * @see java.security.KeyPairGeneratorSpi#initialize(int, java.security.SecureRandom)
+	/**
+	 * 
+	 * @param keysize
+	 * @param random
 	 */
-	@Override
 	public void initialize(int keysize, SecureRandom random) {
-		// Hopefully, SecureRandom is a CryptoKitty implementation.
-		// TODO Check?
+
 		this.keysize = keysize;
 		this.random = random;
 
 	}
 
-	/* (non-Javadoc)
-	 * @see java.security.KeyPairGeneratorSpi#generateKeyPair()
+	/**
+	 * 
+	 * @return
 	 */
-	@Override
 	public KeyPair generateKeyPair() {
 
 		// BigInteger e = BigInteger.valueOf(65537);

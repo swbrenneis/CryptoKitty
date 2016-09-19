@@ -9,7 +9,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 
@@ -199,7 +198,7 @@ public class RSACipherSpi extends CipherSpi {
 			else {
 				throw new InvalidAlgorithmParameterException("Invalid PSource");
 			}
-			try {
+/*			try {
 				oaep.setHashAlgorithm(oaepSpec.getDigestAlgorithm());
 			}
 			catch (NoSuchAlgorithmException e) {
@@ -207,7 +206,7 @@ public class RSACipherSpi extends CipherSpi {
 			}
 			catch (NoSuchProviderException e) {
 				// Won't happen because, well, you know.
-			}
+			}*/
 			if (oaepSpec.getMGFAlgorithm() != "MGF1") {
 				throw new InvalidAlgorithmParameterException("Invalid MGF algorithm");
 			}
