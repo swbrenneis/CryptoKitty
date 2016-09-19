@@ -8,7 +8,7 @@ import java.io.InputStream;
 
 import org.cryptokitty.pgp.PGPConstants;
 import org.cryptokitty.pgp.packet.InvalidPacketException;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.xprovider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis

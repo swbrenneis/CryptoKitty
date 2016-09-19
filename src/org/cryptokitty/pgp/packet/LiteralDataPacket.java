@@ -6,8 +6,8 @@ package org.cryptokitty.pgp.packet;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cryptokitty.data.DataException;
-import org.cryptokitty.data.Time;
+//import org.cryptokitty.data.DataException;
+//import org.cryptokitty.data.Time;
 
 /**
  * @author Steve Brenneis
@@ -22,7 +22,7 @@ public class LiteralDataPacket {
 	 * data but makes no reference to the format. We'll assume
 	 * it is a Time object until we know otherwise.
 	 */
-	private Time date;
+//	private Time date;
 
 	/*
 	 * File name.
@@ -61,12 +61,12 @@ public class LiteralDataPacket {
 			byte[] string = new byte[length];
 			fileName = new String(string);
 
-			try {
-				date = new Time(in);
-			}
-			catch (DataException e) {
-				throw new InvalidPacketException(e);
-			}
+//			try {
+//				date = new Time(in);
+//			}
+//			catch (DataException e) {
+//				throw new InvalidPacketException(e);
+//			}
 
 			data = new byte[in.available()];
 			in.read(data);

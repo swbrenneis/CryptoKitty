@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.cryptokitty.pgp.keys.String2Key;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.xprovider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis

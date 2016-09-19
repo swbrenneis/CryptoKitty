@@ -6,9 +6,9 @@ package org.cryptokitty.pgp.keys;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import org.cryptokitty.digest.Digest;
 import org.cryptokitty.pgp.AlgorithmFactory;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
-import org.cryptokitty.provider.digest.Digest;
+import org.cryptokitty.xprovider.UnsupportedAlgorithmException;
 
 /**
  * @author Steve Brenneis

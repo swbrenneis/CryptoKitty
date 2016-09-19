@@ -6,9 +6,9 @@ package org.cryptokitty.pgp.packet;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.cryptokitty.data.DataException;
-import org.cryptokitty.data.KeyID;
-import org.cryptokitty.data.MPI;
+//import org.cryptokitty.data.DataException;
+//import org.cryptokitty.data.KeyID;
+//import org.cryptokitty.data.MPI;
 import org.cryptokitty.pgp.keys.KeyAlgorithms;
 
 /**
@@ -23,18 +23,18 @@ public class PublicKeyEncryptedSessionKey {
 	 * Multiprecision integer containing the first half of
 	 * the ElGamal public key.
 	 */
-	private MPI elgamalMPI1;
+//	private MPI elgamalMPI1;
 
 	/*
 	 * Multiprecision integer containing the second half of
 	 * the ElGamal public key.
 	 */
-	private MPI elgamalMPI2;
+//	private MPI elgamalMPI2;
 
 	/*
 	 * Key ID.
 	 */
-	private KeyID id;
+//	private KeyID id;
 
 	/*
 	 * The raw, encrypted key.
@@ -49,7 +49,7 @@ public class PublicKeyEncryptedSessionKey {
 	/*
 	 * Multiprecision integer containing the RSA public key.
 	 */
-	private MPI rsaMPI;
+//	private MPI rsaMPI;
 
 	/*
 	 * Packet version number. Should be 3.
@@ -64,15 +64,15 @@ public class PublicKeyEncryptedSessionKey {
 
 		try {
 			version = in.read();
-			try {
-				id = new KeyID(in);
-			}
-			catch (DataException e) {
-				throw new InvalidPacketException(e);
-			}
+//			try {
+//				id = new KeyID(in);
+//			}
+//			catch (DataException e) {
+//				throw new InvalidPacketException(e);
+//			}
 
 			pkAlgorithm = in.read();		
-			switch (pkAlgorithm) {
+			/*switch (pkAlgorithm) {
 			case KeyAlgorithms.RSA:
 			case KeyAlgorithms.RSA_ENCRYPT:
 				rsaMPI = new MPI(in);
@@ -83,11 +83,11 @@ public class PublicKeyEncryptedSessionKey {
 				break;
 			default:
 				throw new InvalidPacketException("Invalid public key algorithm");
-			}
+			}*/
 		}
-		catch (DataException e) {
-			throw new InvalidPacketException("Invalid public key format");
-		}
+		//catch (DataException e) {
+		//	throw new InvalidPacketException("Invalid public key format");
+		//}
 		catch (IOException e) {
 			throw new InvalidPacketException("Invalid public key format");
 		}

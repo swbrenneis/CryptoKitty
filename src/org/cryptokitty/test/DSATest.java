@@ -13,7 +13,7 @@ import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 
-import org.cryptokitty.provider.CryptoKittyProvider;
+import org.cryptokitty.xprovider.CryptoKittyProvider;
 
 /**
  * @author stevebrenneis

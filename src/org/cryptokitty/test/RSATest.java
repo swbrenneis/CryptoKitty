@@ -22,13 +22,13 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 
-import org.cryptokitty.data.Scalar64;
-import org.cryptokitty.provider.CryptoKittyProvider;
-import org.cryptokitty.provider.digest.CKMD5;
-import org.cryptokitty.provider.digest.Digest;
-import org.cryptokitty.provider.keys.CKRSAPrivateCrtKey;
-import org.cryptokitty.provider.keys.CKRSAPrivateModKey;
-import org.cryptokitty.provider.keys.CKRSAPublicKey;
+import org.cryptokitty.codec.Scalar64;
+import org.cryptokitty.digest.MD5;
+import org.cryptokitty.keys.RSAPrivateCrtKey;
+import org.cryptokitty.keys.RSAPrivateModKey;
+import org.cryptokitty.keys.RSAPublicKey;
+import org.cryptokitty.xprovider.CryptoKittyProvider;
+import org.cryptokitty.digest.Digest;
 
 /**
  * @author Steve Brenneis
@@ -58,7 +58,7 @@ public class RSATest {
 			keyGen.initialize(2048);
 			KeyPair ckpair = keyGen.generateKeyPair();
 
-			Digest digest = new CKMD5();
+			Digest digest = new MD5();
 			byte[] message = digest.digest(Scalar64.encode(System.nanoTime()));
 
 			// Test OAEP encoding.
@@ -216,12 +216,12 @@ public class RSATest {
 
 			BigInteger n = new BigInteger(1, N1);
 			BigInteger e = new BigInteger(1, E1);
-			CKRSAPublicKey pkcsPublicKey1 = new CKRSAPublicKey(n, e);
+			RSAPublicKey pkcsPublicKey1 = new RSAPublicKey(n, e);
 			BigInteger d = new BigInteger(1, D1);
-			CKRSAPrivateModKey pkcsPrivateModKey1 = new CKRSAPrivateModKey(n, d);
+			RSAPrivateModKey pkcsPrivateModKey1 = new RSAPrivateModKey(n, d);
 			BigInteger p = new BigInteger(1, P1);
 			BigInteger q = new BigInteger(1, Q1);
-			CKRSAPrivateCrtKey pkcsPrivateCrtKey1 = new CKRSAPrivateCrtKey(p, q, d, e);
+			RSAPrivateCrtKey pkcsPrivateCrtKey1 = new RSAPrivateCrtKey(p, q, d, e);
 
 			rsae = Cipher.getInstance("RSA", "CryptoKitty");
 			rsae.init(Cipher.ENCRYPT_MODE, pkcsPublicKey1, new IvParameterSpec(ps1));

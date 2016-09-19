@@ -5,13 +5,13 @@ package org.cryptokitty.test;
 
 import java.util.Arrays;
 
-import org.cryptokitty.provider.digest.CKMD5;
-import org.cryptokitty.provider.digest.CKRIPEMD160;
-import org.cryptokitty.provider.digest.CKSHA1;
-import org.cryptokitty.provider.digest.CKSHA224;
-import org.cryptokitty.provider.digest.CKSHA256;
-import org.cryptokitty.provider.digest.CKSHA384;
-import org.cryptokitty.provider.digest.CKSHA512;
+import org.cryptokitty.digest.MD5;
+import org.cryptokitty.digest.SHA1;
+import org.cryptokitty.digest.SHA224;
+import org.cryptokitty.digest.SHA256;
+import org.cryptokitty.digest.SHA384;
+import org.cryptokitty.digest.SHA512;
+import org.cryptokitty.xprovider.digest.CKRIPEMD160;
 
 /**
  * @author stevebrenneis
@@ -135,7 +135,7 @@ public class DigestTest {
 				0x61, 0x28, 0x08, (byte)0x97, 0x7e, (byte)0xe8, (byte)0xf5, 0x48, (byte)0xb2, 0x25,
 				(byte)0x8d, 0x31 };
 
-		CKSHA256 sha256 = new CKSHA256();
+		SHA256 sha256 = new SHA256();
 		byte[] digestSHA256 = sha256.digest("".getBytes());
 		if (Arrays.equals(digestSHA256, emptyAnswerSHA256)) {
 			System.out.println("SHA256 empty message test passed!");
@@ -171,7 +171,7 @@ public class DigestTest {
 			System.out.println("SHA256 million test failed!");
 		}
 
-		CKSHA512 sha512 = new CKSHA512();
+		SHA512 sha512 = new SHA512();
 		byte[] digestSHA512 = sha512.digest("".getBytes());
 		if (Arrays.equals(digestSHA512, emptyAnswerSHA512)) {
 			System.out.println("SHA512 empty message test passed!");
@@ -188,7 +188,7 @@ public class DigestTest {
 			System.out.println("SHA512 'abc' test failed!");
 		}
 
-		CKSHA384 sha384 = new CKSHA384();
+		SHA384 sha384 = new SHA384();
 		byte[] digestSHA384 = sha384.digest("".getBytes());
 		if (Arrays.equals(digestSHA384, emptyAnswerSHA384)) {
 			System.out.println("SHA384 empty message test passed!");
@@ -205,7 +205,7 @@ public class DigestTest {
 			System.out.println("SHA384 'abc' test failed!");
 		}
 
-		CKSHA1 sha1 = new CKSHA1();
+		SHA1 sha1 = new SHA1();
 		byte[] digestSHA1 = sha1.digest("".getBytes());
 		if (Arrays.equals(digestSHA1, emptyAnswerSHA1)) {
 			System.out.println("SHA-1 empty message test passed!");
@@ -222,7 +222,7 @@ public class DigestTest {
 			System.out.println("SHA-1 'abc' test failed!");
 		}
 
-		CKSHA224 sha224 = new CKSHA224();
+		SHA224 sha224 = new SHA224();
 		byte[] digestSHA224 = sha224.digest("".getBytes());
 		if (Arrays.equals(digestSHA224, emptyAnswerSHA224)) {
 			System.out.println("SHA224 empty message test passed!");
@@ -239,7 +239,7 @@ public class DigestTest {
 			System.out.println("SHA224 'abc' test failed!");
 		}
 
-		CKMD5 md5 = new CKMD5();
+		MD5 md5 = new MD5();
 		byte[] digestMD5 = md5.digest("".getBytes());
 		if (Arrays.equals(digestMD5, emptyAnswerMD5)) {
 			System.out.println("MD5 empty message test passed!");
