@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.cryptokitty.xprovider;
+package org.cryptokitty.exceptions;
 
 /**
  * @author stevebrenneis
