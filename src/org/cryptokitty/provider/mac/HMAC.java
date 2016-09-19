@@ -3,6 +3,7 @@
  */
 package org.cryptokitty.provider.mac;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.cryptokitty.provider.BadParameterException;
@@ -132,17 +133,18 @@ public class HMAC {
 		if (K.length > B) {
 			k = digest.digest(K);
 		}
+		else if (K.length < B) {
+			ByteBuffer buf = ByteBuffer.allocate(B);
+			byte[] pad = new byte[B - K.length];
+			buf.put(pad);
+			buf.put(K);
+			k = buf.array();
+		}
 		else {
 			k = K;
 		}
-		byte[] pad = new byte[B - k.length];
-		k = Append(k, pad);
-		byte[] tmp = new byte[pad.length + k.length];
-		System.arraycopy(k, 0, tmp, 0, k.length);
-		System.arraycopy(pad, 0, tmp, k.length, pad.length);
-		k = tmp;
-		digest.reset();
 
+		digest.reset();
 		// First mask.
 		byte[] i = Xor(k, ipad);
 		i = Append(i, text);

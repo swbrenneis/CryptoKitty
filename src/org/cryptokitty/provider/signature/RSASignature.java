@@ -29,6 +29,11 @@ import org.cryptokitty.provider.keys.CKRSAPublicKey;
  */
 public abstract class RSASignature {
 
+	/**
+	 * Digest algorithm enumeration.
+	 */
+	public enum DigestTypes { SHA224, SHA256, SHA384, SHA512 };
+	protected DigestTypes digestType;
 
 	/*
 	 * BigInteger byte mask.
@@ -38,7 +43,7 @@ public abstract class RSASignature {
 	/*
 	 * Hash algorithm.
 	 */
-	protected String hashAlgorithm;
+	//protected String hashAlgorithm;
 
 	/*
 	 * The maximum size of an input octet string for the associated
@@ -115,8 +120,8 @@ public abstract class RSASignature {
 
 	}
 
-	public abstract void setHashAlgorithm(String hashAlgorithm)
-						throws NoSuchAlgorithmException, NoSuchProviderException;
+	//public abstract void setHashAlgorithm(String hashAlgorithm)
+	//					throws NoSuchAlgorithmException, NoSuchProviderException;
 
 	public abstract void setSeedLength(int seedLen);
 

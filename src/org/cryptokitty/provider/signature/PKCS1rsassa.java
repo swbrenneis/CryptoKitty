@@ -13,6 +13,11 @@ import java.security.SignatureException;
 import java.util.Arrays;
 
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.digest.CKSHA224;
+import org.cryptokitty.provider.digest.CKSHA256;
+import org.cryptokitty.provider.digest.CKSHA384;
+import org.cryptokitty.provider.digest.CKSHA512;
+import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
@@ -50,13 +55,30 @@ public class PKCS1rsassa extends RSASignature {
 	/**
 	 * Message digest
 	 */
-	private MessageDigest digest;
+	private Digest digest;
 
 	/**
 	 * 
 	 */
-	public PKCS1rsassa(String hashAlgorithm)
-			throws UnsupportedAlgorithmException {
+	public PKCS1rsassa(DigestTypes type) {
+
+		this.digestType = type;
+		switch (type) {
+		case SHA224:
+			digest = new CKSHA224();
+			break;
+		case SHA256:
+			digest = new CKSHA256();
+			break;
+		case SHA384:
+			digest = new CKSHA384();
+			break;
+		case SHA512:
+			digest = new CKSHA512();
+			break;
+		}
+		//digestLength = digest.getDigestLength();
+
 	}
 
 	/*
@@ -171,14 +193,14 @@ public class PKCS1rsassa extends RSASignature {
 	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.RSA#setHashAlgorithm(String)
 	 */
-	@Override
+	/*@Override
 	public void setHashAlgorithm(String hashAlgorithm) throws NoSuchAlgorithmException, NoSuchProviderException {
 		// TODO Auto-generated method stub
 		
 		this.hashAlgorithm = hashAlgorithm;
 		digest = MessageDigest.getInstance(hashAlgorithm, "CK");
 
-	}
+	}*/
 
 	/*
 	 * (non-Javadoc)

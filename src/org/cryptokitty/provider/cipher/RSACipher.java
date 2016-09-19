@@ -4,8 +4,6 @@
 package org.cryptokitty.provider.cipher;
 
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.util.Arrays;
 
@@ -33,7 +31,13 @@ import org.cryptokitty.provider.keys.CKRSAPublicKey;
 public abstract class RSACipher {
 
 
-	/*
+	/**
+	 * Digest algorithm enumeration.
+	 */
+	public enum DigestTypes { SHA224, SHA256, SHA384, SHA512 };
+	protected DigestTypes digestType;
+
+	/***
 	 * BigInteger byte mask.
 	 */
 	private static final BigInteger MASK = BigInteger.valueOf(0xff);
@@ -41,7 +45,7 @@ public abstract class RSACipher {
 	/*
 	 * Hash algorithm.
 	 */
-	protected String hashAlgorithm;
+	//protected String hashAlgorithm;
 
 	/*
 	 * The maximum size of an input octet string for the associated
@@ -49,7 +53,7 @@ public abstract class RSACipher {
 	 * currently practical. Java cannot create a string or array longer
 	 * than 2^64 - 1 bytes;
 	 */
-	protected BigInteger maxHash;
+	//protected BigInteger maxHash;
 
 	/**
 	 * Default constructor. The class must be subclassed.
@@ -155,8 +159,8 @@ public abstract class RSACipher {
 
 	}
 
-	public abstract void setHashAlgorithm(String hashAlgorithm)
-						throws NoSuchAlgorithmException, NoSuchProviderException;
+	//public abstract void setHashAlgorithm(String hashAlgorithm)
+	//					throws NoSuchAlgorithmException, NoSuchProviderException;
 
 	/*
 	 * Byte array bitwise exclusive or.

@@ -4,8 +4,6 @@
 package org.cryptokitty.provider.cipher;
 
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -193,12 +191,6 @@ public class PKCS1rsaes extends RSACipher {
 
 		this.seed = seed;
 
-	}
-
-	@Override
-	public void setHashAlgorithm(String hashAlgorithm) throws NoSuchAlgorithmException, NoSuchProviderException {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

@@ -6,9 +6,7 @@ package org.cryptokitty.provider.signature;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
@@ -18,6 +16,11 @@ import javax.crypto.BadPaddingException;
 import org.cryptokitty.provider.ProviderException;
 import org.cryptokitty.provider.UnsupportedAlgorithmException;
 import org.cryptokitty.provider.cipher.CKRSAmgf1;
+import org.cryptokitty.provider.digest.CKSHA224;
+import org.cryptokitty.provider.digest.CKSHA256;
+import org.cryptokitty.provider.digest.CKSHA384;
+import org.cryptokitty.provider.digest.CKSHA512;
+import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
 
@@ -36,7 +39,7 @@ public class PSSrsassa extends RSASignature {
 	/**
 	 * Message digest.
 	 */
-	private MessageDigest digest;
+	private Digest digest;
 
 	/**
 	 * Digest length.
@@ -48,7 +51,25 @@ public class PSSrsassa extends RSASignature {
 	 * @param sLen
 	 * @throws UnsupportedAlgorithmException
 	 */
-	public PSSrsassa() {
+	public PSSrsassa(DigestTypes type) {
+
+		this.digestType = type;
+		switch (type) {
+		case SHA224:
+			digest = new CKSHA224();
+			break;
+		case SHA256:
+			digest = new CKSHA256();
+			break;
+		case SHA384:
+			digest = new CKSHA384();
+			break;
+		case SHA512:
+			digest = new CKSHA512();
+			break;
+		}
+		digestLength = digest.getDigestLength();
+
 	}
 
 	/**
@@ -119,7 +140,7 @@ public class PSSrsassa extends RSASignature {
 
 		try {
 			// 9.  Let dbMask = MGF(H, emLen - hLen - 1).
-			CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
+			CKRSAmgf1 dbmgf = new CKRSAmgf1(digestType);
 			byte[] dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
 
 			// 10. Let maskedDB = DB \xor dbMask.
@@ -258,7 +279,7 @@ public class PSSrsassa extends RSASignature {
 		}
 
 		// 7.  Let dbMask = MGF(H, emLen - hLen - 1).
-		CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
+		CKRSAmgf1 dbmgf = new CKRSAmgf1(digestType);
 		byte[] dbMask;
 		try {
 			dbMask = dbmgf.generateMask(H, emLen - hLen - 1);
@@ -316,7 +337,7 @@ public class PSSrsassa extends RSASignature {
 	/*
 	 * (non-Javadoc)
 	 * @see org.cryptokitty.provider.RSA#setHashAlgorithm(String)
-	 */
+	 
 	@Override
 	public void setHashAlgorithm(String hashAlgorithm)
 					throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -325,7 +346,7 @@ public class PSSrsassa extends RSASignature {
 		digest = MessageDigest.getInstance(hashAlgorithm, "CK");
 		digestLength = digest.getDigestLength();
 
-	}
+	}*/
 
 	/*
 	 * (non-Javadoc)

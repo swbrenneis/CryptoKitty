@@ -6,9 +6,6 @@ package org.cryptokitty.provider.cipher;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -16,10 +13,14 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 import org.cryptokitty.provider.BadParameterException;
-import org.cryptokitty.provider.UnsupportedAlgorithmException;
+import org.cryptokitty.provider.digest.CKSHA224;
+import org.cryptokitty.provider.digest.CKSHA256;
+import org.cryptokitty.provider.digest.CKSHA384;
+import org.cryptokitty.provider.digest.CKSHA512;
+import org.cryptokitty.provider.digest.Digest;
 import org.cryptokitty.provider.keys.CKRSAPrivateKey;
 import org.cryptokitty.provider.keys.CKRSAPublicKey;
-import org.cryptokitty.provider.random.BBSSecureRandom;
+import org.cryptokitty.provider.random.FortunaSecureRandom;
 
 /**
  * @author Steve Brenneis
@@ -28,15 +29,20 @@ import org.cryptokitty.provider.random.BBSSecureRandom;
  */
 public class OAEPrsaes extends RSACipher {
 
-	/*
+	/**
 	 * P Source (L label).
 	 */
 	private byte[] pSource;
 
 	/**
+	 * Encoding seed.
+	 */
+	private byte[] seed;
+
+	/**
 	 * Message digest.
 	 */
-	private MessageDigest digest;
+	private Digest digest;
 
 	/**
 	 * Digest length.
@@ -44,9 +50,33 @@ public class OAEPrsaes extends RSACipher {
 	private int digestLength;
 
 	/**
-	 * 
+	 * This constructor is used for the provider interface only.
 	 */
 	public OAEPrsaes() {
+	}
+
+	/**
+	 * This is the standalone constructor.
+	 */
+	public OAEPrsaes(DigestTypes type) {
+
+		this.digestType = type;
+		switch (type) {
+		case SHA224:
+			digest = new CKSHA224();
+			break;
+		case SHA256:
+			digest = new CKSHA256();
+			break;
+		case SHA384:
+			digest = new CKSHA384();
+			break;
+		case SHA512:
+			digest = new CKSHA512();
+			break;
+		}
+		digestLength = digest.getDigestLength();
+
 	}
 
 	/**
@@ -123,14 +153,14 @@ public class OAEPrsaes extends RSACipher {
 		System.arraycopy(EM, hLen + 1, maskedDB, 0, maskedDB.length);
 
 		// c. Let seedMask = MGF(maskedDB, hLen).
-		CKRSAmgf1 mdmgf = new CKRSAmgf1(hashAlgorithm);
+		CKRSAmgf1 mdmgf = new CKRSAmgf1(digestType);
 		byte[] seedMask = mdmgf.generateMask(maskedDB, hLen);
 
 		// d. Let seed = maskedSeed \xor seedMask.
-		byte[] seed = xor(maskedSeed, seedMask);
+		seed = xor(maskedSeed, seedMask);
 
 		// e. Let dbMask = MGF(seed, k - hLen - 1).
-		CKRSAmgf1 dbmgf = new CKRSAmgf1(hashAlgorithm);
+		CKRSAmgf1 dbmgf = new CKRSAmgf1(digestType);
 		byte[] dbMask = dbmgf.generateMask(seed, k - hLen - 1);
 
 		// f. Let DB = maskedDB \xor dbMask.
@@ -215,19 +245,23 @@ public class OAEPrsaes extends RSACipher {
 		}
 
 		// d. Generate a random octet string seed of length hLen.
-		byte[] seed = new byte[hLen];
-		SecureRandom rnd = new BBSSecureRandom();
-		rnd.nextBytes(seed);
+		// The seed should be set in the setSeed function.
+		if (seed.length != hLen) {
+			throw new BadPaddingException("Invalid seed");
+		}
+		//byte[] seed = new byte[hLen];
+		//SecureRandom rnd = new FortunaSecureRandom();
+		//rnd.nextBytes(seed);
 
 		// e. Let dbMask = MGF(seed, k - hLen - 1).
-		CKRSAmgf1 dmgf = new CKRSAmgf1(hashAlgorithm);
+		CKRSAmgf1 dmgf = new CKRSAmgf1(digestType);
 		byte[] dbMask = dmgf.generateMask(seed, k - hLen - 1);
 
 		// f. Let maskedDB = DB \xor dbMask.
 		byte[] maskedDB = xor(DB.toByteArray(), dbMask);
 
 		// g. Let seedMask = MGF(maskedDB, hLen).
-		CKRSAmgf1 smgf = new CKRSAmgf1(hashAlgorithm);
+		CKRSAmgf1 smgf = new CKRSAmgf1(digestType);
 		byte[] seedMask = smgf.generateMask(maskedDB, hLen);
 
 		// h. Let maskedSeed = seed \xor seedMask.
@@ -303,7 +337,7 @@ public class OAEPrsaes extends RSACipher {
 	 * @throws UnsupportedAlgorithmException
 	 * @throws NoSuchProviderException 
 	 * @throws NoSuchAlgorithmException 
-	 */
+	 
 	public void setHashAlgorithm(String hashAlgorithm)
 							throws NoSuchAlgorithmException, NoSuchProviderException {
 
@@ -326,7 +360,7 @@ public class OAEPrsaes extends RSACipher {
 				break;
 		}
 
-	}
+	}*/
 
 	/**
 	 * Set the Label
@@ -334,6 +368,16 @@ public class OAEPrsaes extends RSACipher {
 	public void setPSource(byte[] pSource) {
 
 		this.pSource = pSource;
+
+	}
+
+	public void setSeed(byte[] seed) throws BadParameterException {
+
+		if (seed.length != digest.getDigestLength()) {
+			throw new BadParameterException("Invalid seed");
+		}
+		
+		this.seed = seed;
 
 	}
 
