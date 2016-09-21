@@ -73,6 +73,8 @@ public class OAEPrsaes extends RSACipher {
 			break;
 		}
 		digestLength = digest.getDigestLength();
+		// See emeOAEPencode a.
+		pSource = new byte[0];
 
 	}
 
