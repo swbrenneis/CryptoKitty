@@ -108,6 +108,7 @@ public class AES implements BlockCipher {
 			row2 = new Word();
 			row3 = new Word();
 		}
+		@SuppressWarnings("unused")
 		StateArray(Word r0, Word r1, Word r2, Word r3) {
 			copyWord(row0, r0);
 			copyWord(row1, r1);
@@ -115,7 +116,14 @@ public class AES implements BlockCipher {
 			copyWord(row3, r3);
 		}
 		StateArray(StateArray other) {
-			this(other.row0, other.row1, other.row2, other.row3);
+			row0 = new Word();
+			row1 = new Word();
+			row2 = new Word();
+			row3 = new Word();
+			copyWord(row0, other.row0);
+			copyWord(row1, other.row1);
+			copyWord(row2, other.row2);
+			copyWord(row3, other.row3);
 		}
 		Word row0;
 		Word row1;
@@ -208,7 +216,7 @@ public class AES implements BlockCipher {
 	 */
 	private static void copyWord(Word dest, Word src) {
 
-		dest.word = Arrays.copyOf(dest.word, dest.word.length);
+		dest.word = Arrays.copyOf(src.word, src.word.length);
 
 	}
 	
@@ -268,6 +276,7 @@ public class AES implements BlockCipher {
 
 	    Word roundKey[] = new Word[4];
 	    for (int n = 0; n < 4; ++n) {
+	    	roundKey[n] = new Word();
 	        copyWord(roundKey[n], keySchedule[n]);
 	    }
 	    AddRoundKey(roundKey);
@@ -304,6 +313,9 @@ public class AES implements BlockCipher {
 	    }
 
 	    Word keySchedule[] = new Word[(int)keyScheduleSize];
+	    for (int i = 0; i < keyScheduleSize; ++i) {
+	    	keySchedule[i] = new Word();
+	    }
 	    KeyExpansion(key, keySchedule);
 	    InvCipher(ciphertext, keySchedule);
 	    ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
@@ -329,6 +341,9 @@ public class AES implements BlockCipher {
 	    }
 
 	    Word keySchedule[] = new Word[(int)keyScheduleSize];
+	    for (int i = 0; i < keyScheduleSize; ++i) {
+	    	keySchedule[i] = new Word();
+	    }
 	    KeyExpansion(key, keySchedule);
 	    Cipher(plaintext, keySchedule);
 	    ByteArrayOutputStream ciphertext = new ByteArrayOutputStream();
@@ -407,6 +422,7 @@ public class AES implements BlockCipher {
 
 	    Word roundKey[] = new Word[4];
 	    for (int n = 0; n < 4; ++n) {
+	    	roundKey[n] = new Word();
 	        copyWord(roundKey[n], keySchedule[(Nr*Nb)+n]);
 	    }
 	    AddRoundKey(roundKey);
@@ -485,12 +501,16 @@ public class AES implements BlockCipher {
 	 */
 	private void InvSubBytes() {
 
-	    for (int col = 0; col < 4; ++col) {
-	        state.row0.word[col] = InvSbox[state.row0.word[col]];
-	        state.row1.word[col] = InvSbox[state.row1.word[col]];
-	        state.row2.word[col] = InvSbox[state.row2.word[col]];
-	        state.row3.word[col] = InvSbox[state.row3.word[col]];
-	    }
+		for (int col = 0; col < 4; ++col) {
+			int index = state.row0.word[col] & 0xff;
+			state.row0.word[col] = InvSbox[index];
+			index = state.row1.word[col] & 0xff;
+			state.row1.word[col] = InvSbox[index];
+			index = state.row2.word[col] & 0xff;
+			state.row2.word[col] = InvSbox[index];
+			index = state.row3.word[col] & 0xff;
+			state.row3.word[col] = InvSbox[index];
+		}
 
 	}
 
@@ -540,10 +560,13 @@ public class AES implements BlockCipher {
 	 */
 	private final void KeyExpansion(final byte[] key, Word[] keySchedule) {
 
-	    Word temp = new Word();
+		Word temp = new Word();
 
 	    // Copy the key into the key schedule.
 	    //keySchedule.copy(0, key, 0);
+	    //System.out.println("keySchedule length: " + Integer.toString(keySchedule.length));
+	    //System.out.println("Key length: " + Integer.toString(key.length));
+	    //System.out.println("Nk: " + Integer.toString(Nk));
 	    for (int i = 0; i < Nk; ++i) {
 	        for (int n = 0; n < 4; ++n) {
 	            keySchedule[i].word[n] = key[(i*4)+n];
@@ -561,7 +584,9 @@ public class AES implements BlockCipher {
 	            temp.word[3] = t;
 	            // SubWord()
 	            for (int n = 0; n < 4; ++n) {
-	                temp.word[n] = Sbox[temp.word[n]];
+	            	// Gosling sucks
+	            	int index = temp.word[n] & 0xff;
+	                temp.word[n] = Sbox[index];
 	            }
 	            // xor Rcon
 	            temp.word[0] = temp.word[0] ^ Rcon[i / Nk];
@@ -570,7 +595,8 @@ public class AES implements BlockCipher {
 	        else if (Nk > 6 && i % Nk == 4) { // 256 bit keys
 	            // SubWord()
 	            for (int n = 0; n < 4; ++n) {
-	                temp.word[n] = Sbox[temp.word[n]];
+	            	int index = temp.word[n] & 0xff;
+	                temp.word[n] = Sbox[index];
 	            }
 	        }
 	        Word wink = new Word();
@@ -593,26 +619,26 @@ public class AES implements BlockCipher {
 	 */
 	private void MixColumns() {
 
-	    StateArray m = new StateArray(state);
+		StateArray m = new StateArray(state);
 
-	    for (int c = 0; c < 4; ++c) {
-	        state.row0.word[c] = RijndaelMult(cx.row0.word[0], m.row0.word[c])
-	                        ^ RijndaelMult(cx.row0.word[1], m.row1.word[c])
-	                        ^ RijndaelMult(cx.row0.word[2], m.row2.word[c])
-	                        ^ RijndaelMult(cx.row0.word[3], m.row3.word[c]);
-	        state.row1.word[c] = RijndaelMult(cx.row1.word[0], m.row0.word[c])
-	                        ^ RijndaelMult(cx.row1.word[1], m.row1.word[c])
-	                        ^ RijndaelMult(cx.row1.word[2], m.row2.word[c])
-	                        ^ RijndaelMult(cx.row1.word[3], m.row3.word[c]);
-	        state.row2.word[c] = RijndaelMult(cx.row2.word[0], m.row0.word[c])
-	                        ^ RijndaelMult(cx.row2.word[1], m.row1.word[c])
-	                        ^ RijndaelMult(cx.row2.word[2], m.row2.word[c])
-	                        ^ RijndaelMult(cx.row2.word[3], m.row3.word[c]);
-	        state.row3.word[c] = RijndaelMult(cx.row3.word[0], m.row0.word[c])
-	                        ^ RijndaelMult(cx.row3.word[1], m.row1.word[c])
-	                        ^ RijndaelMult(cx.row3.word[2], m.row2.word[c])
-	                        ^ RijndaelMult(cx.row3.word[3], m.row3.word[c]);
-	    }
+		for (int c = 0; c < 4; ++c) {
+			state.row0.word[c] = RijndaelMult(cx.row0.word[0], m.row0.word[c])
+					^ RijndaelMult(cx.row0.word[1], m.row1.word[c])
+					^ RijndaelMult(cx.row0.word[2], m.row2.word[c])
+					^ RijndaelMult(cx.row0.word[3], m.row3.word[c]);
+			state.row1.word[c] = RijndaelMult(cx.row1.word[0], m.row0.word[c])
+					^ RijndaelMult(cx.row1.word[1], m.row1.word[c])
+					^ RijndaelMult(cx.row1.word[2], m.row2.word[c])
+					^ RijndaelMult(cx.row1.word[3], m.row3.word[c]);
+			state.row2.word[c] = RijndaelMult(cx.row2.word[0], m.row0.word[c])
+					^ RijndaelMult(cx.row2.word[1], m.row1.word[c])
+					^ RijndaelMult(cx.row2.word[2], m.row2.word[c])
+					^ RijndaelMult(cx.row2.word[3], m.row3.word[c]);
+			state.row3.word[c] = RijndaelMult(cx.row3.word[0], m.row0.word[c])
+					^ RijndaelMult(cx.row3.word[1], m.row1.word[c])
+					^ RijndaelMult(cx.row3.word[2], m.row2.word[c])
+					^ RijndaelMult(cx.row3.word[3], m.row3.word[c]);
+		}
 
 	}
 
@@ -741,12 +767,17 @@ public class AES implements BlockCipher {
 	 */
 	private void SubBytes() {
 
-	    for (int col = 0; col < 4; ++col) {
-	        state.row0.word[col] = Sbox[state.row0.word[col]];
-	        state.row1.word[col] = Sbox[state.row1.word[col]];
-	        state.row2.word[col] = Sbox[state.row2.word[col]];
-	        state.row3.word[col] = Sbox[state.row3.word[col]];
-	    }
+		for (int col = 0; col < 4; ++col) {
+			// Gosling really, really sucks.
+			int index = state.row0.word[col] & 0xff;
+			state.row0.word[col] = Sbox[index];
+			index = state.row1.word[col] & 0xff;
+			state.row1.word[col] = Sbox[index];
+			index = state.row2.word[col] & 0xff;
+			state.row2.word[col] = Sbox[index];
+			index = state.row3.word[col] & 0xff;
+			state.row3.word[col] = Sbox[index];
+		}
 
 	}
 
