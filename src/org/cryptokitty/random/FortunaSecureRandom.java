@@ -3,6 +3,8 @@
  */
 package org.cryptokitty.random;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author stevebrenneis
  *
@@ -35,10 +37,10 @@ public class FortunaSecureRandom extends SecureRandomWrapper implements SecureRa
 
 	}
 
-    /**
-     * Initialize the C++ object.
-     */
-    private native void initialize();
+	/**
+	 * Initialize the C++ object.
+	 */
+	private native void initialize();
 
 	/**
 	 * 
@@ -50,14 +52,26 @@ public class FortunaSecureRandom extends SecureRandomWrapper implements SecureRa
 	 * 
 	 * @return
 	 */
-	public native int nextInt();
+	public int nextInt() {
+
+		byte[] bytes = new byte[4];
+		ByteBuffer wrapper = ByteBuffer.wrap(bytes);
+		return wrapper.getInt();
+
+	}
 
 	/**
 	 * 
 	 * @return
 	 */
-	public native long nextLong();
+	public long nextLong() {
 
-    public static native void setStandalone(boolean standalone);
+		byte[] bytes = new byte[8];
+		ByteBuffer wrapper = ByteBuffer.wrap(bytes);
+		return wrapper.getLong();
+
+	}
+
+	public static native void setStandalone(boolean standalone);
 
 }
