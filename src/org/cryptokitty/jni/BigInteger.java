@@ -27,17 +27,17 @@ public class BigInteger {
 	public static final BigInteger ZERO = new BigInteger(0L);
 	public static final BigInteger ONE = new BigInteger(1L);
 
-    /**
-     * The opaque pointer to the underlying C++ object.
-     */
-    private long pointer;
+	/**
+	 * The opaque pointer to the underlying C++ object.
+	 */
+	private long pointer;
 
 	/**
 	 * 
 	 */
 	public BigInteger() {
 
-        pointer = 0;
+		pointer = 0;
 
 	}
 
@@ -46,8 +46,8 @@ public class BigInteger {
 	 */
 	public BigInteger(long lValue) {
 		
-        pointer = 0;
-        initialize(lValue);
+		pointer = 0;
+		initialize(lValue);
 
 	}
 
@@ -57,16 +57,16 @@ public class BigInteger {
 	 */
 	public native int bitLength();
 
-    /**
-     * Initialize the BigInteger with a long value.
-     */
-    public native void initialize(long lValue);
+	/**
+	 * Initialize the BigInteger with a long value.
+	 */
+	public native void initialize(long lValue);
 
 	/**
 	 * 
 	 * @param exp
 	 * @param m
-	 * @return A BigInteger that is the value of m raised to exp.
+	 * @return A BigInteger that is the value of this integer raised to exp mod m.
 	 */
 	public native BigInteger modPow(BigInteger exp, BigInteger m);
 
