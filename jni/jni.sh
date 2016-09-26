@@ -7,6 +7,8 @@ if [ ! -d "$BUILD" ]; then
 fi
 
 javac -cp ../src -d build ../src/org/cryptokitty/random/SecureRandom.java
+javac -cp ../src -d build ../src/org/cryptokitty/random/FortunaSecureRandom.java
 javac -cp ../src -d build ../src/org/cryptokitty/jni/BigInteger.java
 javah -cp build org.cryptokitty.jni.BigInteger
+javah -cp build org.cryptokitty.random.FortunaSecureRandom
 
