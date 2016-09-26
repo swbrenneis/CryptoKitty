@@ -18,7 +18,7 @@ public class BigInteger {
 	 * Load the CryptoKitty-C binary.
 	 */
 	static {
-		System.loadLibrary("cryptokitty");
+		System.loadLibrary("ckjni");
 	}
 
 	/**
@@ -37,7 +37,7 @@ public class BigInteger {
 	 */
 	public BigInteger() {
 
-		pointer = 0;
+		initialize();
 
 	}
 
@@ -46,7 +46,6 @@ public class BigInteger {
 	 */
 	public BigInteger(long lValue) {
 		
-		pointer = 0;
 		initialize(lValue);
 
 	}
@@ -57,10 +56,15 @@ public class BigInteger {
 	 */
 	public native int bitLength();
 
+    /**
+     * Initialize the BigInteger.
+     */
+    private native void initialize();
+
 	/**
 	 * Initialize the BigInteger with a long value.
 	 */
-	public native void initialize(long lValue);
+	private native void initialize(long lValue);
 
 	/**
 	 * 

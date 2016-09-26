@@ -13,7 +13,7 @@ public class FortunaSecureRandom extends SecureRandomWrapper implements SecureRa
 	 * Load the CryptoKitty-C binary.
 	 */
 	static {
-		System.loadLibrary("cryptokitty");
+		System.loadLibrary("ckjni");
 	}
 
 	/**
@@ -31,9 +31,14 @@ public class FortunaSecureRandom extends SecureRandomWrapper implements SecureRa
 	 */
 	public FortunaSecureRandom() {
 
-		pointer = 0;
+		initialize();
 
 	}
+
+    /**
+     * Initialize the C++ object.
+     */
+    private native void initialize();
 
 	/**
 	 * 
@@ -52,5 +57,7 @@ public class FortunaSecureRandom extends SecureRandomWrapper implements SecureRa
 	 * @return
 	 */
 	public native long nextLong();
+
+    public static native void setStandalone(boolean standalone);
 
 }
