@@ -27,16 +27,18 @@ public class BigInteger {
 	public static final BigInteger ZERO = new BigInteger(0L);
 	public static final BigInteger ONE = new BigInteger(1L);
 
-	/**
-	 * The highest order bit position containing a 1.
-	 */
-	private int length;
+    /**
+     * The opaque pointer to the underlying C++ object.
+     */
+    private long pointer;
 
 	/**
 	 * 
 	 */
 	public BigInteger() {
-		// TODO Auto-generated constructor stub
+
+        pointer = 0;
+
 	}
 
 	/**
@@ -44,17 +46,21 @@ public class BigInteger {
 	 */
 	public BigInteger(long lValue) {
 		
+        pointer = 0;
+        initialize(lValue);
+
 	}
 
 	/**
 	 * 
 	 * @return
 	 */
-	public int bitLength() {
+	public native int bitLength();
 
-		return length;
-
-	}
+    /**
+     * Initialize the BigInteger with a long value.
+     */
+    public native void initialize(long lValue);
 
 	/**
 	 * 
