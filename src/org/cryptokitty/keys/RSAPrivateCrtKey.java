@@ -19,7 +19,7 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	/**
 	 * Private exponent.
 	 */
-	private BigInteger d;
+	//private BigInteger d;
 
 	/**
 	 * Prime exponent p.
@@ -34,7 +34,7 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	/**
 	 * Public exponent.
 	 */
-	private BigInteger e;
+	//private BigInteger e;
 
 	/**
 	 * Modulus.
@@ -58,12 +58,13 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 
 	/**
 	 * 
-	 * @param p
-	 * @param q
-	 * @param d
-	 * @param e
+	 * @param p Prime P.
+	 * @param q Prime Q.
+	 * @param d Private exponent.
+	 * @param e Public exponent.
 	 */
 	public RSAPrivateCrtKey(BigInteger p, BigInteger q, BigInteger d, BigInteger e) {
+
 		this.p = p;
 		this.q = q;
 		BigInteger pp = p.subtract(BigInteger.ONE);
@@ -71,21 +72,44 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 		dP = e.modInverse(pp);
 		dQ = e.modInverse(qq);
 		qInv = q.modInverse(p);
-		this.d = d;
-		this.e = e;
+		//this.d = d;
+		//this.e = e;
 		
 		n = p.multiply(q);
 		bitsize = n.bitLength();
+
+	}
+
+	/**
+	 * 
+	 * @param p Prime P.
+	 * @param q Prime Q.
+	 * @param dP Prime exponent P.
+	 * @param dQ Prime exponent Q.
+	 * @param qInv CRT coefficient.
+	 */
+	public RSAPrivateCrtKey(BigInteger p, BigInteger q, BigInteger dP, BigInteger dQ,
+																			BigInteger qInv) {
+
+		this.p = p;
+		this.q = q;
+		this.dP = dP;
+		this.dQ = dQ;
+		this.qInv = qInv;
+
+		n = p.multiply(q);
+		bitsize = n.bitLength();
+
 	}
 
 	/**
 	 * 
 	 * @return
-	 */
 	public BigInteger getPrivateExponent() {
 		// TODO Auto-generated method stub
 		return d;
 	}
+	 */
 
 	/**
 	 * 
@@ -99,11 +123,11 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	/**
 	 * 
 	 * @return
-	 */
 	public BigInteger getPublicExponent() {
 		// TODO Auto-generated method stub
 		return e;
 	}
+	 */
 
 	/**
 	 * 
@@ -163,7 +187,7 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	public BigInteger rsadp(BigInteger c) throws IllegalBlockSizeException {
 
 		// We have to compute the modulus for the range check
-		BigInteger n = p.multiply(q);
+		// BigInteger n = p.multiply(q);	Hnadled in the constructor.
 
 		//   1. If the ciphertext representative c is not between 0 and n - 1,
 		//      output "ciphertext representative out of range" and stop.

@@ -3,8 +3,7 @@
  */
 package org.cryptokitty.keys;
 
-import java.math.BigInteger;
-
+import org.cryptokitty.jni.BigInteger;
 import org.cryptokitty.random.FortunaSecureRandom;
 
 /**
