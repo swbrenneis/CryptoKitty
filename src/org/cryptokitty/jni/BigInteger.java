@@ -3,8 +3,6 @@
  */
 package org.cryptokitty.jni;
 
-import org.cryptokitty.random.SecureRandom;
-
 /**
  * This is a JNI wrapper for the CryptoKitty-C BigInteger class.
  * The performance of the native Java implementation is terrible.
@@ -37,7 +35,7 @@ public class BigInteger {
 	 */
 	public BigInteger() {
 
-		initialize();
+		pointer = 0;
 
 	}
 
@@ -56,11 +54,6 @@ public class BigInteger {
 	 */
 	public native int bitLength();
 
-    /**
-     * Initialize the BigInteger.
-     */
-    private native void initialize();
-
 	/**
 	 * Initialize the BigInteger with a long value.
 	 */
@@ -76,11 +69,18 @@ public class BigInteger {
 
 	/**
 	 * Generate a high probability random BigInteger of bitsize bits.
+	 * Uses a native secure RNG for entropy.
 	 * 
 	 * @param bitsize
 	 * @param rnd
 	 * @return
 	 */
-	public static native BigInteger probablePrime(int bitsize, SecureRandom rnd);
+	public static native BigInteger probablePrime(int bitsize);
+
+	/**
+	 * 
+	 * @return Decimal string representation of this integer.
+	 */
+	public native String toString();
 
 }
