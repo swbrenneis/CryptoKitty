@@ -14,6 +14,7 @@ import java.security.SecureRandomSpi;
  * and the Java SecureRandom abstraction. It is used so that the CryptoKitty
  * secure RNGs can be used with the BigInteger class.
  */
+@SuppressWarnings("serial")
 public abstract class SecureRandomWrapper extends SecureRandom {
 
 	/**

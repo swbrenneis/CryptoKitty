@@ -4,7 +4,6 @@
 package org.cryptokitty.keys;
 
 import org.cryptokitty.jni.BigInteger;
-import org.cryptokitty.random.FortunaSecureRandom;
 
 /**
  * @author stevebrenneis
@@ -62,20 +61,19 @@ public class DHKeyExchange {
 	 */
 	public BigInteger generatePublicKey() {
 
-		FortunaSecureRandom rnd = new FortunaSecureRandom();
 	    if (p == BigInteger.ZERO) {
-	        p = BigInteger.probablePrime(bitsize, rnd);
+	        p = BigInteger.probablePrime(bitsize);
 	        while (p.bitLength() < bitsize) {
-	            p = BigInteger.probablePrime(bitsize, rnd);
+	            p = BigInteger.probablePrime(bitsize);
 	        }
-	        g = BigInteger.probablePrime(bitsize/2, rnd);
+	        g = BigInteger.probablePrime(bitsize/2);
 	        while (g.bitLength() < bitsize/2) {
-	            g = BigInteger.probablePrime(bitsize/2, rnd);
+	            g = BigInteger.probablePrime(bitsize/2);
 	        }
 	    }
 
 	    if (a == BigInteger.ZERO) {
-	        a = BigInteger.probablePrime(bitsize/4, rnd);
+	        a = BigInteger.probablePrime(bitsize/4);
 	    }
 
 	    publicKey = g.modPow(a, p);
@@ -120,8 +118,7 @@ public class DHKeyExchange {
 	public BigInteger getSecret(BigInteger fpk) {
 
 	    if (a == BigInteger.ZERO) {
-	    	FortunaSecureRandom rnd = new FortunaSecureRandom();
-	        a = BigInteger.probablePrime(bitsize/4, rnd);
+	        a = BigInteger.probablePrime(bitsize/4);
 	    }
 
 	    s = fpk.modPow(a, p);
