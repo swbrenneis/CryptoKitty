@@ -1,14 +1,7 @@
 #! /bin/sh
 
-BUILD=build
+javah -cp CryptoKitty.jar org.cryptokitty.jni.BigInteger
+javah -cp CryptoKitty.jar org.cryptokitty.random.FortunaSecureRandom
 
-if [ ! -d "$BUILD" ]; then
-    mkdir $BUILD  
-fi
-
-javac -cp ../src -d build ../src/org/cryptokitty/random/SecureRandom.java
-javac -cp ../src -d build ../src/org/cryptokitty/random/FortunaSecureRandom.java
-javac -cp ../src -d build ../src/org/cryptokitty/jni/BigInteger.java
-javah -cp build org.cryptokitty.jni.BigInteger
-javah -cp build org.cryptokitty.random.FortunaSecureRandom
+make
 

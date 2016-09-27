@@ -37,6 +37,6 @@ install:
 	cp --preserve=timestamps $(LIBRARY) $(INSTALL_PATH)/lib64
 	chmod 755 $(INSTALL_PATH)/lib64/$(LIBRARY)
 	chown root:root $(INSTALL_PATH)/lib64/$(LIBRARY)
-	strip $(INSTALL_PATH)/lib64/$(LIBRARY)
+#	strip $(INSTALL_PATH)/lib64/$(LIBRARY)
 
 -include $(DEPEND)
