@@ -3,7 +3,6 @@
  */
 package org.cryptokitty.test;
 
-import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -29,6 +28,7 @@ import org.cryptokitty.keys.RSAPrivateModKey;
 import org.cryptokitty.keys.RSAPublicKey;
 import org.cryptokitty.xprovider.CryptoKittyProvider;
 import org.cryptokitty.digest.Digest;
+import org.cryptokitty.jni.BigInteger;
 
 /**
  * @author Steve Brenneis
@@ -214,13 +214,13 @@ public class RSATest {
 					(byte)0xcf, (byte)0xcd, (byte)0xd3, (byte)0xde, 0x65, 0x37,
 					0x29, (byte)0xea, (byte)0xd5, (byte)0xd1 };
 
-			BigInteger n = new BigInteger(1, N1);
-			BigInteger e = new BigInteger(1, E1);
+			BigInteger n = new BigInteger(N1);
+			BigInteger e = new BigInteger(E1);
 			RSAPublicKey pkcsPublicKey1 = new RSAPublicKey(n, e);
-			BigInteger d = new BigInteger(1, D1);
+			BigInteger d = new BigInteger(D1);
 			RSAPrivateModKey pkcsPrivateModKey1 = new RSAPrivateModKey(n, d);
-			BigInteger p = new BigInteger(1, P1);
-			BigInteger q = new BigInteger(1, Q1);
+			BigInteger p = new BigInteger(P1);
+			BigInteger q = new BigInteger(Q1);
 			RSAPrivateCrtKey pkcsPrivateCrtKey1 = new RSAPrivateCrtKey(p, q, d, e);
 
 			rsae = Cipher.getInstance("RSA", "CryptoKitty");

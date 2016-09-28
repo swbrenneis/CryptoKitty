@@ -5,7 +5,6 @@ package org.cryptokitty.signature;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 
 import java.util.Arrays;
 
@@ -20,6 +19,7 @@ import org.cryptokitty.cipher.CKRSAmgf1;
 import org.cryptokitty.digest.Digest;
 import org.cryptokitty.exceptions.BadParameterException;
 import org.cryptokitty.exceptions.SignatureException;
+import org.cryptokitty.jni.BigInteger;
 
 /**
  * @author Steve Brenneis

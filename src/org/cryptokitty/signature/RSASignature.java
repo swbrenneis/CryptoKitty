@@ -3,13 +3,13 @@
  */
 package org.cryptokitty.signature;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.cryptokitty.exceptions.BadParameterException;
 import org.cryptokitty.exceptions.SignatureException;
 import org.cryptokitty.keys.RSAPrivateKey;
 import org.cryptokitty.keys.RSAPublicKey;
+import org.cryptokitty.jni.BigInteger;
 
 /**
  * @author Steve Brenneis
@@ -36,7 +36,7 @@ public abstract class RSASignature {
 	/*
 	 * BigInteger byte mask.
 	 */
-	private static final BigInteger MASK = BigInteger.valueOf(0xff);
+	private static final BigInteger MASK = new BigInteger(0xffL);
 	
 	/*
 	 * Hash algorithm.
@@ -63,11 +63,11 @@ public abstract class RSASignature {
 	protected byte[] i2osp(BigInteger x, int xLen)
 							throws SignatureException {
 		
-		if (x.compareTo(BigInteger.valueOf(256).pow(xLen)) > 0) {
+		if (x.compareTo(new BigInteger(256L).pow(xLen)) > 0) {
 			throw new SignatureException("Invalid signature");
 		}
 
-		BigInteger work = new BigInteger(x.toString());
+		BigInteger work = BigInteger.copy(x);
 		byte[] xBytes = new byte[xLen];
 		Arrays.fill(xBytes, (byte)0x00);
 		int index = xLen - 1;
@@ -84,9 +84,9 @@ public abstract class RSASignature {
 	 * unreliable results, so we'll do it the hard way.
 	 */
 	protected BigInteger os2ip(byte[] X) {
-		BigInteger bi = BigInteger.valueOf(X[0] & 0xff);
+		BigInteger bi = new BigInteger(X[0] & 0xff);
 		for (int i = 1; i < X.length; ++i) {
-			bi = bi.shiftLeft(8).or(BigInteger.valueOf((X[i] & 0xff)));
+			bi = bi.shiftLeft(8).or(new BigInteger((X[i] & 0xff)));
 		}
 		return bi;
 	}

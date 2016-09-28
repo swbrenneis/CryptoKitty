@@ -3,8 +3,7 @@
  */
 package org.cryptokitty.keys;
 
-import java.math.BigInteger;
-
+import org.cryptokitty.jni.BigInteger;
 import org.cryptokitty.exceptions.SignatureException;
 import org.cryptokitty.exceptions.IllegalBlockSizeException;
 import org.cryptokitty.exceptions.BadParameterException;
