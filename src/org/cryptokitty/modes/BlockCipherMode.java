@@ -3,7 +3,7 @@ package org.cryptokitty.modes;
 import org.cryptokitty.exceptions.BadParameterException;
 import org.cryptokitty.exceptions.IllegalBlockSizeException;
 
-public interface BlockMode {
+public interface BlockCipherMode {
 
 	/**
 	 * Decrypt a series of bits.
