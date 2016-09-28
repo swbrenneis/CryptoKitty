@@ -5,7 +5,6 @@ package org.cryptokitty.signature;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.cryptokitty.digest.Digest;
@@ -16,6 +15,7 @@ import org.cryptokitty.digest.SHA512;
 import org.cryptokitty.exceptions.SignatureException;
 import org.cryptokitty.keys.RSAPrivateKey;
 import org.cryptokitty.keys.RSAPublicKey;
+import org.cryptokitty.jni.BigInteger;
 
 /**
  * @author Steve Brenneis

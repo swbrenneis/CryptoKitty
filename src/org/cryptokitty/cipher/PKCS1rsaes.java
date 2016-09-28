@@ -3,7 +3,6 @@
  */
 package org.cryptokitty.cipher;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -13,6 +12,7 @@ import org.cryptokitty.exceptions.InvalidPaddingException;
 import org.cryptokitty.keys.RSAPrivateKey;
 import org.cryptokitty.keys.RSAPublicKey;
 import org.cryptokitty.xprovider.random.BBSSecureRandom;
+import org.cryptokitty.jni.BigInteger;
 
 /**
  * @author Steve Brenneis

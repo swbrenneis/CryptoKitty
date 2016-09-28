@@ -3,7 +3,7 @@
  */
 package org.cryptokitty.keys;
 
-import java.math.BigInteger;
+import org.cryptokitty.jni.BigInteger;
 import java.security.PublicKey;
 
 /**
