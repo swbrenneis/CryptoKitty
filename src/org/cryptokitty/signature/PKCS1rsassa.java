@@ -26,6 +26,7 @@ public class PKCS1rsassa extends RSASignature {
 
 	/**
 	 * DER hash algorithm identifiers.
+	 */
 	private final static byte[] SHA1_DER =
 				{ 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e,
 					0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14 };
@@ -41,7 +42,6 @@ public class PKCS1rsassa extends RSASignature {
 				{ 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte)0x86,
 					0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05,
 					0x00, 0x04, 0x40 };
-	 */
 
 	/*
 	 * The ASN.1 hash algorithm identifier.
@@ -62,15 +62,19 @@ public class PKCS1rsassa extends RSASignature {
 		switch (type) {
 		case SHA224:
 			digest = new SHA224();
+			algorithmOID = SHA1_DER;
 			break;
 		case SHA256:
 			digest = new SHA256();
+			algorithmOID = SHA256_DER;
 			break;
 		case SHA384:
 			digest = new SHA384();
+			algorithmOID = SHA384_DER;
 			break;
 		case SHA512:
 			digest = new SHA512();
+			algorithmOID = SHA512_DER;
 			break;
 		}
 		//digestLength = digest.getDigestLength();
