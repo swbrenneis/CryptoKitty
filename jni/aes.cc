@@ -1,5 +1,5 @@
 #include "org_cryptokitty_cipher_AES.h"
-#include "ByteArrayHolder.h"
+#include "ByteArrayCodec.h"
 #include <CryptoKitty-C/cipher/AES.h>
 #include <CryptoKitty-C/exceptions/BadParameterException.h>
 #include <coder/ByteArray.h>
@@ -24,18 +24,14 @@ Java_org_cryptokitty_cipher_AES_decrypt (JNIEnv *env, jobject thisObj, jbyteArra
 
     CK::AES *ref = getReference(env, thisObj);
     // Retrieve ciphertext and key
-    ByteArrayHolder ctHolder(env, ciphertextIn);
-    ByteArrayHolder keyHolder(env, keyIn);
+    ByteArrayCodec ctCodec(env, ciphertextIn);
+    ByteArrayCodec keyCodec(env, keyIn);
     // Do decryption
     try {
-        coder::ByteArray plaintext(ref->decrypt(ctHolder.getBytes(), keyHolder.getBytes()));
+        coder::ByteArray plaintext(ref->decrypt(ctCodec.getBytes(), keyCodec.getBytes()));
         // Convert output array
-        uint8_t *pbytes = plaintext.asArray();
-        jbyte *jarray = reinterpret_cast<jbyte*>(pbytes);
-        jbyteArray out = env->NewByteArray(plaintext.getLength());
-        env->SetByteArrayRegion(out, 0, plaintext.getLength(), jarray);
-        delete[] pbytes;
-        return out;
+        ByteArrayCodec ptCodec(env, plaintext);
+        return ptCodec.getJBytes();
     }
     catch (CK::BadParameterException& e) {
         jclass bpe = env->FindClass("org/cryptokitty/exceptions/BadParameterException");
@@ -52,18 +48,14 @@ Java_org_cryptokitty_cipher_AES_encrypt (JNIEnv *env, jobject thisObj, jbyteArra
 
     CK::AES *ref = getReference(env, thisObj);
     // Retrieve plaintext and key
-    ByteArrayHolder ptHolder(env, plaintextIn);
-    ByteArrayHolder keyHolder(env, keyIn);
+    ByteArrayCodec ptCodec(env, plaintextIn);
+    ByteArrayCodec keyCodec(env, keyIn);
     try {
         // Do encryption
-        coder::ByteArray ciphertext(ref->encrypt(ptHolder.getBytes(), keyHolder.getBytes()));
+        coder::ByteArray ciphertext(ref->encrypt(ptCodec.getBytes(), keyCodec.getBytes()));
         // Convert output array
-        uint8_t *cbytes = ciphertext.asArray();
-        jbyte *jarray = reinterpret_cast<jbyte*>(cbytes);
-        jbyteArray out = env->NewByteArray(ciphertext.getLength());
-        env->SetByteArrayRegion(out, 0, ciphertext.getLength(), jarray);
-        delete[] cbytes;
-        return out;
+        ByteArrayCodec ctCodec(env, ciphertext);
+        return ctCodec.getJBytes();
     }
     catch (CK::BadParameterException& e) {
         jclass bpe = env->FindClass("org/cryptokitty/exceptions/BadParameterException");

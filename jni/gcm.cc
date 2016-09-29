@@ -1,5 +1,5 @@
 #include "org_cryptokitty_modes_GCM.h"
-#include "ByteArrayHolder.h"
+#include "ByteArrayCodec.h"
 #include <CryptoKitty-C/ciphermodes/GCM.h>
 #include <CryptoKitty-C/cipher/BlockCipher.h>
 #include <CryptoKitty-C/exceptions/BadParameterException.h>
@@ -37,18 +37,14 @@ Java_org_cryptokitty_modes_GCM_decrypt (JNIEnv *env, jobject thisObj, jbyteArray
 
     CK::GCM *ref = getReference(env, thisObj);
     // Retrieve ciphertext and key
-    ByteArrayHolder ctHolder(env, ciphertextIn);
-    ByteArrayHolder keyHolder(env, keyIn);
+    ByteArrayCodec ctCodec(env, ciphertextIn);
+    ByteArrayCodec keyCodec(env, keyIn);
     // Do decryption
     try {
-        coder::ByteArray plaintext(ref->decrypt(ctHolder.getBytes(), keyHolder.getBytes()));
+        coder::ByteArray plaintext(ref->decrypt(ctCodec.getBytes(), keyCodec.getBytes()));
         // Convert output array
-        uint8_t *pbytes = plaintext.asArray();
-        jbyte *jarray = reinterpret_cast<jbyte*>(pbytes);
-        jbyteArray out = env->NewByteArray(plaintext.getLength());
-        env->SetByteArrayRegion(out, 0, plaintext.getLength(), jarray);
-        delete[] pbytes;
-        return out;
+        ByteArrayCodec ptCodec(env, plaintext);
+        return ptCodec.getJBytes();
     }
     catch (CK::BadParameterException& e) {
         jclass bpe = env->FindClass("org/cryptokitty/exceptions/BadParameterException");
@@ -65,18 +61,14 @@ Java_org_cryptokitty_modes_GCM_encrypt (JNIEnv *env, jobject thisObj, jbyteArray
 
     CK::GCM *ref = getReference(env, thisObj);
     // Retrieve plaintext and key
-    ByteArrayHolder ptHolder(env, plaintextIn);
-    ByteArrayHolder keyHolder(env, keyIn);
+    ByteArrayCodec ptCodec(env, plaintextIn);
+    ByteArrayCodec keyCodec(env, keyIn);
     try {
         // Do encryption
-        coder::ByteArray ciphertext(ref->encrypt(ptHolder.getBytes(), keyHolder.getBytes()));
+        coder::ByteArray ciphertext(ref->encrypt(ptCodec.getBytes(), keyCodec.getBytes()));
         // Convert output array
-        uint8_t *cbytes = ciphertext.asArray();
-        jbyte *jarray = reinterpret_cast<jbyte*>(cbytes);
-        jbyteArray out = env->NewByteArray(ciphertext.getLength());
-        env->SetByteArrayRegion(out, 0, ciphertext.getLength(), jarray);
-        delete[] cbytes;
-        return out;
+        ByteArrayCodec ctCodec(env, ciphertext);
+        return ctCodec.getJBytes();
     }
     catch (CK::BadParameterException& e) {
         jclass bpe = env->FindClass("org/cryptokitty/exceptions/BadParameterException");
@@ -107,8 +99,8 @@ Java_org_cryptokitty_modes_GCM_setAuthenticationData (JNIEnv *env, jobject thisO
                                                                             jbyteArray adIn) {
 
     CK::GCM *ref = getReference(env, thisObj);
-    ByteArrayHolder adHolder(env, adIn);
-    ref->setAuthenticationData(adHolder.getBytes());
+    ByteArrayCodec adCodec(env, adIn);
+    ref->setAuthenticationData(adCodec.getBytes());
 
 }
 
@@ -116,8 +108,8 @@ JNIEXPORT void JNICALL
 Java_org_cryptokitty_modes_GCM_setIV (JNIEnv *env, jobject thisObj, jbyteArray ivIn) {
 
     CK::GCM *ref = getReference(env, thisObj);
-    ByteArrayHolder ivHolder(env, ivIn);
-    ref->setIV(ivHolder.getBytes());
+    ByteArrayCodec ivCodec(env, ivIn);
+    ref->setIV(ivCodec.getBytes());
 
 }
 
