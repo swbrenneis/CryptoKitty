@@ -1,4 +1,5 @@
 #include "org_cryptokitty_jni_BigInteger.h"
+#include "ByteArrayHolder.h"
 #include <CryptoKitty-C/data/BigInteger.h>
 #include <CryptoKitty-C/random/FortunaSecureRandom.h>
 #include <sstream>
@@ -33,13 +34,28 @@ Java_org_cryptokitty_jni_BigInteger_bitLength (JNIEnv *env, jobject thisObj) {
 }
 
 JNIEXPORT void JNICALL
-Java_org_cryptokitty_jni_BigInteger_initialize (JNIEnv *env, jobject thisObj, jlong lValue) {
+Java_org_cryptokitty_jni_BigInteger_initialize__J (JNIEnv *env, jobject thisObj, jlong lValue) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
     // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
     jlong pointer = env->GetLongField(thisObj, fieldId);
     pointer = reinterpret_cast<jlong>(new CK::BigInteger(lValue));
+    env->SetLongField(thisObj, fieldId, pointer);
+
+}
+
+JNIEXPORT void JNICALL
+Java_org_cryptokitty_jni_BigInteger_initialize___3B (JNIEnv *env, jobject thisObj,
+                                                                    jbyteArray encoded) {
+
+    ByteArrayHolder eHolder(env, encoded);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    // TODO Throw an exception if null.
+    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
+    jlong pointer = env->GetLongField(thisObj, fieldId);
+    pointer =
+        reinterpret_cast<jlong>(new CK::BigInteger(eHolder.getBytes(), CK::BigInteger::BIGENDIAN));
     env->SetLongField(thisObj, fieldId, pointer);
 
 }
