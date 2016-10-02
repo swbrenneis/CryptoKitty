@@ -7,10 +7,12 @@ LDFLAGS= -Wall -g -shared -Wl,--no-undefined $(LDPATHS) $(LDLIBS)
 
 CPP= g++
 CPPDEFINES= -D_GNU_SOURCE -D_REENTRANT
-CPPINCLUDES= -I/usr/java/default/include -I/usr/java/default/include/linux
+CPPINCLUDES= -I/usr/java/default/include -I/usr/java/default/include/linux \
+			 -I/usr/local/include/CryptoKitty-C
 CPPFLAGS= -Wall -g -std=c++11 -Wl,--add-stdcall-alias -MMD -fPIC $(CPPDEFINES) $(CPPINCLUDES)
 
-CPP_SOURCES= ByteArrayCodec.cc biginteger.cc fortunarandom.cc aes.cc gcm.cc hmac.cc
+CPP_SOURCES= ByteArrayCodec.cc aes.cc biginteger.cc fortunarandom.cc gcm.cc hmac.cc \
+			 rsakeypairgenerator.cc
 
 CPP_OBJECT= $(CPP_SOURCES:.cc=.o)
 DEPEND= $(CPP_OBJECT:.o=.d)
@@ -18,7 +20,8 @@ DEPEND= $(CPP_OBJECT:.o=.d)
 .PHONY: clean install
 
 JNI_HEADERS= org_cryptokitty_jni_BigInteger.h org_cryptokitty_random_FortunaSecureRandom.h \
-			 org_cryptokitty_cipher_AES.h org_cryptokitty_modes_GCM.h org_cryptokitty_mac_HMAC.h
+			 org_cryptokitty_cipher_AES.h org_cryptokitty_modes_GCM.h org_cryptokitty_mac_HMAC.h \
+			 org_cryptokitty_keys_RSAKeyPairGenerator.h org_cryptokitty_jni_JNIReference.h
 BUILD_DIR= build
 
 LIBRARY= libckjni.so
