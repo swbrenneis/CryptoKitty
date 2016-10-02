@@ -7,28 +7,28 @@
 #include <coder/ByteArray.h>
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::GCM *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
     // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::GCM*>(pointer);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    return reinterpret_cast<CK::GCM*>(jniImpl);
 
 }
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::BlockCipher *getCipherReference(JNIEnv *env, jobject cipherObj) {
 
     jclass thisClass = env->GetObjectClass(cipherObj);
     // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(cipherObj, fieldId);
-    return reinterpret_cast<CK::BlockCipher*>(pointer);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(cipherObj, fieldId);
+    return reinterpret_cast<CK::BlockCipher*>(jniImpl);
 
 }
 
@@ -60,6 +60,13 @@ Java_org_cryptokitty_modes_GCM_decrypt (JNIEnv *env, jobject thisObj, jbyteArray
 
 }
 
+JNIEXPORT void JNICALL
+Java_org_cryptokitty_modes_GCM_dispose (JNIEnv *env, jobject thisObj) {
+
+    delete getReference(env, thisObj);
+
+}
+
 JNIEXPORT jbyteArray JNICALL
 Java_org_cryptokitty_modes_GCM_encrypt (JNIEnv *env, jobject thisObj, jbyteArray plaintextIn,
                                                                             jbyteArray keyIn) {
@@ -84,18 +91,13 @@ Java_org_cryptokitty_modes_GCM_encrypt (JNIEnv *env, jobject thisObj, jbyteArray
 
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_modes_GCM_initialize (JNIEnv *env, jobject thisObj, jobject cipherObj,
                                                                             jboolean appendTag) {
 
     CK::BlockCipher *cipher = getCipherReference(env, cipherObj);
     CK::GCM *ref = new CK::GCM(cipher, appendTag);
-    jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    pointer = reinterpret_cast<jlong>(ref);
-    env->SetLongField(thisObj, fieldId, pointer);
+    return reinterpret_cast<jlong>(ref);
 
 }
 
