@@ -3,6 +3,7 @@
 #include <CryptoKitty-C/ciphermodes/GCM.h>
 #include <CryptoKitty-C/cipher/BlockCipher.h>
 #include <CryptoKitty-C/exceptions/BadParameterException.h>
+#include <CryptoKitty-C/exceptions/AuthenticationException.h>
 #include <coder/ByteArray.h>
 
 /**
@@ -49,6 +50,10 @@ Java_org_cryptokitty_modes_GCM_decrypt (JNIEnv *env, jobject thisObj, jbyteArray
     catch (CK::BadParameterException& e) {
         jclass bpe = env->FindClass("org/cryptokitty/exceptions/BadParameterException");
         env->ThrowNew(bpe, e.what());
+    }
+    catch (CK::AuthenticationException& e) {
+        jclass ae = env->FindClass("org/cryptokitty/exceptions/AuthenticationException");
+        env->ThrowNew(ae, e.what());
     }
     // Won't get here.
     return 0;

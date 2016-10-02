@@ -117,30 +117,27 @@ Java_org_cryptokitty_jni_BigInteger_getEncoded (JNIEnv *env, jobject thisObj) {
 
 }
 
-JNIEXPORT void JNICALL
-Java_org_cryptokitty_jni_BigInteger_initialize__J (JNIEnv *env, jobject thisObj, jlong lValue) {
+JNIEXPORT jlong JNICALL
+Java_org_cryptokitty_jni_BigInteger_initialize__ (JNIEnv *, jobject) {
 
-    jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    pointer = reinterpret_cast<jlong>(new CK::BigInteger(lValue));
-    env->SetLongField(thisObj, fieldId, pointer);
+    return reinterpret_cast<jlong>(new CK::BigInteger);
 
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jlong JNICALL
+Java_org_cryptokitty_jni_BigInteger_initialize__J (JNIEnv *env, jobject thisObj, jlong lValue) {
+
+    return  reinterpret_cast<jlong>(new CK::BigInteger(lValue));
+
+}
+
+JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_jni_BigInteger_initialize___3B (JNIEnv *env, jobject thisObj,
                                                                     jbyteArray encoded) {
 
     ByteArrayCodec eCodec(env, encoded);
-    jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    pointer =
-        reinterpret_cast<jlong>(new CK::BigInteger(eCodec.getBytes(), CK::BigInteger::BIGENDIAN));
-    env->SetLongField(thisObj, fieldId, pointer);
+    return reinterpret_cast<jlong>(
+                    new CK::BigInteger(eCodec.getBytes(), CK::BigInteger::BIGENDIAN));
 
 }
 
