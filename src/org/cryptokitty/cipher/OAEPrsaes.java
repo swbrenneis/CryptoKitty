@@ -17,6 +17,7 @@ import org.cryptokitty.exceptions.IllegalBlockSizeException;
 import org.cryptokitty.exceptions.InvalidPaddingException;
 import org.cryptokitty.keys.RSAPrivateKey;
 import org.cryptokitty.keys.RSAPublicKey;
+import org.cryptokitty.random.FortunaSecureRandom;
 import org.cryptokitty.jni.BigInteger;
 
 /**
@@ -252,7 +253,12 @@ public class OAEPrsaes extends RSACipher {
 		}
 
 		// d. Generate a random octet string seed of length hLen.
-		// The seed should be set in the setSeed function.
+		// The seed can be set in the setSeed function.
+		if (seed == null) {
+			FortunaSecureRandom rnd = new FortunaSecureRandom();
+			seed = new byte[hLen];
+			rnd.nextBytes(seed);
+		}
 		if (seed.length != hLen) {
 			throw new InvalidPaddingException("Invalid seed");
 		}

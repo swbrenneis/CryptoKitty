@@ -14,6 +14,13 @@ import org.cryptokitty.exceptions.InvalidKeyException;
 public class AES implements BlockCipher {
 
 	/**
+	 * Load the CryptoKitty-C binary.
+	 */
+	static {
+		System.loadLibrary("ckjni");
+	}
+
+	/**
 	 * Key size enumerators.
 	 */
 	public static final int AES128 = 16;
@@ -23,7 +30,7 @@ public class AES implements BlockCipher {
 	/**
 	 * JNI implementation pointer.
 	 */
-	private long pointer;
+	private long jniImpl;
 
 	/**
 	 * @throws InvalidKeyException 
@@ -35,7 +42,7 @@ public class AES implements BlockCipher {
 			case AES128:
 			case AES192:
 			case AES256:
-				initialize(keySize);
+				jniImpl = initialize(keySize);
 				break;
 			default:
 				throw new InvalidKeyException("Invalid AES key size");
@@ -50,12 +57,28 @@ public class AES implements BlockCipher {
 	public native byte[] decrypt(byte[] ciphertext, byte[] key)
 							throws BadParameterException, IllegalBlockSizeException;
 
+	/**
+	 * Free JNI resources.
+	 */
+	private native void dispose();
+
 	/* (non-Javadoc)
 	 * @see org.cryptokitty.cipher.BlockCipher#encrypt(byte[], byte[])
 	 */
 	@Override
 	public native byte[] encrypt(byte[] plaintext, byte[] key)
 							throws BadParameterException, IllegalBlockSizeException;
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	public void finalize() throws Throwable {
+
+		dispose();
+
+	}
 
 	/* (non-Javadoc)
 	 * @see org.cryptokitty.cipher.BlockCipher#getBlockSize()
@@ -72,7 +95,7 @@ public class AES implements BlockCipher {
 	 * 
 	 * @param keySize
 	 */
-	private native void initialize(int keySize);
+	private native long initialize(int keySize);
 
 	/* (non-Javadoc)
 	 * @see org.cryptokitty.cipher.BlockCipher#reset()

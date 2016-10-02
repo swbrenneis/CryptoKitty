@@ -20,22 +20,22 @@ public class BigInteger {
 	}
 
 	/**
+	 * JNI implementation pointer.
+	 */
+	private long jniImpl;
+
+	/**
 	 * Zero and one constants.
 	 */
 	public static final BigInteger ZERO = new BigInteger(0L);
 	public static final BigInteger ONE = new BigInteger(1L);
 
 	/**
-	 * The opaque pointer to the underlying C++ object.
-	 */
-	private long pointer;
-
-	/**
 	 * 
 	 */
 	public BigInteger() {
 
-		pointer = 0;
+		jniImpl = initialize();
 
 	}
 
@@ -44,7 +44,7 @@ public class BigInteger {
 	 */
 	public BigInteger(long lValue) {
 		
-		initialize(lValue);
+		jniImpl = initialize(lValue);
 
 	}
 
@@ -53,7 +53,7 @@ public class BigInteger {
 	 */
 	public BigInteger(byte[] bytes) {
 
-		initialize(bytes);
+		jniImpl = initialize(bytes);
 
 	}
 
@@ -100,6 +100,22 @@ public class BigInteger {
 	public static native BigInteger copy(BigInteger other);
 
 	/**
+	 * Free JNI resources.
+	 */
+	private native void dispose();
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	public void finalize() throws Throwable {
+
+		dispose();
+
+	}
+
+	/**
 	 * 
 	 * @param other
 	 * @return A BigInteger that is the value of the greatest common
@@ -114,18 +130,23 @@ public class BigInteger {
 	public native byte[] getEncoded();
 
 	/**
+	 * Initialize the BigInteger with a default value (ZERO).
+	 */
+	protected native long initialize();
+
+	/**
 	 * Initialize the BigInteger with a long value.
 	 * 
 	 * @param lValue
 	 */
-	private native void initialize(long lValue);
+	private native long initialize(long lValue);
 
 	/**
 	 * Initialize the BigInteger with a byte array.
 	 * 
 	 * @param bytes
 	 */
-	private native void initialize(byte[] bytes);
+	private native long initialize(byte[] bytes);
 
 	/**
 	 * 
