@@ -9,19 +9,11 @@
  */
 static CK::BigInteger *getReference(JNIEnv *env, jobject thisObj) {
 
-    jclass thisClass = env->GetObjectClass(thisObj);
+    jclass thisClass = env->FindClass("org/cryptokitty/jni/BigInteger");
     // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong pointer = env->GetLongField(thisObj, fieldId);
-    if (pointer != 0) {
-        return reinterpret_cast<CK::BigInteger*>(pointer);
-    }
-    else {
-        CK::BigInteger *ref = new CK::BigInteger;
-        pointer = reinterpret_cast<jlong>(ref);
-        env->SetLongField(thisObj, fieldId, pointer);
-        return ref;
-    }
+    return reinterpret_cast<CK::BigInteger*>(pointer);
 
 }
 
@@ -30,7 +22,7 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
     jclass biClass = env->FindClass("org/cryptokitty/jni/BigInteger");
     jmethodID initId = env->GetMethodID(biClass, "<init>", "()V");
     jobject biObj = env->NewObject(biClass, initId);
-    jfieldID fieldId = env->GetFieldID(biClass, "pointer", "J");
+    jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
     jlong pointer = env->GetLongField(biObj, fieldId);
     pointer = reinterpret_cast<jlong>(new CK::BigInteger(integer));
     env->SetLongField(biObj, fieldId, pointer);
@@ -99,6 +91,13 @@ Java_org_cryptokitty_jni_BigInteger_copy (JNIEnv *env, jclass, jobject otherObj)
 
 }
 
+JNIEXPORT void JNICALL
+Java_org_cryptokitty_jni_BigInteger_dispose (JNIEnv *env, jobject thisObj) {
+
+    delete getReference(env, thisObj);
+
+}
+
 JNIEXPORT jobject JNICALL
 Java_org_cryptokitty_jni_BigInteger_gcd (JNIEnv *env, jobject thisObj, jobject otherObj) {
 
@@ -127,7 +126,7 @@ Java_org_cryptokitty_jni_BigInteger_initialize__ (JNIEnv *, jobject) {
 JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_jni_BigInteger_initialize__J (JNIEnv *env, jobject thisObj, jlong lValue) {
 
-    return  reinterpret_cast<jlong>(new CK::BigInteger(lValue));
+    return reinterpret_cast<jlong>(new CK::BigInteger(lValue));
 
 }
 

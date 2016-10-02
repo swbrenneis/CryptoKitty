@@ -9,15 +9,15 @@
 #include <CryptoKitty-C/exceptions/BadParameterException.h>
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::HMAC *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
     // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::HMAC*>(pointer);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    return reinterpret_cast<CK::HMAC*>(jniImpl);
 
 }
 
@@ -36,6 +36,13 @@ JNICALL Java_org_cryptokitty_mac_HMAC_authenticate (JNIEnv *env, jobject thisObj
     }
     // Won't get here.
     return 0;
+
+}
+
+JNIEXPORT void JNICALL
+Java_org_cryptokitty_mac_HMAC_dispose (JNIEnv *env, jobject thisObj) {
+
+    delete getReference(env, thisObj);
 
 }
 
@@ -81,7 +88,7 @@ Java_org_cryptokitty_mac_HMAC_getDigestLength (JNIEnv *env, jobject thisObj) {
 
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_mac_HMAC_initialize (JNIEnv *env, jobject thisObj, jint digestType) {
 
     CK::Digest *digest;
@@ -100,14 +107,7 @@ Java_org_cryptokitty_mac_HMAC_initialize (JNIEnv *env, jobject thisObj, jint dig
             digest = new CK::SHA512;
             break;
     }
-    CK::HMAC *ref = new CK::HMAC(digest);
-
-    jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    pointer = reinterpret_cast<jlong>(ref);
-    env->SetLongField(thisObj, fieldId, pointer);
+    return reinterpret_cast<jlong>(new CK::HMAC(digest));
 
 }
 

@@ -7,15 +7,15 @@
 #include <CryptoKitty-C/data/BigInteger.h>
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::RSAKeyPairGenerator *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
     // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::RSAKeyPairGenerator*>(pointer);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    return reinterpret_cast<CK::RSAKeyPairGenerator*>(jniImpl);
 
 }
 
@@ -24,25 +24,34 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
     jclass biClass = env->FindClass("org/cryptokitty/jni/BigInteger");
     jmethodID initId = env->GetMethodID(biClass, "<init>", "()V");
     jobject biObj = env->NewObject(biClass, initId);
-    jfieldID fieldId = env->GetFieldID(biClass, "pointer", "J");
-    jlong pointer = env->GetLongField(biObj, fieldId);
-    pointer = reinterpret_cast<jlong>(new CK::BigInteger(integer));
-    env->SetLongField(biObj, fieldId, pointer);
+    jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(biObj, fieldId);
+    jniImpl = reinterpret_cast<jlong>(new CK::BigInteger(integer));
+    env->SetLongField(biObj, fieldId, jniImpl);
     return biObj;
 
 }
 
 JNIEXPORT void JNICALL
-Java_org_cryptokitty_keys_RSAKeyPairGenerator_initialize (JNIEnv *env, jobject thisObj, jint keysize) {
+Java_org_cryptokitty_keys_RSAKeyPairGenerator_dispose (JNIEnv *env, jobject thisObj) {
 
-    CK::RSAKeyPairGenerator *ref = new CK::RSAKeyPairGenerator;
+    delete getReference(env, thisObj);
+
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_cryptokitty_keys_RSAKeyPairGenerator_initialize__ (JNIEnv *, jobject) {
+
+    return reinterpret_cast<jlong>(new CK::RSAKeyPairGenerator);
+
+}
+
+JNIEXPORT void JNICALL
+Java_org_cryptokitty_keys_RSAKeyPairGenerator_initialize__I (JNIEnv *env, jobject thisObj,
+                                                                            jint keysize) {
+
+    CK::RSAKeyPairGenerator *ref = getReference(env, thisObj);
     ref->initialize(keysize, new CK::FortunaSecureRandom);
-    jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    pointer = reinterpret_cast<jlong>(ref);
-    env->SetLongField(thisObj, fieldId, pointer);
 
 }
 

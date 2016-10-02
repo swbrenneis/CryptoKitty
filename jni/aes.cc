@@ -6,15 +6,15 @@
 //#include <iostream>
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::AES *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
     // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::AES*>(pointer);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    return reinterpret_cast<CK::AES*>(jniImpl);
 
 }
 
@@ -42,6 +42,13 @@ Java_org_cryptokitty_cipher_AES_decrypt (JNIEnv *env, jobject thisObj, jbyteArra
 
 }
 
+JNIEXPORT void JNICALL
+Java_org_cryptokitty_cipher_AES_dispose (JNIEnv *env, jobject thisObj) {
+
+    delete getReference(env, thisObj);
+
+}
+
 JNIEXPORT jbyteArray JNICALL
 Java_org_cryptokitty_cipher_AES_encrypt (JNIEnv *env, jobject thisObj, jbyteArray plaintextIn,
                                                                                 jbyteArray keyIn) {
@@ -66,8 +73,8 @@ Java_org_cryptokitty_cipher_AES_encrypt (JNIEnv *env, jobject thisObj, jbyteArra
 
 }
 
-JNIEXPORT void JNICALL
-Java_org_cryptokitty_cipher_AES_initialize (JNIEnv *env, jobject thisObj, jint keysize) {
+JNIEXPORT jlong JNICALL
+Java_org_cryptokitty_cipher_AES_initialize (JNIEnv *env, jobject thisobj, jint keysize) {
 
     CK::AES::KeySize ks;
     switch (keysize) {
@@ -81,13 +88,6 @@ Java_org_cryptokitty_cipher_AES_initialize (JNIEnv *env, jobject thisObj, jint k
             ks = CK::AES::AES256;
             break;
     }
-    CK::AES *ref = new CK::AES(ks);
-
-    jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
-    jfieldID fieldId = env->GetFieldID(thisClass, "pointer", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    pointer = reinterpret_cast<jlong>(ref);
-    env->SetLongField(thisObj, fieldId, pointer);
+    return reinterpret_cast<jlong>(new CK::AES(ks));
 
 }
