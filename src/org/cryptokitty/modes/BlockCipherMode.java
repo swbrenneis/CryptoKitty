@@ -21,7 +21,6 @@ public interface BlockCipherMode {
 	public byte[] encrypt(byte[] plaintext, byte[] key)
 				throws IllegalBlockSizeException, BadParameterException;
 
-
 	/**
 	 * Set the initial value.
 	 * @param iv

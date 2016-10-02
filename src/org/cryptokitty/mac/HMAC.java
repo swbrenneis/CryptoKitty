@@ -13,6 +13,13 @@ import org.cryptokitty.exceptions.IllegalStateException;
 public class HMAC {
 
 	/**
+	 * Load the CryptoKitty-C binary.
+	 */
+	static {
+		System.loadLibrary("ckjni");
+	}
+
+	/**
 	 * Digest sizes.
 	 */
 	public static final int SHA224 = 224;
@@ -23,7 +30,7 @@ public class HMAC {
 	/**
 	 * JNI implemetation pointer.
 	 */
-	private long pointer;
+	private long jniImpl;
 
 	/**
 	 * 
@@ -36,7 +43,7 @@ public class HMAC {
 		case SHA256:
 		case SHA384:
 		case SHA512:
-			initialize(digest);
+			jniImpl = initialize(digest);
 			break;
 		default:
 			throw new BadParameterException("Invalid digest type");
@@ -53,6 +60,22 @@ public class HMAC {
 	 */
 	public native boolean authenticate(byte[] hmac)
 					throws BadParameterException, IllegalStateException;
+
+	/**
+	 * Free JNI resources.
+	 */
+	private native void dispose();
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	public void finalize() throws Throwable {
+
+		dispose();
+
+	}
 
 	/**
 	 * Generate an HMAC key. The key size will be rounded
@@ -85,7 +108,7 @@ public class HMAC {
 	 * 
 	 * @param digest
 	 */
-	private native void initialize(int digest);
+	private native long initialize(int digest);
 
 	/**
 	 * 

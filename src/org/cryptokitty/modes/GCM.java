@@ -4,6 +4,7 @@
 package org.cryptokitty.modes;
 
 import org.cryptokitty.cipher.BlockCipher;
+import org.cryptokitty.exceptions.AuthenticationException;
 import org.cryptokitty.exceptions.BadParameterException;
 import org.cryptokitty.exceptions.IllegalBlockSizeException;
 
@@ -14,9 +15,16 @@ import org.cryptokitty.exceptions.IllegalBlockSizeException;
 public class GCM implements AEADCipherMode {
 
 	/**
+	 * Load the CryptoKitty-C binary.
+	 */
+	static {
+		System.loadLibrary("ckjni");
+	}
+
+	/**
 	 * JNI implementation pointer.
 	 */
-	private long pointer;
+	private long jniImpl;
 
 	/**
 	 * @throws IllegalBlockSizeException 
@@ -28,7 +36,7 @@ public class GCM implements AEADCipherMode {
 			throw new IllegalBlockSizeException("Invalid GCM block cipher size");
 		}
 
-		initialize(cipher, appendTag);
+		jniImpl = initialize(cipher, appendTag);
 
 	}
 
@@ -37,7 +45,13 @@ public class GCM implements AEADCipherMode {
 	 */
 	@Override
 	public native byte[] decrypt(byte[] ciphertext, byte[] key)
-						throws IllegalBlockSizeException, BadParameterException;
+						throws AuthenticationException, IllegalBlockSizeException,
+														BadParameterException;
+
+	/**
+	 * Free JNI resources.
+	 */
+	private native void dispose();
 
 	/* (non-Javadoc)
 	 * @see org.cryptokitty.modes.BlockMode#encrypt(byte[], byte[])
@@ -46,13 +60,24 @@ public class GCM implements AEADCipherMode {
 	public native byte[] encrypt(byte[] P, byte[] key)
 							throws IllegalBlockSizeException, BadParameterException;
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	public void finalize() throws Throwable {
+
+		dispose();
+
+	}
+
 	/**
 	 * Initialize the JNI implementation.
 	 * 
 	 * @param cipher
 	 * @param appendTag
 	 */
-	private native void initialize(BlockCipher cipher, boolean appendTag);
+	private native long initialize(BlockCipher cipher, boolean appendTag);
 	
 	/*
 	 * (non-Javadoc)
