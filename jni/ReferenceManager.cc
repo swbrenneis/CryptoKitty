@@ -32,7 +32,7 @@ long ReferenceManager::addRef(CK::JNIReference *ref) {
 void ReferenceManager::deleteRef(long index) {
 
     RefIter it = references.find(index);
-    if (it != references.end()) {
+    if (it != references.end() && !it->second.deleted) {
         it->second.deleted = true;
         delete it->second.ref;
     }
