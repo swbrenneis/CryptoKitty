@@ -2,7 +2,7 @@ INSTALL_PATH= /usr/local
 
 LD= g++
 LDPATHS= -L/usr/local/lib64
-LDLIBS= -lcryptokitty -lcoder
+LDLIBS= -lcryptokitty -lcoder -lcthread
 LDFLAGS= -Wall -g -shared -Wl,--no-undefined $(LDPATHS) $(LDLIBS)
 
 CPP= g++
@@ -11,8 +11,8 @@ CPPINCLUDES= -I/usr/java/default/include -I/usr/java/default/include/linux \
 			 -I/usr/local/include/CryptoKitty-C
 CPPFLAGS= -Wall -g -std=c++11 -Wl,--add-stdcall-alias -MMD -fPIC $(CPPDEFINES) $(CPPINCLUDES)
 
-CPP_SOURCES= ByteArrayCodec.cc aes.cc biginteger.cc fortunarandom.cc gcm.cc hmac.cc \
-			 rsakeypairgenerator.cc
+CPP_SOURCES= ByteArrayCodec.cc ReferenceManager.cc aes.cc biginteger.cc fortunarandom.cc \
+				gcm.cc hmac.cc rsakeypairgenerator.cc
 
 CPP_OBJECT= $(CPP_SOURCES:.cc=.o)
 DEPEND= $(CPP_OBJECT:.o=.d)

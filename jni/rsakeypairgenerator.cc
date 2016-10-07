@@ -1,4 +1,5 @@
 #include "org_cryptokitty_keys_RSAKeyPairGenerator.h"
+#include "ReferenceManager.h"
 #include <CryptoKitty-C/keys/RSAKeyPairGenerator.h>
 #include <CryptoKitty-C/keys/RSAPublicKey.h>
 #include <CryptoKitty-C/keys/RSAPrivateCrtKey.h>
@@ -12,10 +13,18 @@
 static CK::RSAKeyPairGenerator *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong jniImpl = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::RSAKeyPairGenerator*>(jniImpl);
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::RSAKeyPairGenerator*>(ref);
+    }
 
 }
 
@@ -25,8 +34,8 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
     jmethodID initId = env->GetMethodID(biClass, "<init>", "()V");
     jobject biObj = env->NewObject(biClass, initId);
     jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
-    jlong jniImpl = env->GetLongField(biObj, fieldId);
-    jniImpl = reinterpret_cast<jlong>(new CK::BigInteger(integer));
+    CK::BigInteger *ref = new CK::BigInteger(integer);
+    jlong jniImpl = ReferenceManager::instance()->addRef(ref);
     env->SetLongField(biObj, fieldId, jniImpl);
     return biObj;
 
@@ -35,7 +44,10 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
 JNIEXPORT void JNICALL
 Java_org_cryptokitty_keys_RSAKeyPairGenerator_dispose (JNIEnv *env, jobject thisObj) {
 
-    delete getReference(env, thisObj);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    ReferenceManager::instance()->deleteRef(jniImpl);
 
 }
 
