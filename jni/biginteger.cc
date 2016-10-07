@@ -5,15 +5,15 @@
 #include <sstream>
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::BigInteger *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->FindClass("org/cryptokitty/jni/BigInteger");
     // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::BigInteger*>(pointer);
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    return reinterpret_cast<CK::BigInteger*>(jniImpl);
 
 }
 
@@ -23,9 +23,9 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
     jmethodID initId = env->GetMethodID(biClass, "<init>", "()V");
     jobject biObj = env->NewObject(biClass, initId);
     jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
-    jlong pointer = env->GetLongField(biObj, fieldId);
-    pointer = reinterpret_cast<jlong>(new CK::BigInteger(integer));
-    env->SetLongField(biObj, fieldId, pointer);
+    jlong jniImpl = env->GetLongField(biObj, fieldId);
+    jniImpl = reinterpret_cast<jlong>(new CK::BigInteger(integer));
+    env->SetLongField(biObj, fieldId, jniImpl);
     return biObj;
 
 }
@@ -203,9 +203,9 @@ Java_org_cryptokitty_jni_BigInteger_probablePrime (JNIEnv *env, jclass, jint bit
     jclass biClass = env->FindClass("org/cryptokitty/jni/BigInteger");
     jmethodID biInitId = env->GetMethodID(biClass, "<init>", "()V");
     jobject newBI = env->NewObject(biClass, biInitId);
-    jfieldID fieldId = env->GetFieldID(biClass, "pointer", "J");
-    jlong pointer = reinterpret_cast<jlong>(bi);
-    env->SetLongField(newBI, fieldId, pointer);
+    jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
+    jlong jniImpl = reinterpret_cast<jlong>(bi);
+    env->SetLongField(newBI, fieldId, jniImpl);
 
     return newBI;
 
