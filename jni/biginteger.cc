@@ -1,5 +1,6 @@
 #include "org_cryptokitty_jni_BigInteger.h"
 #include "ByteArrayCodec.h"
+#include "ReferenceManager.h"
 #include <CryptoKitty-C/data/BigInteger.h>
 #include <CryptoKitty-C/random/FortunaSecureRandom.h>
 #include <sstream>
@@ -9,11 +10,19 @@
  */
 static CK::BigInteger *getReference(JNIEnv *env, jobject thisObj) {
 
-    jclass thisClass = env->FindClass("org/cryptokitty/jni/BigInteger");
-    // TODO Throw an exception if null.
+    jclass thisClass = env->GetObjectClass(thisObj);
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong jniImpl = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::BigInteger*>(jniImpl);
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::BigInteger*>(ref);
+    }
 
 }
 
@@ -23,8 +32,8 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
     jmethodID initId = env->GetMethodID(biClass, "<init>", "()V");
     jobject biObj = env->NewObject(biClass, initId);
     jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
-    jlong jniImpl = env->GetLongField(biObj, fieldId);
-    jniImpl = reinterpret_cast<jlong>(new CK::BigInteger(integer));
+    CK::BigInteger *ref = new CK::BigInteger(integer);
+    jlong jniImpl = ReferenceManager::instance()->addRef(ref);
     env->SetLongField(biObj, fieldId, jniImpl);
     return biObj;
 
@@ -94,7 +103,10 @@ Java_org_cryptokitty_jni_BigInteger_copy (JNIEnv *env, jclass, jobject otherObj)
 JNIEXPORT void JNICALL
 Java_org_cryptokitty_jni_BigInteger_dispose (JNIEnv *env, jobject thisObj) {
 
-    delete getReference(env, thisObj);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    ReferenceManager::instance()->deleteRef(jniImpl);
 
 }
 

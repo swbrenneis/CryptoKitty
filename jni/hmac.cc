@@ -1,7 +1,7 @@
 #include "org_cryptokitty_mac_HMAC.h"
 #include "ByteArrayCodec.h"
+#include "ReferenceManager.h"
 #include <CryptoKitty-C/mac/HMAC.h>
-//#include <CryptoKitty-C/digest/SHA224.h>
 #include <CryptoKitty-C/digest/SHA256.h>
 #include <CryptoKitty-C/digest/SHA384.h>
 #include <CryptoKitty-C/digest/SHA512.h>
@@ -14,10 +14,18 @@
 static CK::HMAC *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong jniImpl = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::HMAC*>(jniImpl);
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::HMAC*>(ref);
+    }
 
 }
 
@@ -42,7 +50,10 @@ JNICALL Java_org_cryptokitty_mac_HMAC_authenticate (JNIEnv *env, jobject thisObj
 JNIEXPORT void JNICALL
 Java_org_cryptokitty_mac_HMAC_dispose (JNIEnv *env, jobject thisObj) {
 
-    delete getReference(env, thisObj);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    ReferenceManager::instance()->deleteRef(jniImpl);
 
 }
 
