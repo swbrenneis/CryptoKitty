@@ -117,6 +117,7 @@ Java_org_cryptokitty_modes_GCM_initialize (JNIEnv *env, jobject thisObj, jobject
 
     CK::BlockCipher *cipher = getCipherReference(env, cipherObj);
     CK::GCM *ref = new CK::GCM(cipher, appendTag);
+    ref->setJni(true);
     return ReferenceManager::instance()->addRef(ref);
 
 }
