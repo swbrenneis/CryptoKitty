@@ -131,14 +131,14 @@ Java_org_cryptokitty_jni_BigInteger_getEncoded (JNIEnv *env, jobject thisObj) {
 JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_jni_BigInteger_initialize__ (JNIEnv *, jobject) {
 
-    return reinterpret_cast<jlong>(new CK::BigInteger);
+    return ReferenceManager::instance()->addRef(new CK::BigInteger);
 
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_jni_BigInteger_initialize__J (JNIEnv *env, jobject thisObj, jlong lValue) {
 
-    return reinterpret_cast<jlong>(new CK::BigInteger(lValue));
+    return ReferenceManager::instance()->addRef(new CK::BigInteger(lValue));
 
 }
 
@@ -147,7 +147,7 @@ Java_org_cryptokitty_jni_BigInteger_initialize___3B (JNIEnv *env, jobject thisOb
                                                                     jbyteArray encoded) {
 
     ByteArrayCodec eCodec(env, encoded);
-    return reinterpret_cast<jlong>(
+    return ReferenceManager::instance()->addRef(
                     new CK::BigInteger(eCodec.getBytes(), CK::BigInteger::BIGENDIAN));
 
 }

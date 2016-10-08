@@ -118,7 +118,7 @@ Java_org_cryptokitty_mac_HMAC_initialize (JNIEnv *env, jobject thisObj, jint dig
             digest = new CK::SHA512;
             break;
     }
-    return reinterpret_cast<jlong>(new CK::HMAC(digest));
+    return ReferenceManager::instance()->addRef(new CK::HMAC(digest));
 
 }
 
