@@ -54,7 +54,7 @@ Java_org_cryptokitty_keys_RSAKeyPairGenerator_dispose (JNIEnv *env, jobject this
 JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_keys_RSAKeyPairGenerator_initialize__ (JNIEnv *, jobject) {
 
-    return reinterpret_cast<jlong>(new CK::RSAKeyPairGenerator);
+    return ReferenceManager::instance()->addRef(new CK::RSAKeyPairGenerator);
 
 }
 
