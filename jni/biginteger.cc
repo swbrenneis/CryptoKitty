@@ -1,19 +1,30 @@
 #include "org_cryptokitty_jni_BigInteger.h"
 #include "ByteArrayCodec.h"
+#include "ReferenceManager.h"
 #include <CryptoKitty-C/data/BigInteger.h>
 #include <CryptoKitty-C/random/FortunaSecureRandom.h>
 #include <sstream>
 
 /**
- * Retrieve the opaque pointer reference.
+ * Retrieve the opaque jniImpl reference.
  */
 static CK::BigInteger *getReference(JNIEnv *env, jobject thisObj) {
 
-    jclass thisClass = env->FindClass("org/cryptokitty/jni/BigInteger");
-    // TODO Throw an exception if null.
+    jclass thisClass = env->GetObjectClass(thisObj);
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
-    jlong pointer = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::BigInteger*>(pointer);
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    //std::cout << "Reference index = " << jniImpl << std::endl;
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    //std::cout << "Recovered reference = " << ref << std::endl;
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::BigInteger*>(ref);
+    }
 
 }
 
@@ -23,9 +34,10 @@ static jobject newBigInteger(JNIEnv *env, const CK::BigInteger& integer) {
     jmethodID initId = env->GetMethodID(biClass, "<init>", "()V");
     jobject biObj = env->NewObject(biClass, initId);
     jfieldID fieldId = env->GetFieldID(biClass, "jniImpl", "J");
-    jlong pointer = env->GetLongField(biObj, fieldId);
-    pointer = reinterpret_cast<jlong>(new CK::BigInteger(integer));
-    env->SetLongField(biObj, fieldId, pointer);
+    CK::BigInteger *ref = new CK::BigInteger(integer);
+    jlong jniImpl = ReferenceManager::instance()->addRef(ref);
+    //std::cout << "newBigInteger called in biginteger.cc returning index " << jniImpl << std::endl;
+    env->SetLongField(biObj, fieldId, jniImpl);
     return biObj;
 
 }
@@ -94,7 +106,10 @@ Java_org_cryptokitty_jni_BigInteger_copy (JNIEnv *env, jclass, jobject otherObj)
 JNIEXPORT void JNICALL
 Java_org_cryptokitty_jni_BigInteger_dispose (JNIEnv *env, jobject thisObj) {
 
-    delete getReference(env, thisObj);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    ReferenceManager::instance()->deleteRef(jniImpl);
 
 }
 
@@ -119,14 +134,18 @@ Java_org_cryptokitty_jni_BigInteger_getEncoded (JNIEnv *env, jobject thisObj) {
 JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_jni_BigInteger_initialize__ (JNIEnv *, jobject) {
 
-    return reinterpret_cast<jlong>(new CK::BigInteger);
+    long jniImpl = ReferenceManager::instance()->addRef(new CK::BigInteger);
+    //std::cout << "initialize__ called in biginteger.cc returning index " << jniImpl << std::endl;
+    return jniImpl;
 
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_cryptokitty_jni_BigInteger_initialize__J (JNIEnv *env, jobject thisObj, jlong lValue) {
 
-    return reinterpret_cast<jlong>(new CK::BigInteger(lValue));
+    long jniImpl = ReferenceManager::instance()->addRef(new CK::BigInteger(lValue));
+    //std::cout << "initialize__J called in biginteger.cc returning index " << jniImpl << std::endl;
+    return jniImpl;
 
 }
 
@@ -135,8 +154,10 @@ Java_org_cryptokitty_jni_BigInteger_initialize___3B (JNIEnv *env, jobject thisOb
                                                                     jbyteArray encoded) {
 
     ByteArrayCodec eCodec(env, encoded);
-    return reinterpret_cast<jlong>(
+    long jniImpl = ReferenceManager::instance()->addRef(
                     new CK::BigInteger(eCodec.getBytes(), CK::BigInteger::BIGENDIAN));
+    //std::cout << "initialize__3B called in biginteger.cc returning index " << jniImpl << std::endl;
+    return jniImpl;
 
 }
 
@@ -199,15 +220,7 @@ JNIEXPORT jobject JNICALL
 Java_org_cryptokitty_jni_BigInteger_probablePrime (JNIEnv *env, jclass, jint bitsize) {
 
     CK::FortunaSecureRandom rnd;
-    CK::BigInteger *bi = new CK::BigInteger(bitsize, false, rnd);
-    jclass biClass = env->FindClass("org/cryptokitty/jni/BigInteger");
-    jmethodID biInitId = env->GetMethodID(biClass, "<init>", "()V");
-    jobject newBI = env->NewObject(biClass, biInitId);
-    jfieldID fieldId = env->GetFieldID(biClass, "pointer", "J");
-    jlong pointer = reinterpret_cast<jlong>(bi);
-    env->SetLongField(newBI, fieldId, pointer);
-
-    return newBI;
+    return newBigInteger(env, CK::BigInteger(bitsize, false, rnd));
 
 }
 

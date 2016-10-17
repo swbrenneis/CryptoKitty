@@ -1,5 +1,6 @@
 #include "org_cryptokitty_cipher_AES.h"
 #include "ByteArrayCodec.h"
+#include "ReferenceManager.h"
 #include <CryptoKitty-C/cipher/AES.h>
 #include <CryptoKitty-C/exceptions/BadParameterException.h>
 #include <coder/ByteArray.h>
@@ -11,10 +12,18 @@
 static CK::AES *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong jniImpl = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::AES*>(jniImpl);
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::AES*>(ref);
+    }
 
 }
 
@@ -45,7 +54,10 @@ Java_org_cryptokitty_cipher_AES_decrypt (JNIEnv *env, jobject thisObj, jbyteArra
 JNIEXPORT void JNICALL
 Java_org_cryptokitty_cipher_AES_dispose (JNIEnv *env, jobject thisObj) {
 
-    delete getReference(env, thisObj);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    ReferenceManager::instance()->deleteRef(jniImpl);
 
 }
 
@@ -88,6 +100,7 @@ Java_org_cryptokitty_cipher_AES_initialize (JNIEnv *env, jobject thisobj, jint k
             ks = CK::AES::AES256;
             break;
     }
-    return reinterpret_cast<jlong>(new CK::AES(ks));
+    CK::AES *ref = new CK::AES(ks);
+    return ReferenceManager::instance()->addRef(ref);
 
 }

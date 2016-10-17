@@ -1,5 +1,6 @@
 #include "org_cryptokitty_modes_GCM.h"
 #include "ByteArrayCodec.h"
+#include "ReferenceManager.h"
 #include <CryptoKitty-C/ciphermodes/GCM.h>
 #include <CryptoKitty-C/cipher/BlockCipher.h>
 #include <CryptoKitty-C/exceptions/BadParameterException.h>
@@ -12,10 +13,18 @@
 static CK::GCM *getReference(JNIEnv *env, jobject thisObj) {
 
     jclass thisClass = env->GetObjectClass(thisObj);
-    // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong jniImpl = env->GetLongField(thisObj, fieldId);
-    return reinterpret_cast<CK::GCM*>(jniImpl);
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::GCM*>(ref);
+    }
 
 }
 
@@ -25,10 +34,18 @@ static CK::GCM *getReference(JNIEnv *env, jobject thisObj) {
 static CK::BlockCipher *getCipherReference(JNIEnv *env, jobject cipherObj) {
 
     jclass thisClass = env->GetObjectClass(cipherObj);
-    // TODO Throw an exception if null.
     jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
     jlong jniImpl = env->GetLongField(cipherObj, fieldId);
-    return reinterpret_cast<CK::BlockCipher*>(jniImpl);
+    CK::JNIReference *ref = ReferenceManager::instance()->getRef(jniImpl);
+    if (ref == 0) {
+        jclass ise = env->FindClass("org/cryptokitty/exceptions/IllegalStateException");
+        env->ThrowNew(ise, "Invalid JNI reference");
+        // Won't get here
+        return 0;
+    }
+    else {
+        return dynamic_cast<CK::BlockCipher*>(ref);
+    }
 
 }
 
@@ -63,7 +80,10 @@ Java_org_cryptokitty_modes_GCM_decrypt (JNIEnv *env, jobject thisObj, jbyteArray
 JNIEXPORT void JNICALL
 Java_org_cryptokitty_modes_GCM_dispose (JNIEnv *env, jobject thisObj) {
 
-    delete getReference(env, thisObj);
+    jclass thisClass = env->GetObjectClass(thisObj);
+    jfieldID fieldId = env->GetFieldID(thisClass, "jniImpl", "J");
+    jlong jniImpl = env->GetLongField(thisObj, fieldId);
+    ReferenceManager::instance()->deleteRef(jniImpl);
 
 }
 
@@ -97,7 +117,8 @@ Java_org_cryptokitty_modes_GCM_initialize (JNIEnv *env, jobject thisObj, jobject
 
     CK::BlockCipher *cipher = getCipherReference(env, cipherObj);
     CK::GCM *ref = new CK::GCM(cipher, appendTag);
-    return reinterpret_cast<jlong>(ref);
+    ref->setJni(true);
+    return ReferenceManager::instance()->addRef(ref);
 
 }
 
