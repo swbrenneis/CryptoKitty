@@ -69,6 +69,13 @@ public class TLSSession {
 	public native void sendRecord(byte[] record) throws TLSException;
 
 	/**
+	 * Set the connected hostname for this session.
+	 * 
+	 * @param hostname
+	 */
+	public native void setHostname(String hostname);
+
+	/**
 	 * Set the certificate credentials for this session.
 	 * 
 	 * @param credentials
