@@ -3,6 +3,8 @@
  */
 package org.cryptokitty.tls;
 
+import java.net.Socket;
+
 import org.cryptokitty.exceptions.TLSException;
 
 /**
@@ -12,10 +14,37 @@ import org.cryptokitty.exceptions.TLSException;
 public class TLSSession {
 
 	/**
+	 * Load the CryptoKitty-C binary.
+	 */
+	static {
+		System.loadLibrary("ckjni");
+	}
+
+	/**
+	 * JNI implementation index.
+	 */
+	private long jniImpl;
+
+	/**
 	 * 
 	 */
 	protected TLSSession() {
-		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * Free JNI resources.
+	 */
+	private native void dispose();
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	public void finalize() throws Throwable {
+
+		dispose();
+
 	}
 
 	/**
@@ -84,12 +113,18 @@ public class TLSSession {
 	public native void setCredentials(TLSCredentials credentials) throws TLSException;
 
 	/**
+	 * 
+	 * @param require
+	 */
+	public native void setRequireClientAuth(boolean require);
+
+	/**
 	 * Start the Berkeley sockets transport.
 	 * 
 	 * @param socket Open socket file descriptor
 	 * @return
 	 */
-	public native boolean startSocketTransport(int socket);
+	public native boolean startSocketTransport(Socket socket);
 
 	/**
 	 * Terminate the TLS connection.

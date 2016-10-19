@@ -12,6 +12,13 @@ import org.cryptokitty.exceptions.TLSException;
 public class TLSCredentials {
 
 	/**
+	 * Load the CryptoKitty-C binary.
+	 */
+	static {
+		System.loadLibrary("ckjni");
+	}
+
+	/**
 	 * Format constants.
 	 */
 	public static final int DER = 0;
@@ -26,10 +33,14 @@ public class TLSCredentials {
 	public static final int DH_ULTRA = 5;
 
 	/**
+	 * JNI implementation index
+	 */
+	private long jniImpl;
+
+	/**
 	 * Must be created via the allocate method.
 	 */
 	protected TLSCredentials() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -38,6 +49,22 @@ public class TLSCredentials {
 	 * @return
 	 */
 	public static native TLSCredentials allocate();
+
+	/**
+	 * Free JNI resources.
+	 */
+	private native void dispose();
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	public void finalize() throws Throwable {
+
+		dispose();
+
+	}
 
 	/**
 	 * 
