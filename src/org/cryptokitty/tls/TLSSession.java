@@ -6,6 +6,7 @@ package org.cryptokitty.tls;
 import java.net.Socket;
 
 import org.cryptokitty.exceptions.TLSException;
+import org.cryptokitty.jni.CKSocket;
 
 /**
  * @author stevebrenneis
@@ -59,6 +60,13 @@ public class TLSSession {
 	 * @return The connected hostname for this session
 	 */
 	public native String getHostname();
+
+	/**
+	 * Get the certificate validation error.
+	 * 
+	 * @return
+	 */
+	public native String getCertificateError();
 
 	/**
 	 * 
@@ -124,7 +132,7 @@ public class TLSSession {
 	 * @param socket Open socket file descriptor
 	 * @return
 	 */
-	public native boolean startSocketTransport(Socket socket);
+	public native boolean startSocketTransport(CKSocket socket);
 
 	/**
 	 * Terminate the TLS connection.

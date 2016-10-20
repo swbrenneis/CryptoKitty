@@ -4,19 +4,17 @@
 package org.cryptokitty.jni;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.SocketImpl;
+
+import org.cryptokitty.exceptions.CKSocketException;
 
 /**
  * @author stevebrenneis
  *
  */
-public class BerkeleySocketImpl extends SocketImpl {
+public class BerkeleySocketImpl implements CKSocket {
 
 	/**
 	 * Load the CryptoKitty-C binary.
@@ -31,6 +29,11 @@ public class BerkeleySocketImpl extends SocketImpl {
 	private long jniImpl;
 
 	/**
+	 * The Unix file descriptor.
+	 */
+	private int fd;
+
+	/**
 	 * 
 	 */
 	public BerkeleySocketImpl() {
@@ -39,53 +42,64 @@ public class BerkeleySocketImpl extends SocketImpl {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#bind(java.lang.String, int)
+	 */
+	@Override
+	public native void bind(String hostname, int port) throws CKSocketException;
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#connect(java.lang.String, int)
+	 */
+	@Override
+	public native void connect(String host, int port) throws CKSocketException;
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#create(boolean)
+	 */
+	@Override
+	public native void create(boolean stream) throws CKSocketException;
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#getHostname()
+	 */
+	@Override
+	public native String getHostname();
+
 	/**
 	 * Initialize the JNI reference;
 	 * 
 	 * @return
 	 */
 	private native long initialize();
-	
-	/**
-	 * Get the underlying Unix file descriptor.
-	 * 
-	 * @return
-	 */
-	public native int getNativeFileDescriptor();
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#isConnected()
+	 */
+	@Override
+	public native boolean isConnected();
 
 	/* (non-Javadoc)
 	 * @see java.net.SocketOptions#setOption(int, java.lang.Object)
-	 */
 	@Override
 	public native void setOption(int optID, Object value) throws SocketException;
+	 */
 	
 	/* (non-Javadoc)
 	 * @see java.net.SocketOptions#getOption(int)
-	 */
 	@Override
 	public native Object getOption(int optID) throws SocketException;
-
-	/* (non-Javadoc)
-	 * @see java.net.SocketImpl#create(boolean)
 	 */
-	@Override
-	protected native void create(boolean stream) throws IOException;
-
-	/* (non-Javadoc)
-	 * @see java.net.SocketImpl#connect(java.lang.String, int)
-	 */
-	@Override
-	protected void connect(String host, int port) throws IOException {
-
-		nativeConnect(host, port, 0);
-
-	}
 
 	/* (non-Javadoc)
 	 * @see java.net.SocketImpl#connect(java.net.InetAddress, int)
 	 */
-	@Override
+	//@Override
 	protected void connect(InetAddress address, int port) throws IOException {
 
 		nativeConnect(address.getHostAddress(), port, 0);
@@ -95,7 +109,7 @@ public class BerkeleySocketImpl extends SocketImpl {
 	/* (non-Javadoc)
 	 * @see java.net.SocketImpl#connect(java.net.SocketAddress, int)
 	 */
-	@Override
+	//@Override
 	protected void connect(SocketAddress address, int timeout) throws IOException {
 
 		InetSocketAddress inetAddress = (InetSocketAddress)address;
@@ -115,64 +129,49 @@ public class BerkeleySocketImpl extends SocketImpl {
 	 */
 	private native void nativeConnect(String address, int port, int timeout) throws IOException;
 
-	/* (non-Javadoc)
-	 * @see java.net.SocketImpl#bind(java.net.InetAddress, int)
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#listen(int)
 	 */
 	@Override
-	protected void bind(InetAddress host, int port) throws IOException {
+	public native void listen(int backlog) throws CKSocketException;
 
-		nativeBind(host.getHostName(), port);
-
-	}
-
-	/**
-	 * The native bind method.
-	 * 
-	 * @param hostname
-	 * @param port
-	 */
-	private native void nativeBind(String hostname, int port);
-
-	/* (non-Javadoc)
-	 * @see java.net.SocketImpl#listen(int)
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#accept()
 	 */
 	@Override
-	protected native void listen(int backlog) throws IOException;
-
-	/* (non-Javadoc)
-	 * @see java.net.SocketImpl#accept(java.net.SocketImpl)
-	 */
-	@Override
-	protected native void accept(SocketImpl s) throws IOException;
+	public native CKSocket accept() throws CKSocketException;
 
 	/* (non-Javadoc)
 	 * @see java.net.SocketImpl#getInputStream()
-	 */
 	@Override
 	protected native InputStream getInputStream() throws IOException;
+	 */
 
 	/* (non-Javadoc)
 	 * @see java.net.SocketImpl#getOutputStream()
-	 */
 	@Override
 	protected native OutputStream getOutputStream() throws IOException;
+	 */
 
 	/* (non-Javadoc)
 	 * @see java.net.SocketImpl#available()
 	 */
-	@Override
+	//@Override
 	protected native int available() throws IOException;
 
-	/* (non-Javadoc)
-	 * @see java.net.SocketImpl#close()
+	/*
+	 * (non-Javadoc)
+	 * @see org.cryptokitty.jni.CKSocket#close()
 	 */
 	@Override
-	protected native void close() throws IOException;
+	public native void close();
 
 	/* (non-Javadoc)
 	 * @see java.net.SocketImpl#sendUrgentData(int)
 	 */
-	@Override
+	//@Override
 	protected native void sendUrgentData(int data) throws IOException;
 	
 }
