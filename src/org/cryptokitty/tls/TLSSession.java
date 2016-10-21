@@ -96,7 +96,7 @@ public class TLSSession {
 	 * @param length
 	 * @return
 	 */
-	public native long receiveRecord(byte[] record, long length);
+	public native long receiveRecord(byte[] record, long length) throws TLSException;
 
 	/**
 	 * Send a TLS application record.
