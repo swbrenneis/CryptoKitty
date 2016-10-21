@@ -15,7 +15,7 @@ SocketImpl::SocketImpl()
 
 SocketImpl::SocketImpl(int socket)
 : fd(socket),
-  connected(false) {
+  connected(true) {
 }
 
 SocketImpl::~SocketImpl() {

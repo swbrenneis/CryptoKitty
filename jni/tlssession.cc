@@ -106,11 +106,18 @@ Java_org_cryptokitty_tls_TLSSession_receiveRecord (JNIEnv *env, jobject thisObj,
 
     CK::TLSSession *ref = getReference(env, thisObj);
     coder::ByteArray data;
-    long received = ref->receiveRecord(data, count);
-    uint8_t *byteArray = data.asArray();
-    const signed char *cbuf = reinterpret_cast<const signed char*>(byteArray);
-    env->SetByteArrayRegion(buffer, 0, data.getLength(), cbuf);
-    delete[] byteArray;
+    long received = 0;
+    try {
+        received = ref->receiveRecord(data, count);
+        uint8_t *byteArray = data.asArray();
+        const signed char *cbuf = reinterpret_cast<const signed char*>(byteArray);
+        env->SetByteArrayRegion(buffer, 0, data.getLength(), cbuf);
+        delete[] byteArray;
+    }
+    catch (CK::TLSException& e) {
+        jclass te = env->FindClass("org/cryptokitty/exceptions/TLSException");
+        env->ThrowNew(te, e.what());
+    }
     return received;
 
 }
@@ -120,7 +127,13 @@ Java_org_cryptokitty_tls_TLSSession_sendRecord (JNIEnv *env, jobject thisObj, jb
 
     CK::TLSSession *ref = getReference(env, thisObj);
     ByteArrayCodec codec(env, data);
-    ref->sendRecord(codec.getBytes());
+    try {
+        ref->sendRecord(codec.getBytes());
+    }
+    catch (CK::TLSException& e) {
+        jclass te = env->FindClass("org/cryptokitty/exceptions/TLSException");
+        env->ThrowNew(te, e.what());
+    }
 
 }
 
