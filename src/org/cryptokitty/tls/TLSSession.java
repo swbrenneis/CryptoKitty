@@ -3,8 +3,6 @@
  */
 package org.cryptokitty.tls;
 
-import java.net.Socket;
-
 import org.cryptokitty.exceptions.TLSException;
 import org.cryptokitty.jni.CKSocket;
 
