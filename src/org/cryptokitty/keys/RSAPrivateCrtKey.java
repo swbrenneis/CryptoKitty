@@ -18,7 +18,7 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	/**
 	 * Private exponent.
 	 */
-	//private BigInteger d;
+	private BigInteger d;
 
 	/**
 	 * Prime exponent p.
@@ -29,11 +29,6 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	 * Prime exponent q.
 	 */
 	private BigInteger dQ;
-
-	/**
-	 * Public exponent.
-	 */
-	//private BigInteger e;
 
 	/**
 	 * Modulus.
@@ -71,9 +66,9 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 		dP = e.modInverse(pp);
 		dQ = e.modInverse(qq);
 		qInv = q.modInverse(p);
-		//this.d = d;
+		this.d = d;
 		//this.e = e;
-		
+
 		n = p.multiply(q);
 		bitsize = n.bitLength();
 
@@ -102,13 +97,11 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * @return the d
+	 */
 	public BigInteger getPrivateExponent() {
-		// TODO Auto-generated method stub
 		return d;
 	}
-	 */
 
 	/**
 	 * 
@@ -118,15 +111,6 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 		// TODO Auto-generated method stub
 		return n;
 	}
-
-	/**
-	 * 
-	 * @return
-	public BigInteger getPublicExponent() {
-		// TODO Auto-generated method stub
-		return e;
-	}
-	 */
 
 	/**
 	 * 
@@ -243,6 +227,13 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 
 		return s;
 
+	}
+
+	/**
+	 * @param d the d to set
+	 */
+	public void setPrivateExponent(BigInteger d) {
+		this.d = d;
 	}
 
 }
