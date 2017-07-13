@@ -143,11 +143,11 @@ public class SHA1 extends Digest {
 
 		ByteArrayOutputStream d = new ByteArrayOutputStream();
 		try {
-			d.write(Scalar32.encode((int)h1[N]));
-			d.write(Scalar32.encode((int)h2[N]));
-			d.write(Scalar32.encode((int)h3[N]));
-			d.write(Scalar32.encode((int)h4[N]));
-			d.write(Scalar32.encode((int)h5[N]));
+			d.write(new Scalar32((int)h1[N]).getEncoded());
+			d.write(new Scalar32((int)h2[N]).getEncoded());
+			d.write(new Scalar32((int)h3[N]).getEncoded());
+			d.write(new Scalar32((int)h4[N]).getEncoded());
+			d.write(new Scalar32((int)h5[N]).getEncoded());
 		}
 		catch (IOException e) {
 			// Nope.
@@ -199,7 +199,7 @@ public class SHA1 extends Digest {
 		byte[] context = new byte[in.length + padding.length + 8];
 		System.arraycopy(in, 0, context, 0, in.length);
 		System.arraycopy(padding, 0, context, in.length, padding.length);
-		System.arraycopy(Scalar64.encode(bitsize), 0, context,
+		System.arraycopy(new Scalar64(bitsize).getEncoded(), 0, context,
 											in.length + padding.length, 8);
 		return context;
 
@@ -234,8 +234,7 @@ public class SHA1 extends Digest {
 
 		for (int t = 0; t < 16; ++t) {
 			int i = t * 4;
-			w[t] = Scalar32.decode(
-					Arrays.copyOfRange(chunk, i, i + 4));
+			w[t] = new Scalar32(Arrays.copyOfRange(chunk, i, i + 4)).getValue();
 		}
 
 		for (int t = 16; t < 80; ++t) {

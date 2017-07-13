@@ -3,27 +3,19 @@
  */
 package org.cryptokitty.pgp.packet;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.Arrays;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 
-//import org.cryptokitty.data.DataException;
-//import org.cryptokitty.data.MPI;
-import org.cryptokitty.codec.Scalar16;
 import org.cryptokitty.pgp.keys.KeyAlgorithms;
 import org.cryptokitty.pgp.keys.String2Key;
 import org.cryptokitty.xprovider.UnsupportedAlgorithmException;
@@ -37,9 +29,8 @@ import org.cryptokitty.xprovider.keys.S2KParameterSpec;
  */
 public class SecretKeyPacket extends PublicKeyPacket {
 
-	/*
+	/**
 	 * Convenience class to abstract the checksum method.
-	 */
 	private class Checksum {
 		// SHA-1 hash
 		private MessageDigest sha1;
@@ -52,7 +43,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 		public Checksum(int usage) {
 			this.usage = usage;
 			if (usage == 255) {
-				summation = new Scalar16(0);
+				summation = new Scalar16((short)0);
 			}
 			else {
 				try {
@@ -86,6 +77,7 @@ public class SecretKeyPacket extends PublicKeyPacket {
 			}
 		}
 	}
+	 */
 
 	/*
 	 * DSA secret exponent x.

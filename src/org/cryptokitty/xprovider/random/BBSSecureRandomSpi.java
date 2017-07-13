@@ -78,7 +78,7 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 		// Compute the modulus
 		M = p.multiply(q);
 		// Compute the initial seed.
-		byte[] seed = Scalar64.encode(System.nanoTime());
+		byte[] seed = new Scalar64(System.nanoTime()).getEncoded();
 		setState(seed);
 
 	}
@@ -118,7 +118,7 @@ public class BBSSecureRandomSpi extends SecureRandomSpi {
 		}
 
 		if (reseed + bytes.length > RESEED) {
-			setState(Scalar64.encode(System.nanoTime()));
+			setState(new Scalar64(System.nanoTime()).getEncoded());
 			reseed = 0;
 		}
 		reseed += bytes.length;

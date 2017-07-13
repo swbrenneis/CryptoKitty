@@ -374,8 +374,8 @@ final class CAST5 implements BlockCipher {
 		// keys of 80 bits or less only go through 12 substitution rounds.
 		int[] L = new int[rounds+2];
 		int[] R = new int[rounds+2];
-		L[rounds+1] = Scalar32.decode(Arrays.copyOf(c, 4));
-		R[rounds+1] = Scalar32.decode(Arrays.copyOfRange(c, 4, 8));
+		L[rounds+1] = new Scalar32(Arrays.copyOf(c, 4)).getValue();
+		R[rounds+1] = new Scalar32(Arrays.copyOfRange(c, 4, 8)).getValue();
 
 		for (int i = rounds; i > 0; --i) {
 			L[i] = R[i+1];
@@ -406,8 +406,8 @@ final class CAST5 implements BlockCipher {
 		}
 
 		m = new byte[8];
-		System.arraycopy(Scalar32.encode(R[1]), 0, m, 0, 4);
-		System.arraycopy(Scalar32.encode(L[1]), 0, m, 4, 4);
+		System.arraycopy(new Scalar32(R[1]).getEncoded(), 0, m, 0, 4);
+		System.arraycopy(new Scalar32(L[1]).getEncoded(), 0, m, 4, 4);
 
 	}
 
@@ -435,8 +435,8 @@ final class CAST5 implements BlockCipher {
 		// keys of 80 bits or less only go through 12 substitution rounds.
 		int[] L = new int[17];
 		int[] R = new int[17];
-		L[0] = Scalar32.decode(Arrays.copyOf(m, 4));
-		R[0] = Scalar32.decode(Arrays.copyOfRange(m, 4, 8));
+		L[0] = new Scalar32(Arrays.copyOf(m, 4)).getValue();
+		R[0] = new Scalar32(Arrays.copyOfRange(m, 4, 8)).getValue();
 
 		for (int i = 1; i <= rounds; ++i) {
 			L[i] = R[i-1];
@@ -467,8 +467,8 @@ final class CAST5 implements BlockCipher {
 		}
 
 		c = new byte[8];
-		System.arraycopy(Scalar32.encode(R[rounds]), 0, c, 0, 4);
-		System.arraycopy(Scalar32.encode(L[rounds]), 0, c, 4, 4);
+		System.arraycopy(new Scalar32(R[rounds]).getEncoded(), 0, c, 0, 4);
+		System.arraycopy(new Scalar32(L[rounds]).getEncoded(), 0, c, 4, 4);
 
 	}
 
@@ -483,9 +483,10 @@ final class CAST5 implements BlockCipher {
 	 */
 	private int f1(int D, int Kmi, int Kri) {
 
-		int I = new Scalar32(Kmi + D).rol(Kri).getValue();
-		int[] i = byte2int(Scalar32.encode(I));
-		return ((S1[i[0]] ^ S2[i[1]]) - S3[i[2]]) + S4[i[3]];
+//		int I = new Scalar32(Kmi + D).rol(Kri).getValue();
+//		int[] i = byte2int(new Scalar32(I).getEncoded());
+//		return ((S1[i[0]] ^ S2[i[1]]) - S3[i[2]]) + S4[i[3]];
+		return 0;
 
 	}
 
@@ -500,9 +501,10 @@ final class CAST5 implements BlockCipher {
 	 */
 	private int f2(int D, int Kmi, int Kri) {
 
-		int I = new Scalar32(Kmi ^ D).rol(Kri).getValue();
-		int[] i = byte2int(Scalar32.encode(I));
-		return ((S1[i[0]] - S2[i[1]]) + S3[i[2]]) ^ S4[i[3]];
+//		int I = new Scalar32(Kmi ^ D).rol(Kri).getValue();
+//		int[] i = byte2int(Scalar32.encode(I));
+//		return ((S1[i[0]] - S2[i[1]]) + S3[i[2]]) ^ S4[i[3]];
+		return 0;
 
 	}
 
@@ -517,9 +519,10 @@ final class CAST5 implements BlockCipher {
 	 */
 	private int f3(int D, int Kmi, int Kri) {
 
-		int I = new Scalar32(Kmi - D).rol(Kri).getValue();
-		int[] i = byte2int(Scalar32.encode(I));
-		return ((S1[i[0]] + S2[i[1]]) ^ S3[i[2]]) - S4[i[3]];
+//		int I = new Scalar32(Kmi - D).rol(Kri).getValue();
+//		int[] i = byte2int(Scalar32.encode(I));
+//		return ((S1[i[0]] + S2[i[1]]) ^ S3[i[2]]) - S4[i[3]];
+		return 0;
 
 	}
 
@@ -537,24 +540,24 @@ final class CAST5 implements BlockCipher {
 
 		// Generate masking keys.
 		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
-		int x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		int x0 = new Scalar32(int2byte(Arrays.copyOf(x, 4))).getValue();
 		int z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
-		int[] zed = byte2int(Scalar32.encode(z0));
+		int[] zed = byte2int(new Scalar32(z0).getEncoded());
 		System.arraycopy(zed, 0, z, 0, 4);
 		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
-		int x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		int x8 = new Scalar32(int2byte(Arrays.copyOfRange(x, 8, 12))).getValue();
 		int z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
-		zed = byte2int(Scalar32.encode(z4));
+		zed = byte2int(new Scalar32(z4).getEncoded());
 		System.arraycopy(zed, 0, z, 4, 4);
 		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
-		int xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		int xc = new Scalar32(int2byte(Arrays.copyOfRange(x, 12, 16))).getValue();
 		int z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
-		zed = byte2int(Scalar32.encode(z8));
+		zed = byte2int(new Scalar32(z8).getEncoded());
 		System.arraycopy(zed, 0, z, 8, 4);
 		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
-		int x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		int x4 = new Scalar32(int2byte(Arrays.copyOfRange(x, 4, 8))).getValue();
 		int zc = x4 ^ (S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]]);
-		zed = byte2int(Scalar32.encode(zc));
+		zed = byte2int(new Scalar32(zc).getEncoded());
 		System.arraycopy(zed, 0, z, 12, 4);
 		// K1  = S5[z8] ^ S6[z9] ^ S7[z7] ^ S8[z6] ^ S5[z2]
 		Km[1] = S5[z[8]] ^ S6[z[9]] ^ S7[z[7]] ^ S8[z[6]] ^ S5[z[2]];
@@ -567,19 +570,19 @@ final class CAST5 implements BlockCipher {
 
 		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
 		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
-		int [] xed = byte2int(Scalar32.encode(x0));
+		int [] xed = byte2int(new Scalar32(x0).getEncoded());
 		System.arraycopy(xed, 0, x, 0, 4);
 		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
 		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
-		xed = byte2int(Scalar32.encode(x4));
+		xed = byte2int(new Scalar32(x4).getEncoded());
 		System.arraycopy(xed, 0, x, 4, 4);
 		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
 		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
-		xed = byte2int(Scalar32.encode(x8));
+		xed = byte2int(new Scalar32(x8).getEncoded());
 		System.arraycopy(xed, 0, x, 8, 4);
 		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
 		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
-		xed = byte2int(Scalar32.encode(xc));
+		xed = byte2int(new Scalar32(xc).getEncoded());
 		System.arraycopy(xed, 0, x, 12, 4);
 		// K5  = S5[x3] ^ S6[x2] ^ S7[xC] ^ S8[xD] ^ S5[x8]
 		Km[5] = S5[x[3]] ^ S6[x[2]] ^ S7[x[12]] ^ S8[x[13]] ^ S5[x[8]];
@@ -591,24 +594,24 @@ final class CAST5 implements BlockCipher {
 		Km[8] = S5[x[5]] ^ S6[x[4]] ^ S7[x[10]] ^ S8[x[11]] ^ S8[x[7]];
 
 		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
-		x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		x0 = new Scalar32(int2byte(Arrays.copyOf(x, 4))).getValue();
 		z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
-		zed = byte2int(Scalar32.encode(z0));
+		zed = byte2int(new Scalar32(z0).getEncoded());
 		System.arraycopy(zed, 0, z, 0, 4);
 		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
-		x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		x8 = new Scalar32(int2byte(Arrays.copyOfRange(x, 8, 12))).getValue();
 		z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
-		zed = byte2int(Scalar32.encode(z4));
+		zed = byte2int(new Scalar32(z4).getEncoded());
 		System.arraycopy(zed, 0, z, 4, 4);
 		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
-		xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		xc = new Scalar32(int2byte(Arrays.copyOfRange(x, 12, 16))).getValue();
 		z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
-		zed = byte2int(Scalar32.encode(z8));
+		zed = byte2int(new Scalar32(z8).getEncoded());
 		System.arraycopy(zed, 0, z, 8, 4);
 		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
-		x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		x4 = new Scalar32(int2byte(Arrays.copyOfRange(x, 4, 8))).getValue();
 		zc = x4 ^ S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]];
-		zed = byte2int(Scalar32.encode(zc));
+		zed = byte2int(new Scalar32(zc).getEncoded());
 		System.arraycopy(zed, 0, z, 12, 4);
 		// K9  = S5[z3] ^ S6[z2] ^ S7[zC] ^ S8[zD] ^ S5[z9]
 		Km[9] = S5[z[3]] ^ S6[z[2]] ^ S7[z[12]] ^ S8[z[13]] ^ S5[z[9]];
@@ -621,19 +624,19 @@ final class CAST5 implements BlockCipher {
 
 		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
 		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
-		xed = byte2int(Scalar32.encode(x0));
+		xed = byte2int(new Scalar32(x0).getEncoded());
 		System.arraycopy(xed, 0, x, 0, 4);
 		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
 		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
-		xed = byte2int(Scalar32.encode(x4));
+		xed = byte2int(new Scalar32(x4).getEncoded());
 		System.arraycopy(xed, 0, x, 4, 4);
 		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
 		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
-		xed = byte2int(Scalar32.encode(x8));
+		xed = byte2int(new Scalar32(x8).getEncoded());
 		System.arraycopy(xed, 0, x, 8, 4);
 		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
 		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
-		xed = byte2int(Scalar32.encode(xc));
+		xed = byte2int(new Scalar32(xc).getEncoded());
 		System.arraycopy(xed, 0, x, 12, 4);
 		// K13 = S5[x8] ^ S6[x9] ^ S7[x7] ^ S8[x6] ^ S5[x3]
 		Km[13] = S5[x[8]] ^ S6[x[9]] ^ S7[x[7]] ^ S8[x[6]] ^ S5[x[3]];
@@ -647,24 +650,24 @@ final class CAST5 implements BlockCipher {
 		// Do it all over again for the rotate keys, but starting with the last
 		// generated x0...xf. We only need the low order 5 bits.
 		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
-		x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		x0 = new Scalar32(int2byte(Arrays.copyOf(x, 4))).getValue();
 		z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
-		zed = byte2int(Scalar32.encode(z0));
+		zed = byte2int(new Scalar32(z0).getEncoded());
 		System.arraycopy(zed, 0, z, 0, 4);
 		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
-		x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		x8 = new Scalar32(int2byte(Arrays.copyOfRange(x, 8, 12))).getValue();
 		z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
-		zed = byte2int(Scalar32.encode(z4));
+		zed = byte2int(new Scalar32(z4).getEncoded());
 		System.arraycopy(zed, 0, z, 4, 4);
 		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
-		xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		xc = new Scalar32(int2byte(Arrays.copyOfRange(x, 12, 16))).getValue();
 		z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
-		zed = byte2int(Scalar32.encode(z8));
+		zed = byte2int(new Scalar32(z8).getEncoded());
 		System.arraycopy(zed, 0, z, 8, 4);
 		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
-		x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		x4 = new Scalar32(int2byte(Arrays.copyOfRange(x, 4, 8))).getValue();
 		zc = x4 ^ (S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]]);
-		zed = byte2int(Scalar32.encode(zc));
+		zed = byte2int(new Scalar32(zc).getEncoded());
 		System.arraycopy(zed, 0, z, 12, 4);
 		// K1  = S5[z8] ^ S6[z9] ^ S7[z7] ^ S8[z6] ^ S5[z2]
 		Kr[1] = (S5[z[8]] ^ S6[z[9]] ^ S7[z[7]] ^ S8[z[6]] ^ S5[z[2]]) & 0x1f;
@@ -677,19 +680,19 @@ final class CAST5 implements BlockCipher {
 
 		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
 		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
-		xed = byte2int(Scalar32.encode(x0));
+		xed = byte2int(new Scalar32(x0).getEncoded());
 		System.arraycopy(xed, 0, x, 0, 4);
 		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
 		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
-		xed = byte2int(Scalar32.encode(x4));
+		xed = byte2int(new Scalar32(x4).getEncoded());
 		System.arraycopy(xed, 0, x, 4, 4);
 		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
 		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
-		xed = byte2int(Scalar32.encode(x8));
+		xed = byte2int(new Scalar32(x8).getEncoded());
 		System.arraycopy(xed, 0, x, 8, 4);
 		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
 		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
-		xed = byte2int(Scalar32.encode(xc));
+		xed = byte2int(new Scalar32(xc).getEncoded());
 		System.arraycopy(xed, 0, x, 12, 4);
 		// K5  = S5[x3] ^ S6[x2] ^ S7[xC] ^ S8[xD] ^ S5[x8]
 		Kr[5] = (S5[x[3]] ^ S6[x[2]] ^ S7[x[12]] ^ S8[x[13]] ^ S5[x[8]]) & 0x1f;
@@ -701,24 +704,24 @@ final class CAST5 implements BlockCipher {
 		Kr[8] = (S5[x[5]] ^ S6[x[4]] ^ S7[x[10]] ^ S8[x[11]] ^ S8[x[7]]) & 0x1f;
 
 		// z0z1z2z3 = x0x1x2x3 ^ S5[xD] ^ S6[xF] ^ S7[xC] ^ S8[xE] ^ S7[x8]
-		x0 = Scalar32.decode(int2byte(Arrays.copyOf(x, 4)));
+		x0 = new Scalar32(int2byte(Arrays.copyOf(x, 4))).getValue();
 		z0 = x0 ^ S5[x[13]] ^ S6[x[15]] ^ S7[x[12]] ^ S8[x[14]] ^ S7[x[8]];
-		zed = byte2int(Scalar32.encode(z0));
+		zed = byte2int(new Scalar32(z0).getEncoded());
 		System.arraycopy(zed, 0, z, 0, 4);
 		// z4z5z6z7 = x8x9xAxB ^ S5[z0] ^ S6[z2] ^ S7[z1] ^ S8[z3] ^ S8[xA]
-		x8 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 8, 12)));
+		x8 = new Scalar32(int2byte(Arrays.copyOfRange(x, 8, 12))).getValue();
 		z4 = x8 ^ S5[z[0]] ^ S6[z[2]] ^ S7[z[1]] ^ S8[z[3]] ^ S8[x[10]];
-		zed = byte2int(Scalar32.encode(z4));
+		zed = byte2int(new Scalar32(z4).getEncoded());
 		System.arraycopy(zed, 0, z, 4, 4);
 		// z8z9zAzB = xCxDxExF ^ S5[z7] ^ S6[z6] ^ S7[z5] ^ S8[z4] ^ S5[x9]
-		xc = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 12, 16)));
+		xc = new Scalar32(int2byte(Arrays.copyOfRange(x, 12, 16))).getValue();
 		z8 = xc ^ S5[z[7]] ^ S6[z[6]] ^ S7[z[5]] ^ S8[z[4]] ^ S5[x[9]];
-		zed = byte2int(Scalar32.encode(z8));
+		zed = byte2int(new Scalar32(z8).getEncoded());
 		System.arraycopy(zed, 0, z, 8, 4);
 		// zCzDzEzF = x4x5x6x7 ^ S5[zA] ^ S6[z9] ^ S7[zB] ^ S8[z8] ^ S6[xB]
-		x4 = Scalar32.decode(int2byte(Arrays.copyOfRange(x, 4, 8)));
+		x4 = new Scalar32(int2byte(Arrays.copyOfRange(x, 4, 8))).getValue();
 		zc = x4 ^ S5[z[10]] ^ S6[z[9]] ^ S7[z[11]] ^ S8[z[8]] ^ S6[x[11]];
-		zed = byte2int(Scalar32.encode(zc));
+		zed = byte2int(new Scalar32(zc).getEncoded());
 		System.arraycopy(zed, 0, z, 12, 4);
 		// K9  = S5[z3] ^ S6[z2] ^ S7[zC] ^ S8[zD] ^ S5[z9]
 		Kr[9] = (S5[z[3]] ^ S6[z[2]] ^ S7[z[12]] ^ S8[z[13]] ^ S5[z[9]]) & 0x1f;
@@ -731,19 +734,19 @@ final class CAST5 implements BlockCipher {
 
 		// x0x1x2x3 = z8z9zAzB ^ S5[z5] ^ S6[z7] ^ S7[z4] ^ S8[z6] ^ S7[z0]
 		x0 = z8 ^ S5[z[5]] ^ S6[z[7]] ^ S7[z[4]] ^ S8[z[6]] ^ S7[z[0]];
-		xed = byte2int(Scalar32.encode(x0));
+		xed = byte2int(new Scalar32(x0).getEncoded());
 		System.arraycopy(xed, 0, x, 0, 4);
 		// x4x5x6x7 = z0z1z2z3 ^ S5[x0] ^ S6[x2] ^ S7[x1] ^ S8[x3] ^ S8[z2]
 		x4 = z0 ^ S5[x[0]] ^ S6[x[2]] ^ S7[x[1]] ^ S8[x[3]] ^ S8[z[2]];
-		xed = byte2int(Scalar32.encode(x4));
+		xed = byte2int(new Scalar32(x4).getEncoded());
 		System.arraycopy(xed, 0, x, 4, 4);
 		// x8x9xAxB = z4z5z6z7 ^ S5[x7] ^ S6[x6] ^ S7[x5] ^ S8[x4] ^ S5[z1]
 		x8 = z4 ^ S5[x[7]] ^ S6[x[6]] ^ S7[x[5]] ^ S8[x[4]] ^ S5[z[1]];
-		xed = byte2int(Scalar32.encode(x8));
+		xed = byte2int(new Scalar32(x8).getEncoded());
 		System.arraycopy(xed, 0, x, 8, 4);
 		// xCxDxExF = zCzDzEzF ^ S5[xA] ^ S6[x9] ^ S7[xB] ^ S8[x8] ^ S6[z3]
 		xc = zc ^ S5[x[10]] ^ S6[x[9]] ^ S7[x[11]] ^ S8[x[8]] ^ S6[z[3]];
-		xed = byte2int(Scalar32.encode(xc));
+		xed = byte2int(new Scalar32(xc).getEncoded());
 		System.arraycopy(xed, 0, x, 12, 4);
 		// K13 = S5[x8] ^ S6[x9] ^ S7[x7] ^ S8[x6] ^ S5[x3]
 		Kr[13] = (S5[x[8]] ^ S6[x[9]] ^ S7[x[7]] ^ S8[x[6]] ^ S5[x[3]]) & 0x1f;

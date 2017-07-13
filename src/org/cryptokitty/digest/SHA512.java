@@ -160,14 +160,14 @@ public class SHA512 extends Digest {
 
 		ByteArrayOutputStream d = new ByteArrayOutputStream();
 		try {
-			d.write(Scalar64.encode(h1[N]));
-			d.write(Scalar64.encode(h2[N]));
-			d.write(Scalar64.encode(h3[N]));
-			d.write(Scalar64.encode(h4[N]));
-			d.write(Scalar64.encode(h5[N]));
-			d.write(Scalar64.encode(h6[N]));
-			d.write(Scalar64.encode(h7[N]));
-			d.write(Scalar64.encode(h8[N]));
+			d.write(new Scalar64(h1[N]).getEncoded());
+			d.write(new Scalar64(h2[N]).getEncoded());
+			d.write(new Scalar64(h3[N]).getEncoded());
+			d.write(new Scalar64(h4[N]).getEncoded());
+			d.write(new Scalar64(h5[N]).getEncoded());
+			d.write(new Scalar64(h6[N]).getEncoded());
+			d.write(new Scalar64(h7[N]).getEncoded());
+			d.write(new Scalar64(h8[N]).getEncoded());
 		}
 		catch (IOException e) {
 			// Nope.
@@ -275,8 +275,7 @@ public class SHA512 extends Digest {
 
 		for (int j = 0; j < 16; ++j) {
 			int i = j * 8;
-			w[j] = Scalar64.decode(
-					Arrays.copyOfRange(chunk, i, i + 8));
+			w[j] = new Scalar64(Arrays.copyOfRange(chunk, i, i + 8)).getValue();
 		}
 
 		for (int j = 16; j < 80; ++j) {
