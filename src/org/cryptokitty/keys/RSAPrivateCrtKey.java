@@ -97,13 +97,6 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	}
 
 	/**
-	 * @return the d
-	 */
-	public BigInteger getPrivateExponent() {
-		return d;
-	}
-
-	/**
 	 * 
 	 * @return
 	 */
@@ -146,6 +139,13 @@ public class RSAPrivateCrtKey extends RSAPrivateKey {
 	public BigInteger getPrimeExponentQ() {
 		// TODO Auto-generated method stub
 		return dQ;
+	}
+
+	/**
+	 * @return the d
+	 */
+	public BigInteger getPrivateExponent() {
+		return d;
 	}
 
 	/**
