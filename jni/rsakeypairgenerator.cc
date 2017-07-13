@@ -95,6 +95,10 @@ Java_org_cryptokitty_keys_RSAKeyPairGenerator_generateKeyPair (JNIEnv *env, jobj
     initId = env->GetMethodID(prvKeyClass, "<init>",
     "(Lorg/cryptokitty/jni/BigInteger;Lorg/cryptokitty/jni/BigInteger;Lorg/cryptokitty/jni/BigInteger;Lorg/cryptokitty/jni/BigInteger;Lorg/cryptokitty/jni/BigInteger;)V");
     jobject privateKey = env->NewObject(prvKeyClass, initId, p, q, dP, dQ, qInv);
+    // Set the private exponent for PEM encoding later.
+    jfieldID dId = env->GetFieldID(prvKeyClass, "d", "Lorg/cryptokitty/jni/BigInteger;");
+    jobject d = newBigInteger(env, prv->getPrivateExponent());
+    env->SetObjectField(privateKey, dId, d);
 
     jclass keyPairClass = env->FindClass("java/security/KeyPair");
     initId = env->GetMethodID(keyPairClass, "<init>",

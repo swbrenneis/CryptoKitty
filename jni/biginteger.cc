@@ -126,7 +126,7 @@ JNIEXPORT jbyteArray JNICALL
 Java_org_cryptokitty_jni_BigInteger_getEncoded (JNIEnv *env, jobject thisObj) {
 
     CK::BigInteger *ref = getReference(env, thisObj);
-    ByteArrayCodec encoded(env, ref->getEncoded(CK::BigInteger::BIGENDIAN));
+    ByteArrayCodec encoded(env, ref->getEncoded());
     return encoded.getJBytes();
 
 }
@@ -155,7 +155,7 @@ Java_org_cryptokitty_jni_BigInteger_initialize___3B (JNIEnv *env, jobject thisOb
 
     ByteArrayCodec eCodec(env, encoded);
     long jniImpl = ReferenceManager::instance()->addRef(
-                    new CK::BigInteger(eCodec.getBytes(), CK::BigInteger::BIGENDIAN));
+                    new CK::BigInteger(eCodec.getBytes()));
     //std::cout << "initialize__3B called in biginteger.cc returning index " << jniImpl << std::endl;
     return jniImpl;
 
