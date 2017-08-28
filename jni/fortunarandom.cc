@@ -17,11 +17,3 @@ Java_org_cryptokitty_random_FortunaSecureRandom_nextBytes (JNIEnv *env, jobject 
 
 }
 
-JNIEXPORT void JNICALL
-Java_org_cryptokitty_random_FortunaSecureRandom_setStandalone (JNIEnv *, jclass,
-                                                                jboolean standalone) {
-
-    CK::FortunaSecureRandom::setStandalone(standalone);
-
-}
-

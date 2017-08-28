@@ -13,7 +13,7 @@ CPPFLAGS= -Wall -g -std=c++11 -Wl,--add-stdcall-alias -MMD -fPIC $(CPPDEFINES) $
 
 CPP_SOURCES= ByteArrayCodec.cc ReferenceManager.cc SocketImpl.cc StringHandler.cc aes.cc \
 			 berkeleysocketimpl.cc biginteger.cc fortunarandom.cc gcm.cc hmac.cc \
-			 rsakeypairgenerator.cc tlscredentials.cc tlssession.cc
+			 rsakeypairgenerator.cc
 
 CPP_OBJECT= $(CPP_SOURCES:.cc=.o)
 DEPEND= $(CPP_OBJECT:.o=.d)
@@ -23,8 +23,7 @@ DEPEND= $(CPP_OBJECT:.o=.d)
 JNI_HEADERS= org_cryptokitty_jni_BigInteger.h org_cryptokitty_random_FortunaSecureRandom.h \
 			 org_cryptokitty_cipher_AES.h org_cryptokitty_modes_GCM.h org_cryptokitty_mac_HMAC.h \
 			 org_cryptokitty_keys_RSAKeyPairGenerator.h org_cryptokitty_jni_JNIReference.h \
-			 org_cryptokitty_jni_BerkeleySocketImpl.h org_cryptokitty_tls_TLSCredentials.h \
-			 org_cryptokitty_tls_TLSSession.h
+			 org_cryptokitty_jni_BerkeleySocketImpl.h
 
 BUILD_DIR= build
 
