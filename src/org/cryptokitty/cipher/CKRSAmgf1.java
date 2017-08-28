@@ -97,7 +97,7 @@ public final class CKRSAmgf1 {
 		for (int counter = 0;
 				counter < Math.ceil((double)maskLen / hLen);
 					++ counter) {
-			byte[] C = Scalar32.encode(counter);
+			byte[] C = new Scalar32(counter).getEncoded();
 			byte[] h = new byte[C.length + mgfSeed.length];
 			System.arraycopy(mgfSeed, 0, h, 0, mgfSeed.length);
 			System.arraycopy(C, 0, h, mgfSeed.length, 4);

@@ -297,8 +297,8 @@ public class GCM extends AEADBlockMode {
 	    }
 
 	    ByteArrayOutputStream ac = new ByteArrayOutputStream();
-	    ac.write(Scalar64.encode(A.length * 8));
-	    ac.write(Scalar64.encode(C.length * 8));
+	    ac.write(new Scalar64(A.length * 8).getEncoded());
+	    ac.write(new Scalar64(C.length * 8).getEncoded());
 	    Xi = multiply(xor(Xi1, ac.toByteArray()), H);
 
 	    return Xi;
@@ -415,7 +415,7 @@ public class GCM extends AEADBlockMode {
 	    Scalar32 v = new Scalar32((int)value);
 	    System.arraycopy(v.getEncoded(), 0, block, 12, 4);
 
-	    value = Scalar32.decode(Arrays.copyOfRange(block, 8, 12));
+	    value = new Scalar32(Arrays.copyOfRange(block, 8, 12)).getValue();
 	    value = (value >> 1) & 0xffff;
 	    if ((block[7] & 0x01) != 0) {
 	        value |= 0x80000000;
@@ -423,7 +423,7 @@ public class GCM extends AEADBlockMode {
 	    Scalar32 vi = new Scalar32((int)value);
 	    System.arraycopy(vi.getEncoded(), 0, block, 8, 4);
 
-	    value = Scalar32.decode(Arrays.copyOfRange(block, 4, 8));
+	    value = new Scalar32(Arrays.copyOfRange(block, 4, 8)).getValue();
 	    value = (value >> 1) & 0xffff;
 	    if ((block[3] & 0x01) != 0) {
 	        value |= 0x80000000;
@@ -431,7 +431,7 @@ public class GCM extends AEADBlockMode {
 	    Scalar32 vii = new Scalar32((int)value);
 	    System.arraycopy(vii.getEncoded(), 0, block, 4, 4);
 
-	    value = Scalar32.decode(Arrays.copyOfRange(block, 0, 4));
+	    value = new Scalar32(Arrays.copyOfRange(block, 0, 4)).getValue();
 	    value = (value >> 1) & 0xffff;
 	    Scalar32 viii = new Scalar32((int)value);
 	    System.arraycopy(viii.getEncoded(), 0, block, 0, 4);

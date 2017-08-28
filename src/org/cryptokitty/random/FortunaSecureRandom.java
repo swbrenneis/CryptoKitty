@@ -61,6 +61,4 @@ public class FortunaSecureRandom extends SecureRandomWrapper implements SecureRa
 
 	}
 
-	public static native void setStandalone(boolean standalone);
-
 }

@@ -3,10 +3,8 @@
  */
 package org.cryptokitty.codec;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.cryptokitty.exceptions.CodecException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * @author Steve Brenneis
@@ -18,99 +16,82 @@ import org.cryptokitty.exceptions.CodecException;
  */
 public class Scalar16 {
 
-	/*
-	 * Convenience methods.
+	/**
+	 * Encoded value.
 	 */
-	public static byte[] encode(int scalar) {
-		return new Scalar16(scalar).getEncoded();
-	}
-
-	public static int decode(byte[] encoded) {
-		return new Scalar16(encoded).getValue();
-	}
-
-	/*
-	 * The scalar value.
-	 */
-	private int value;
+	private byte[] encoded;
 
 	/**
-	 * Create a scalar from an input stream.
+	 * Short value.
 	 */
-	public Scalar16(InputStream in) throws CodecException {
-		byte[] sBytes = new byte[2];
-		try {
-			in.read(sBytes);
-		}
-		catch (IOException e) {
-			throw new CodecException(e);
-		}
-
-		value = (sBytes[0] & 0xff);
-		value = value << 8;
-		value |= (sBytes[1] & 0xff);		
-	}
+	private short value;
 
 	/**
-	 * Create a scalar given and integer value.
-	 */
-	public Scalar16(int value) {
-		this.value = value & 0xffff;
-	}
-
-	/**
-	 * Create a scalar given an encoded value
+	 * Construct with encoded value.
 	 */
 	public Scalar16(byte[] encoded) {
-		value = (encoded[0] & 0xff);
-		value = value << 8;
-		value |= (encoded[1] & 0xff);
+
+		ByteBuffer buf = ByteBuffer.wrap(encoded);
+		buf.order(ByteOrder.BIG_ENDIAN);
+		this.value = buf.getShort();
+
 	}
 
-	/*
-	 * returns a Scalar16 object that is the sum of addend and
-	 * this scalar.
+	/**
+	 * Construct with short value.
 	 */
-	public Scalar16 add(Scalar16 addend) {
-		int sum = (value + addend.value) % 65536;
-		return new Scalar16(sum);
+	public Scalar16(short value) {
+
+		ByteBuffer buf = ByteBuffer.allocate(2);
+		buf.order(ByteOrder.BIG_ENDIAN);
+		buf.putShort(value);
+		this.encoded = buf.array();
+
 	}
 
-	/*
-	 * returns a Scalar16 object that is the sum of addend and
-	 * this scalar.
+	/**
+	 * 
+	 * @param encoded
 	 */
-	public Scalar16 add(int addend) {
-		int sum = (value + addend) % 65536;
-		return new Scalar16(sum);
+	public void decode(byte[] encoded) {
+
+		ByteBuffer buf = ByteBuffer.wrap(encoded);
+		buf.order(ByteOrder.BIG_ENDIAN);
+		this.value = buf.getShort();
+
 	}
 
-	/*
-	 * Checks equality of a scalar to this scalar. Proper class
-	 * cast is up to the caller.
-	 */
-	@Override
-	public boolean equals(Object other) {
-		return value == ((Scalar16)other).value;
-	}
-
-	/*
-	 * Get the encoded value.
+	/**
+	 * 
+	 * @return
 	 */
 	public byte[] getEncoded() {
-		byte[] encoded = new byte[2];
-		int encode = value;
-		encoded[1] = (byte)(encode & 0xff);
-		encode = encode >> 8;
-		encoded[0] = (byte)(encode & 0xff);
+		
 		return encoded;
+		
 	}
 
-	/*
-	 * Get the scalar value.
+	/**
+	 * 
+	 * @return
 	 */
-	public int getValue() {
+	public short getValue() {
+
 		return value;
+
+	}
+
+	/**
+	 * 
+	 * @param value
+	 */
+	public void setValue(short value) {
+
+		ByteBuffer buf = ByteBuffer.allocate(2);
+		buf.order(ByteOrder.BIG_ENDIAN);
+		buf.putShort(value);
+		this.encoded = buf.array();
+
 	}
 
 }

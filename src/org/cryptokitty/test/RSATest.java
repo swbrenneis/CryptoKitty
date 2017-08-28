@@ -59,7 +59,7 @@ public class RSATest {
 			KeyPair ckpair = keyGen.generateKeyPair();
 
 			Digest digest = new MD5();
-			byte[] message = digest.digest(Scalar64.encode(System.nanoTime()));
+			byte[] message = digest.digest(new Scalar64(System.nanoTime()).getEncoded());
 
 			// Test OAEP encoding.
 			Cipher rsae = Cipher.getInstance("RSA", "CryptoKitty");
