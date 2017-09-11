@@ -40,9 +40,16 @@ public class GCMCodec extends ByteStreamCodec {
 	private byte[] ciphertext;
 
 	/**
+	 * Initial value.
+	 */
+	private byte[] iv;
+
+	/**
 	 * 
 	 */
 	public GCMCodec() {
+
+		this.iv = null;
 
 	}
 
@@ -53,6 +60,7 @@ public class GCMCodec extends ByteStreamCodec {
 	public GCMCodec(byte[] ciphertext) {
 
 		this.ciphertext = ciphertext;
+		this.iv = null;
 		// Release the stream created in the default constructor
 		out = null;
 
@@ -66,15 +74,17 @@ public class GCMCodec extends ByteStreamCodec {
 	public void decrypt(byte[] key, byte[] aead) throws CodecException {
 
 		try {
-			ByteBuffer buf = ByteBuffer.wrap(ciphertext);
-			byte[] ct = new byte[ciphertext.length - 12];
-			buf.get(ct);
-			byte[] iv = new byte[12];
-			buf.get(iv);
+			if (iv == null) {
+				ByteBuffer buf = ByteBuffer.wrap(ciphertext);
+				ciphertext = new byte[ciphertext.length - 12];
+				buf.get(ciphertext);
+				iv = new byte[12];
+				buf.get(iv);
+			}
 			GCM cipher = new GCM(new AES(key.length), true);
 			cipher.setIV(iv);
 			cipher.setAuthenticationData(aead);
-			byte[] plaintext = cipher.decrypt(ct, key);
+			byte[] plaintext = cipher.decrypt(ciphertext, key);
 			in = new ByteArrayInputStream(plaintext);
 		}
 		catch (BufferUnderflowException e) {
@@ -106,16 +116,25 @@ public class GCMCodec extends ByteStreamCodec {
 		try {
 			byte[] plaintext = out.toByteArray();
 			GCM cipher = new GCM(new AES(key.length), true);
-			FortunaSecureRandom rnd = new FortunaSecureRandom();
-			byte[] iv = new byte[12];
-			rnd.nextBytes(iv);
+			boolean appendIv = false;
+			if (iv == null) {
+				appendIv = true;
+				FortunaSecureRandom rnd = new FortunaSecureRandom();
+				iv = new byte[12];
+				rnd.nextBytes(iv);
+			}
 			cipher.setIV(iv);
 			cipher.setAuthenticationData(aead);
 			byte[] ciphertext = cipher.encrypt(plaintext, key);
-			ByteBuffer buf = ByteBuffer.allocate(ciphertext.length + 12);
-			buf.put(ciphertext);
-			buf.put(iv);
-			return buf.array();
+			if (appendIv) {
+				ByteBuffer buf = ByteBuffer.allocate(ciphertext.length + 12);
+				buf.put(ciphertext);
+				buf.put(iv);
+				return buf.array();
+			}
+			else {
+				return ciphertext;
+			}
 		}
 		catch (IllegalStateException e) {
 			throw new CodecException("Illegal cipher state");
@@ -127,6 +146,15 @@ public class GCMCodec extends ByteStreamCodec {
 			throw new CodecException("Invalid key");
 		}
 
+	}
+
+	/**
+	 * Sets the initial value.
+	 * 
+	 * @param iv
+	 */
+	public void setIV(byte[] iv) {
+		this.iv = iv;
 	}
 
 }
