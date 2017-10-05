@@ -6,11 +6,6 @@ package org.cryptokitty.pgp.packet;
 import java.io.IOException;
 import java.io.InputStream;
 
-//import org.cryptokitty.data.DataException;
-//import org.cryptokitty.data.KeyID;
-//import org.cryptokitty.data.MPI;
-import org.cryptokitty.pgp.keys.KeyAlgorithms;
-
 /**
  * @author Steve Brenneis
  *
@@ -39,11 +34,13 @@ public class PublicKeyEncryptedSessionKey {
 	/*
 	 * The raw, encrypted key.
 	 */
+	@SuppressWarnings("unused")
 	private byte[] keypacket;
 
 	/*
 	 * Public key algorithm
 	 */
+	@SuppressWarnings("unused")
 	private int pkAlgorithm;
 
 	/*
@@ -54,6 +51,7 @@ public class PublicKeyEncryptedSessionKey {
 	/*
 	 * Packet version number. Should be 3.
 	 */
+	@SuppressWarnings("unused")
 	private int version;
 
 	/**

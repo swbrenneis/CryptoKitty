@@ -26,6 +26,7 @@ public class ElGamalCipher extends CipherSpi {
 	/*
 	 * The cipher class.
 	 */
+	@SuppressWarnings("unused")
 	private ElGamal cipher;
 
 	/**

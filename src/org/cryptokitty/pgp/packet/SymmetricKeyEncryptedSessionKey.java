@@ -25,11 +25,13 @@ public class SymmetricKeyEncryptedSessionKey {
 	/*
 	 * S2K value.
 	 */
+	@SuppressWarnings("unused")
 	private String2Key s2k;
 
 	/*
 	 * Symmetric key algorithm.
 	 */
+	@SuppressWarnings("unused")
 	private int skAlgorithm;
 	
 	/*

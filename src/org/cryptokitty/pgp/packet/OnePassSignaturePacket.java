@@ -19,6 +19,7 @@ public class OnePassSignaturePacket {
 	/*
 	 * The signature hash algorithm.
 	 */
+	@SuppressWarnings("unused")
 	private int hashAlgorithm;
 
 	/*
@@ -29,16 +30,19 @@ public class OnePassSignaturePacket {
 	/*
 	 * Nested one pass signature packets.
 	 */
+	@SuppressWarnings("unused")
 	private OnePassSignaturePacket next;
 
 	/*
 	 * The signature public key algorithm.
 	 */
+	@SuppressWarnings("unused")
 	private int pkAlgorithm;
 
 	/*
 	 * Signature type. See SignaturePacket class.
 	 */
+	@SuppressWarnings("unused")
 	private int type;
 
 	/*

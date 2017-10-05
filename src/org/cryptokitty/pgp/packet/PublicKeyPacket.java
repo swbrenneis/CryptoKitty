@@ -6,12 +6,6 @@ package org.cryptokitty.pgp.packet;
 import java.io.IOException;
 import java.io.InputStream;
 
-//import org.cryptokitty.data.DataException;
-//import org.cryptokitty.data.MPI;
-import org.cryptokitty.codec.Scalar16;
-//import org.cryptokitty.data.Time;
-import org.cryptokitty.pgp.keys.KeyAlgorithms;
-
 /**
  * @author Steve Brenneis
  *

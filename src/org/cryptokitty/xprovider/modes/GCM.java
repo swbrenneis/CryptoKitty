@@ -47,8 +47,8 @@ public class GCM extends AEADBlockMode {
 
 	/**
 	 * Encryption/decryption key
-	 */
 	private byte[] key;
+	 */
 
 	/**
 	 * 
@@ -255,7 +255,8 @@ public class GCM extends AEADBlockMode {
 	    byte[] Ai;                   // A(i)
 	    byte[] Ci;                   // C(i)
 
-	    int i = 1; // For tracking Xi index. Debug only.
+	    @SuppressWarnings("unused")
+		int i = 1; // For tracking Xi index. Debug only.
 	    for (int j = 0; j < m; ++j) {
 	    	int jj = j * 16;
 	        Ai = Arrays.copyOfRange(A, jj, jj + 16);
@@ -399,7 +400,7 @@ public class GCM extends AEADBlockMode {
 	@Override
 	public void setKey(byte[] key) throws InvalidKeyException {
 
-		this.key = key;
+		// this.key = key;
 		cipher.setKey(key);
 
 	}

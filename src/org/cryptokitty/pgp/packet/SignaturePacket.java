@@ -3,16 +3,8 @@
  */
 package org.cryptokitty.pgp.packet;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-//import org.cryptokitty.data.DataException;
-//import org.cryptokitty.data.KeyID;
-//import org.cryptokitty.data.MPI;
-import org.cryptokitty.codec.Scalar16;
-//import org.cryptokitty.data.Time;
-import org.cryptokitty.pgp.keys.KeyAlgorithms;
 
 /**
  * @author Steve Brenneis
@@ -59,16 +51,19 @@ public class SignaturePacket {
 	/*
 	 * Hash algorithm.
 	 */
+	@SuppressWarnings("unused")
 	private int hashAlgorithm;
 
 	/*
 	 * Hashed subpackets.
 	 */
+	@SuppressWarnings("unused")
 	private SignatureSubpacketSet hashedSubpackets;
 
 	/*
 	 * PublicKey algorithm.
 	 */
+	@SuppressWarnings("unused")
 	private int pkAlgorithm;
 
 	/*
@@ -89,6 +84,7 @@ public class SignaturePacket {
 	/*
 	 * Unhashed subpackets.
 	 */
+	@SuppressWarnings("unused")
 	private SignatureSubpacketSet unhashedSubpackets;
 
 	/*

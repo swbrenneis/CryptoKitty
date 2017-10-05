@@ -52,8 +52,11 @@ public class SignatureSubpacketSet {
 			this.blob = blob;
 			this.critical = critical;
 		}
+		@SuppressWarnings("unused")
 		public int type;
+		@SuppressWarnings("unused")
 		public byte[] blob;
+		@SuppressWarnings("unused")
 		public boolean critical;
 	}
 

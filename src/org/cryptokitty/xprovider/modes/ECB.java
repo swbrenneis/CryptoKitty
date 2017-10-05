@@ -28,6 +28,7 @@ public class ECB implements BlockMode {
 	/*
 	 * The BlockCipher object.
 	 */
+	@SuppressWarnings("unused")
 	private BlockCipher cipher;
 
 	/**

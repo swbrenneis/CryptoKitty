@@ -24,6 +24,7 @@ public class CompressedDataPacket {
 	/*
 	 * Compression algorithm.
 	 */
+	@SuppressWarnings("unused")
 	private int algorithm;
 
 	/*

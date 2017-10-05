@@ -27,11 +27,13 @@ public class LiteralDataPacket {
 	/*
 	 * File name.
 	 */
+	@SuppressWarnings("unused")
 	private String fileName;
 
 	/*
 	 * Format identifier.
 	 */
+	@SuppressWarnings("unused")
 	private char format;
 
 	/*
