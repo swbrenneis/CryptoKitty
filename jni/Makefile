@@ -2,12 +2,12 @@ INSTALL_PATH= /usr/local
 
 LD= g++
 LDPATHS= -L/usr/local/lib64
-LDLIBS= -lcryptokitty -lcoder -lcthread
+LDLIBS= -lcryptokitty -lcoder -lpthread
 LDFLAGS= -Wall -g -shared -Wl,--no-undefined $(LDPATHS) $(LDLIBS)
 
 CPP= g++
 CPPDEFINES= -D_GNU_SOURCE -D_REENTRANT
-CPPINCLUDES= -I/usr/java/default/include -I/usr/java/default/include/linux \
+CPPINCLUDES= -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux \
 			 -I/usr/local/include/CryptoKitty-C
 CPPFLAGS= -Wall -g -std=c++11 -Wl,--add-stdcall-alias -MMD -fPIC $(CPPDEFINES) $(CPPINCLUDES)
 

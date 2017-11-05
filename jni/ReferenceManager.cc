@@ -1,25 +1,19 @@
 #include "ReferenceManager.h"
 #include <CryptoKitty-C/jni/JNIReference.h>
-#include <cthread/Mutex.h>
-#include <cthread/Lock.h>
 
 // The singlton.
 ReferenceManager *ReferenceManager::theInstance = 0;
 
 ReferenceManager::ReferenceManager()
-: refIndex(100),
-  refMutex(new cthread::Mutex) {
+: refIndex(100) {
 }
 
 ReferenceManager::~ReferenceManager() {
-
-    delete refMutex;
-
 }
 
 long ReferenceManager::addRef(CK::JNIReference *ref) {
 
-    cthread::Lock lock(refMutex);
+    std::lock_guard<std::mutex> lock(refMutex);
 
     Reference reference;
     reference.ref = ref;

@@ -2,13 +2,10 @@
 #define REFERENCEMANAGER_H_INCLUDED
 
 #include <map>
+#include <mutex>
 
 namespace CK {
     class JNIReference;
-}
-
-namespace cthread {
-    class Mutex;
 }
 
 class ReferenceManager {
@@ -39,7 +36,7 @@ class ReferenceManager {
         typedef ReferenceMap::iterator RefIter;
         typedef ReferenceMap::const_iterator RefConstIter;
         ReferenceMap references;
-        cthread::Mutex *refMutex;
+        std::mutex refMutex;
 
 };
 
