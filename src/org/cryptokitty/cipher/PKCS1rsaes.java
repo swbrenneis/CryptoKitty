@@ -11,7 +11,7 @@ import org.cryptokitty.exceptions.IllegalBlockSizeException;
 import org.cryptokitty.exceptions.InvalidPaddingException;
 import org.cryptokitty.keys.RSAPrivateKey;
 import org.cryptokitty.keys.RSAPublicKey;
-import org.cryptokitty.xprovider.random.BBSSecureRandom;
+import org.cryptokitty.random.FortunaSecureRandom;
 import org.cryptokitty.jni.BigInteger;
 
 /**
@@ -138,7 +138,7 @@ public class PKCS1rsaes extends RSACipher {
 		//    will be at least eight octets.
 		byte[] PS;
 		if (seed == null) {
-			SecureRandom rnd = new BBSSecureRandom();
+			SecureRandom rnd = new FortunaSecureRandom();
 			PS = new byte[k - mLen - 3];
 			rnd.nextBytes(PS);
 			for (int i = 0; i < PS.length; ++i) {
